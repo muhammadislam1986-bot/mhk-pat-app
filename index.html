@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#153553" />
+  <title>MHK PAT Mobile V2</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root{
+      --bg:#0b1622;
+      --panel:#122334;
+      --panel2:#17314a;
+      --line:#2b4d70;
+      --input:#0d1c2b;
+      --text:#eef5ff;
+      --muted:#b4c7dd;
+      --blue:#153553;
+      --blue2:#1f4e79;
+      --blue3:#3d78ad;
+      --green:#0b8f47;
+      --greenbg:#e9f8ef;
+      --red:#c62828;
+      --redbg:#fdecec;
+      --gold:#d6e8fb;
+      --shadow:0 12px 28px rgba(0,0,0,.25);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,#09131d,#102131 45%,#0b1622);
+      color:var(--text);
+    }
+    .wrap{max-width:980px;margin:0 auto;padding:14px 14px 96px}
+    .hero{
+      background:linear-gradient(135deg,#10263c,#153553 60%,#316b9f 120%);
+      border:1px solid #365a80;border-radius:28px;padding:18px;box-shadow:var(--shadow);
+      position:sticky;top:0;z-index:10
+    }
+    .heroRow{display:flex;gap:14px;align-items:center}
+    .heroLogo{width:82px;height:82px;object-fit:contain;border-radius:18px;background:rgba(255,255,255,.08);padding:8px;border:1px solid rgba(255,255,255,.16);display:none}
+    .hero h1{margin:0;font-size:1.5rem}
+    .hero p{margin:.35rem 0 0;color:var(--gold);font-size:.95rem}
+    .grid{display:grid;gap:12px}
+    .grid2{grid-template-columns:1fr 1fr}
+    .grid3{grid-template-columns:repeat(3,1fr)}
+    @media (max-width:760px){.grid2,.grid3{grid-template-columns:1fr}.heroLogo{width:64px;height:64px}}
+    .card{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .card h2{margin:0;padding:14px 16px;border-bottom:1px solid var(--line);font-size:1rem;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.04))}
+    .body{padding:14px}
+    label{display:block;font-size:.83rem;color:var(--muted);margin:0 0 6px;font-weight:700}
+    input,textarea,select{
+      width:100%;padding:12px;border-radius:14px;border:1px solid #355c86;background:var(--input);
+      color:var(--text);font-size:16px;outline:none
+    }
+    textarea{min-height:84px;resize:vertical}
+    .btns{display:flex;gap:10px;flex-wrap:wrap}
+    button{border:0;border-radius:14px;padding:12px 14px;background:#214a72;color:#fff;font-weight:800;cursor:pointer}
+    button.primary{background:linear-gradient(180deg,var(--blue3),var(--blue2))}
+    button.green{background:linear-gradient(180deg,#17a65a,#0c7a40)}
+    button.red{background:linear-gradient(180deg,#ef5350,#b71c1c)}
+    button.ghost{background:transparent;border:1px solid #48698d}
+    button.small{padding:9px 11px;font-size:.86rem;border-radius:12px}
+    .tabs{
+      position:fixed;left:0;right:0;bottom:0;background:rgba(9,18,29,.98);border-top:1px solid var(--line);
+      display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:10px 10px 14px;z-index:20
+    }
+    .tab{padding:10px 6px;text-align:center;border-radius:14px;color:var(--muted);font-weight:800;border:1px solid transparent}
+    .tab.active{background:#16314d;color:#fff;border-color:#42688f}
+    .hidden{display:none}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    @media (max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+    .stat{background:var(--panel2);border:1px solid var(--line);padding:12px;border-radius:16px;text-align:center}
+    .stat .n{font-size:1.35rem;font-weight:900}
+    .good{color:#50e08e}.bad{color:#ff9b9b}
+    .job,.item{background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:12px;margin-top:10px}
+    .job.active{border-color:#68a7dc}
+    .topline{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+    .title{font-weight:900}
+    .sub{font-size:.88rem;color:var(--muted)}
+    .hr{height:1px;background:var(--line);margin:14px 0}
+    .pill{display:inline-block;padding:5px 10px;border-radius:999px;font-size:.75rem;font-weight:900}
+    .pill.pass{background:rgba(11,143,71,.18);color:#7af2ad}
+    .pill.fail{background:rgba(198,40,40,.18);color:#ffb2b2}
+    .pill.pending{background:rgba(61,120,173,.20);color:#d7ebff}
+    .notice{background:rgba(61,120,173,.12);border:1px solid rgba(61,120,173,.35);color:#d7ebff;border-radius:16px;padding:12px;font-size:.9rem}
+    .logoPreview{max-width:220px;max-height:90px;object-fit:contain;background:rgba(255,255,255,.05);padding:8px;border:1px solid var(--line);border-radius:12px;display:none}
+    .report{background:#fff;color:#111;border-radius:22px;padding:18px}
+    .reportHead{background:linear-gradient(135deg,#153553,#2f6a9f);color:#fff;border-radius:18px;padding:16px;margin-bottom:14px}
+    .reportHeadRow{display:flex;gap:14px;align-items:center}
+    .reportLogo{width:110px;height:110px;object-fit:contain;background:rgba(255,255,255,.10);padding:10px;border-radius:16px;border:1px solid rgba(255,255,255,.16);display:none}
+    .report h3,.report h4,.report p{margin:.3rem 0}
+    .summaryTable,.reportTable{width:100%;border-collapse:collapse;margin-top:10px;font-size:.9rem}
+    .summaryTable th,.summaryTable td,.reportTable th,.reportTable td{border:1px solid #cfd8e3;padding:7px;vertical-align:top;text-align:left}
+    .summaryTable th{background:#153553;color:#fff}
+    .reportTable.pass th{background:#0b8f47;color:#fff}
+    .reportTable.fail th{background:#c62828;color:#fff}
+    .passText{color:#0b8f47;font-weight:800}
+    .failText{color:#c62828;font-weight:800}
+    .metaGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+    @media (max-width:760px){.metaGrid{grid-template-columns:1fr}}
+    .metaBox{border:1px solid #d9e1ea;border-radius:14px;padding:10px}
+    .sigWrap{margin-top:14px;border:1px solid #d9e1ea;border-radius:16px;padding:10px}
+    .sigCanvas{width:100%;height:170px;border:1px dashed #8ea7c0;border-radius:12px;touch-action:none;background:#fff}
+    .smallNote{font-size:.8rem;color:var(--muted)}
+    .footerSpace{height:34px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="heroRow">
+      <img id="heroLogo" class="heroLogo" alt="Company logo">
+      <div>
+        <h1>MHK PAT Mobile V2</h1>
+        <p>Premium onsite PAT app with engineer signature, branded report, and PWA install support.</p>
+      </div>
+    </div>
+  </div>
+
+  <section id="view-jobs">
+    <div class="card">
+      <h2>New Job</h2>
+      <div class="body grid">
+        <div class="grid grid2">
+          <div><label>Client Name</label><input id="jobClient"></div>
+          <div><label>Contact Name</label><input id="jobContact"></div>
+        </div>
+        <div class="grid grid2">
+          <div><label>Contact Email</label><input id="jobEmail" type="email"></div>
+          <div><label>Test Date</label><input id="jobDate" type="date"></div>
+        </div>
+        <div><label>Site Address</label><textarea id="jobAddress"></textarea></div>
+        <div class="grid grid2">
+          <div><label>Retest Interval (months)</label><input id="jobRetest" value="12"></div>
+          <div><label>Engineer</label><input id="jobEngineer"></div>
+        </div>
+        <button class="primary" onclick="createJob()">Create Job</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Saved Jobs</h2>
+      <div class="body"><div id="jobsList"></div></div>
+    </div>
+  </section>
+
+  <section id="view-items" class="hidden">
+    <div id="jobSummaryCard" class="card"></div>
+    <div class="card">
+      <h2>Add Appliance</h2>
+      <div class="body grid">
+        <div class="grid grid2">
+          <div><label>Asset Number</label><input id="itemAsset" placeholder="e.g. KTL01"></div>
+          <div><label>Location</label><input id="itemLocation" placeholder="e.g. Kitchen"></div>
+        </div>
+        <div><label>Description</label><input id="itemDesc" placeholder="e.g. Russell Hobbs Kettle"></div>
+        <div class="grid grid2">
+          <div><label>Class</label><select id="itemClass"><option>Class I</option><option>Class II</option></select></div>
+          <div><label>Fuse Rating</label><input id="itemFuse" placeholder="e.g. 13A / N/A"></div>
+        </div>
+        <div class="grid grid2">
+          <div><label>Result</label><select id="itemResult"><option>PASS</option><option>FAIL</option><option>PENDING</option></select></div>
+          <div><label>Failure Reason</label><input id="itemReason" placeholder="Only if failed"></div>
+        </div>
+        <button class="green" onclick="addItem()">Add Item</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Appliance Register</h2>
+      <div class="body">
+        <input id="itemSearch" placeholder="Search appliances..." oninput="renderItems()">
+        <div id="itemsList"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-sign" class="hidden">
+    <div class="card">
+      <h2>Engineer Signature</h2>
+      <div class="body">
+        <div class="smallNote">This signature is for the engineer only and will appear on the report.</div>
+        <div class="sigWrap">
+          <canvas id="sigCanvas" class="sigCanvas"></canvas>
+        </div>
+        <div class="btns" style="margin-top:10px">
+          <button class="primary" onclick="saveSignature()">Save Signature</button>
+          <button class="ghost" onclick="clearSignature()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-report" class="hidden">
+    <div class="card">
+      <h2>Report & Export</h2>
+      <div class="body">
+        <div class="btns">
+          <button class="primary" onclick="printReport()">Print / Save PDF</button>
+          <button onclick="exportCSV()">Export CSV</button>
+          <button onclick="exportJSON()">Backup JSON</button>
+        </div>
+        <div class="hr"></div>
+        <div id="reportPreview"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-settings" class="hidden">
+    <div class="card">
+      <h2>Company Settings</h2>
+      <div class="body grid">
+        <div><label>Company Name</label><input id="setName"></div>
+        <div><label>Phone</label><input id="setPhone"></div>
+        <div><label>Email</label><input id="setEmail"></div>
+        <div><label>Default Engineer</label><input id="setEngineer"></div>
+        <div><label>Test Instrument</label><input id="setInstrument"></div>
+        <div><label>Instrument Serial No</label><input id="setSerial"></div>
+        <div><label>Calibration Due</label><input id="setCalibration" type="date"></div>
+        <div><label>Address</label><textarea id="setAddress"></textarea></div>
+        <div>
+          <label>Company Logo</label>
+          <input id="setLogoFile" type="file" accept="image/*" onchange="loadLogoFile(event)">
+          <div class="smallNote">Upload PNG or JPG. It is stored on this device and used in the app and report.</div>
+          <img id="logoPreview" class="logoPreview" alt="Logo preview">
+        </div>
+        <div class="btns">
+          <button class="primary" onclick="saveSettings()">Save Settings</button>
+          <button class="ghost" onclick="clearLogo()">Remove Logo</button>
+          <button class="ghost" onclick="resetAll()">Reset App</button>
+        </div>
+        <div class="notice">This app saves data in your browser on this device. Use JSON backup regularly to avoid losing jobs.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footerSpace"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="jobs" onclick="showTab('jobs')">Jobs</div>
+  <div class="tab" data-tab="items" onclick="showTab('items')">Items</div>
+  <div class="tab" data-tab="sign" onclick="showTab('sign')">Sign</div>
+  <div class="tab" data-tab="report" onclick="showTab('report')">Report</div>
+  <div class="tab" data-tab="settings" onclick="showTab('settings')">Settings</div>
+</div>
+
+<script>
+const KEY = "mhk_pat_v2_pwa";
+const defaultState = {
+  company: {
+    name: "MHK Building Solutions Ltd.",
+    address: "60 Little Horton Lane, Bradford, BD5 0BS",
+    phone: "07876786286",
+    email: "mhkbuildingsolutions@gmail.com",
+    engineer: "",
+    instrument: "Seaward Apollo 400+ PAT Tester",
+    serialNumber: "",
+    calibrationDue: "",
+    logoData: "",
+    engineerSignature: ""
+  },
+  jobs: [],
+  activeJobId: null
+};
+let state = loadState();
+let pendingLogoData = "";
+let sigPad = null;
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    return raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(defaultState));
+  }catch(e){
+    return JSON.parse(JSON.stringify(defaultState));
+  }
+}
+function saveState(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function uid(prefix){ return prefix + "-" + Math.random().toString(36).slice(2,8).toUpperCase(); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function activeJob(){ return state.jobs.find(j => j.id === state.activeJobId) || null; }
+function val(id){ return document.getElementById(id).value.trim(); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function safe(s){ return String(s||"job").replace(/\s+/g,"_").replace(/[^\w\-]/g,""); }
+
+document.getElementById("jobDate").value = today();
+
+function showTab(tab){
+  ["jobs","items","sign","report","settings"].forEach(t => {
+    document.getElementById("view-"+t).classList.toggle("hidden", t !== tab);
+    document.querySelector('.tab[data-tab="'+t+'"]').classList.toggle("active", t === tab);
+  });
+  if(tab === "items") renderItems();
+  if(tab === "report") renderReport();
+  if(tab === "settings") populateSettings();
+  if(tab === "sign") setTimeout(initSignaturePad, 30);
+}
+
+function createJob(){
+  const clientName = val("jobClient"), siteAddress = val("jobAddress");
+  if(!clientName || !siteAddress){ alert("Enter at least client name and site address."); return; }
+  const job = {
+    id: uid("JOB"),
+    clientName,
+    contactName: val("jobContact"),
+    contactEmail: val("jobEmail"),
+    siteAddress,
+    testDate: val("jobDate") || today(),
+    retestMonths: val("jobRetest") || "12",
+    engineer: val("jobEngineer"),
+    items: []
+  };
+  state.jobs.unshift(job);
+  state.activeJobId = job.id;
+  saveState();
+  ["jobClient","jobContact","jobEmail","jobAddress","jobEngineer"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("jobRetest").value = "12";
+  document.getElementById("jobDate").value = today();
+  renderJobs(); renderItems(); renderReport(); showTab("items");
+}
+
+function renderJobs(){
+  const wrap = document.getElementById("jobsList");
+  if(!state.jobs.length){ wrap.innerHTML = '<div class="sub">No jobs saved yet.</div>'; return; }
+  wrap.innerHTML = state.jobs.map(job => {
+    const total = job.items.length;
+    const passed = job.items.filter(i => i.result === "PASS").length;
+    const failed = job.items.filter(i => i.result === "FAIL").length;
+    const pending = job.items.filter(i => i.result === "PENDING").length;
+    return '<div class="job '+(job.id===state.activeJobId?'active':'')+'"><div class="topline"><div><div class="title">'+esc(job.clientName)+'</div><div class="sub">'+esc(job.siteAddress)+'</div><div class="sub">'+job.testDate+' · '+job.id+'</div></div><div class="btns"><button class="small primary" onclick="openJob(\\''+job.id+'\\')">Open</button><button class="small red" onclick="deleteJob(\\''+job.id+'\\')">Delete</button></div></div><div class="hr"></div><div class="stats"><div class="stat"><div class="n">'+total+'</div><div class="sub">Tested</div></div><div class="stat"><div class="n good">'+passed+'</div><div class="sub">Passed</div></div><div class="stat"><div class="n bad">'+failed+'</div><div class="sub">Failed</div></div><div class="stat"><div class="n">'+pending+'</div><div class="sub">Pending</div></div></div></div>';
+  }).join("");
+}
+function openJob(id){ state.activeJobId = id; saveState(); renderJobs(); renderItems(); renderReport(); showTab("items"); }
+function deleteJob(id){
+  if(!confirm("Delete this job?")) return;
+  state.jobs = state.jobs.filter(j => j.id !== id);
+  if(state.activeJobId === id) state.activeJobId = state.jobs[0]?.id || null;
+  saveState(); renderJobs(); renderItems(); renderReport();
+}
+
+function renderItems(){
+  const job = activeJob();
+  const summary = document.getElementById("jobSummaryCard");
+  const list = document.getElementById("itemsList");
+  if(!job){
+    summary.innerHTML = '<h2>Current Job</h2><div class="body sub">Open or create a job first.</div>';
+    list.innerHTML = "";
+    return;
+  }
+  const total = job.items.length;
+  const passed = job.items.filter(i => i.result === "PASS").length;
+  const failed = job.items.filter(i => i.result === "FAIL").length;
+  const pending = job.items.filter(i => i.result === "PENDING").length;
+  summary.innerHTML = '<h2>Current Job</h2><div class="body"><div class="title">'+esc(job.clientName)+'</div><div class="sub">'+esc(job.siteAddress)+'</div><div class="sub">'+job.testDate+' · Retest '+esc(job.retestMonths)+' months</div><div class="hr"></div><div class="stats"><div class="stat"><div class="n">'+total+'</div><div class="sub">Tested</div></div><div class="stat"><div class="n good">'+passed+'</div><div class="sub">Passed</div></div><div class="stat"><div class="n bad">'+failed+'</div><div class="sub">Failed</div></div><div class="stat"><div class="n">'+pending+'</div><div class="sub">Pending</div></div></div></div>';
+  const q = document.getElementById("itemSearch").value.trim().toLowerCase();
+  const items = job.items.filter(i => [i.assetNo,i.location,i.description,i.classType,i.fuseRating,i.result,i.failureReason].join(" ").toLowerCase().includes(q));
+  if(!items.length){ list.innerHTML = '<div class="sub" style="margin-top:10px">No items found.</div>'; return; }
+  list.innerHTML = items.map(i => {
+    const cls = i.result === "PASS" ? "pass" : i.result === "FAIL" ? "fail" : "pending";
+    return '<div class="item"><div class="topline"><div><div class="title">'+esc(i.description)+'</div><div class="sub">'+esc(i.assetNo||"")+' · '+esc(i.location||"No location")+'</div><div class="sub">'+esc(i.classType)+' · '+esc(i.fuseRating||"N/A")+'</div>'+(i.failureReason?'<div class="sub" style="color:#ffb1b1">Reason: '+esc(i.failureReason)+'</div>':'')+'</div><div class="btns"><span class="pill '+cls+'">'+esc(i.result)+'</span><button class="small red" onclick="deleteItem(\\''+i.id+'\\')">Delete</button></div></div></div>';
+  }).join("");
+}
+
+function addItem(){
+  const job = activeJob();
+  if(!job){ alert("Create or open a job first."); return; }
+  const description = val("itemDesc");
+  if(!description){ alert("Enter appliance description."); return; }
+  job.items.unshift({
+    id: uid("ITEM"),
+    assetNo: val("itemAsset") || uid("AST"),
+    location: val("itemLocation"),
+    description,
+    classType: val("itemClass"),
+    fuseRating: val("itemFuse"),
+    result: val("itemResult"),
+    failureReason: val("itemReason")
+  });
+  saveState();
+  ["itemAsset","itemLocation","itemDesc","itemFuse","itemReason"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("itemClass").value = "Class I";
+  document.getElementById("itemResult").value = "PASS";
+  renderJobs(); renderItems(); renderReport();
+}
+function deleteItem(id){
+  const job = activeJob();
+  if(!job) return;
+  if(!confirm("Delete this item?")) return;
+  job.items = job.items.filter(i => i.id !== id);
+  saveState(); renderJobs(); renderItems(); renderReport();
+}
+
+function rowsToTable(rows, cls){
+  return '<table class="reportTable '+cls+'"><tr><th>Asset No</th><th>Location</th><th>Description</th><th>Class</th><th>Fuse</th><th>Result</th><th>Failure Reason</th></tr>' + rows.map(i => '<tr><td>'+esc(i.assetNo||"")+'</td><td>'+esc(i.location||"")+'</td><td>'+esc(i.description||"")+'</td><td>'+esc(i.classType||"")+'</td><td>'+esc(i.fuseRating||"")+'</td><td class="'+(i.result==="PASS"?"passText":"failText")+'">'+esc(i.result||"")+'</td><td>'+esc(i.failureReason||"")+'</td></tr>').join("") + '</table>';
+}
+
+function renderReport(){
+  const job = activeJob();
+  const wrap = document.getElementById("reportPreview");
+  if(!job){ wrap.innerHTML = '<div class="sub">Create or open a job first.</div>'; return; }
+  const passed = job.items.filter(i => i.result === "PASS");
+  const failed = job.items.filter(i => i.result === "FAIL");
+  const pending = job.items.filter(i => i.result === "PENDING");
+  const logo = state.company.logoData ? '<img class="reportLogo" src="'+state.company.logoData+'" style="display:block" alt="Logo">' : '';
+  const sig = state.company.engineerSignature ? '<div class="metaBox"><strong>Engineer Signature</strong><br><img src="'+state.company.engineerSignature+'" alt="Engineer signature" style="margin-top:8px;max-width:260px;max-height:90px"></div>' : '';
+  wrap.innerHTML =
+    '<div class="report" id="printableReport">' +
+    '<div class="reportHead"><div class="reportHeadRow">'+logo+'<div><h3>'+esc(state.company.name)+'</h3><p>'+esc(state.company.address)+'<br>'+esc(state.company.phone)+' · '+esc(state.company.email)+'</p></div></div></div>' +
+    '<h3>Portable Appliance Testing (PAT) Report</h3>' +
+    '<div class="metaGrid">' +
+      '<div class="metaBox"><strong>Client Details</strong><br>Client: '+esc(job.clientName)+'<br>Contact: '+esc(job.contactName||"")+'<br>Email: '+esc(job.contactEmail||"")+'<br>Site: '+esc(job.siteAddress)+'</div>' +
+      '<div class="metaBox"><strong>Test Details</strong><br>Test Date: '+esc(job.testDate)+'<br>Retest Period: '+esc(job.retestMonths)+' months<br>Engineer: '+esc(job.engineer || state.company.engineer || "")+'<br>Instrument: '+esc(state.company.instrument)+'<br>Serial No: '+esc(state.company.serialNumber||"")+'<br>Calibration Due: '+esc(state.company.calibrationDue||"")+'</div>' +
+    '</div>' +
+    '<h4 style="margin-top:14px">Summary</h4>' +
+    '<table class="summaryTable"><tr><th>Total Tested</th><th>Total Passed</th><th>Total Failed</th><th>Total Pending</th></tr><tr><td>'+job.items.length+'</td><td class="passText">'+passed.length+'</td><td class="failText">'+failed.length+'</td><td>'+pending.length+'</td></tr></table>' +
+    '<h4 style="margin-top:16px;color:#0b8f47">Passed Items</h4>' +
+    (passed.length ? rowsToTable(passed, 'pass') : '<p>No passed items recorded.</p>') +
+    '<h4 style="margin-top:16px;color:#c62828">Failed Items</h4>' +
+    (failed.length ? rowsToTable(failed, 'fail') : '<p>No failed items recorded.</p>') +
+    (sig ? '<div style="margin-top:16px">'+sig+'</div>' : '') +
+    '<h4 style="margin-top:16px">Compliance Statement</h4><p>Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment. Failed items should be removed from service until repaired or replaced.</p>' +
+    '</div>';
+}
+
+function printReport(){
+  const job = activeJob();
+  if(!job){ alert("Open a job first."); return; }
+  renderReport();
+  const html = document.getElementById("printableReport").outerHTML;
+  const w = window.open("", "_blank");
+  w.document.write('<!DOCTYPE html><html><head><title>PAT Report</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Arial,sans-serif;padding:20px;color:#111}.reportHead{background:linear-gradient(135deg,#153553,#2f6a9f);color:#fff;border-radius:18px;padding:16px;margin-bottom:14px}.reportHeadRow{display:flex;gap:14px;align-items:center}.reportLogo{width:110px;height:110px;object-fit:contain;background:rgba(255,255,255,.10);padding:10px;border-radius:16px;border:1px solid rgba(255,255,255,.16)}.metaGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}.metaBox{border:1px solid #d9e1ea;border-radius:14px;padding:10px}.summaryTable,.reportTable{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}.summaryTable th,.summaryTable td,.reportTable th,.reportTable td{border:1px solid #cfd8e3;padding:6px;vertical-align:top;text-align:left}.summaryTable th{background:#153553;color:#fff}.reportTable.pass th{background:#0b8f47;color:#fff}.reportTable.fail th{background:#c62828;color:#fff}.passText{color:#0b8f47;font-weight:800}.failText{color:#c62828;font-weight:800}@media print{body{padding:0}}</style></head><body>'+html+'</body></html>');
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 350);
+}
+
+function rowsToCSV(rows){
+  return rows.map(r => r.map(v => {
+    v = String(v == null ? "" : v);
+    return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }).join(",")).join("\\n");
+}
+function download(filename, content, type){
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+function exportCSV(){
+  const job = activeJob();
+  if(!job){ alert("Open a job first."); return; }
+  const rows = [
+    ["Job ID", job.id],
+    ["Client", job.clientName],
+    ["Site Address", job.siteAddress],
+    ["Test Date", job.testDate],
+    ["Retest Months", job.retestMonths],
+    [],
+    ["Asset No","Location","Description","Class","Fuse Rating","Result","Failure Reason"],
+    ...job.items.map(i => [i.assetNo,i.location,i.description,i.classType,i.fuseRating,i.result,i.failureReason])
+  ];
+  download(safe(job.clientName)+"_PAT_"+job.testDate+".csv", rowsToCSV(rows), "text/csv;charset=utf-8;");
+}
+function exportJSON(){
+  const job = activeJob();
+  if(!job){ alert("Open a job first."); return; }
+  download(safe(job.clientName)+"_PAT_"+job.testDate+".json", JSON.stringify(job, null, 2), "application/json");
+}
+
+function populateSettings(){
+  document.getElementById("setName").value = state.company.name || "";
+  document.getElementById("setPhone").value = state.company.phone || "";
+  document.getElementById("setEmail").value = state.company.email || "";
+  document.getElementById("setEngineer").value = state.company.engineer || "";
+  document.getElementById("setInstrument").value = state.company.instrument || "";
+  document.getElementById("setSerial").value = state.company.serialNumber || "";
+  document.getElementById("setCalibration").value = state.company.calibrationDue || "";
+  document.getElementById("setAddress").value = state.company.address || "";
+  updateLogoViews();
+}
+
+function loadLogoFile(event){
+  const file = event.target.files && event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    pendingLogoData = e.target.result;
+    document.getElementById("logoPreview").src = pendingLogoData;
+    document.getElementById("logoPreview").style.display = "block";
+  };
+  reader.readAsDataURL(file);
+}
+function clearLogo(){
+  pendingLogoData = "";
+  state.company.logoData = "";
+  saveState();
+  document.getElementById("setLogoFile").value = "";
+  updateLogoViews();
+  renderReport();
+}
+function updateLogoViews(){
+  const logo = state.company.logoData || pendingLogoData || "";
+  const hero = document.getElementById("heroLogo");
+  const preview = document.getElementById("logoPreview");
+  if(logo){
+    hero.src = logo; hero.style.display = "block";
+    preview.src = logo; preview.style.display = "block";
+  }else{
+    hero.removeAttribute("src"); hero.style.display = "none";
+    preview.removeAttribute("src"); preview.style.display = "none";
+  }
+}
+function saveSettings(){
+  state.company.name = val("setName");
+  state.company.phone = val("setPhone");
+  state.company.email = val("setEmail");
+  state.company.engineer = val("setEngineer");
+  state.company.instrument = val("setInstrument");
+  state.company.serialNumber = val("setSerial");
+  state.company.calibrationDue = val("setCalibration");
+  state.company.address = val("setAddress");
+  if(pendingLogoData){ state.company.logoData = pendingLogoData; pendingLogoData = ""; }
+  saveState();
+  updateLogoViews();
+  renderReport();
+  alert("Settings saved.");
+}
+function resetAll(){
+  if(!confirm("Reset the app and delete all saved jobs on this device?")) return;
+  state = JSON.parse(JSON.stringify(defaultState));
+  pendingLogoData = "";
+  saveState();
+  renderJobs(); renderItems(); renderReport(); populateSettings(); clearSignatureLocal(); showTab("jobs");
+}
+
+function initSignaturePad(){
+  const canvas = document.getElementById("sigCanvas");
+  if(!canvas) return;
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * ratio;
+  canvas.height = rect.height * ratio;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(ratio, ratio);
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = "#12385a";
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0,0,rect.width,rect.height);
+  if(state.company.engineerSignature){
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+    img.src = state.company.engineerSignature;
+  }
+  let drawing = false;
+  function pos(e){
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return {x: t.clientX - r.left, y: t.clientY - r.top};
+  }
+  function start(e){ drawing = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault(); }
+  function move(e){ if(!drawing) return; const p = pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault(); }
+  function end(){ drawing = false; }
+  canvas.onmousedown = start; canvas.onmousemove = move; window.onmouseup = end;
+  canvas.ontouchstart = start; canvas.ontouchmove = move; canvas.ontouchend = end;
+  sigPad = canvas;
+}
+function saveSignature(){
+  const canvas = document.getElementById("sigCanvas");
+  if(!canvas) return;
+  state.company.engineerSignature = canvas.toDataURL("image/png");
+  saveState();
+  renderReport();
+  alert("Engineer signature saved.");
+}
+function clearSignatureLocal(){
+  const canvas = document.getElementById("sigCanvas");
+  if(canvas){
+    const ctx = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,rect.width,rect.height);
+  }
+}
+function clearSignature(){
+  state.company.engineerSignature = "";
+  saveState();
+  clearSignatureLocal();
+  renderReport();
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+renderJobs();
+renderItems();
+renderReport();
+populateSettings();
+updateLogoViews();
+</script>
+</body>
+</html>
