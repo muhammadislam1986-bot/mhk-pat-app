@@ -39,7 +39,7 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 .btns{display:flex;gap:10px;flex-wrap:wrap}
 .small{font-size:.82rem;color:var(--muted)}
 .hidden{display:none!important}
-.tabs{position:fixed;left:0;right:0;bottom:0;background:#091522;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:10px 10px 14px}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:#091522;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:10px 10px 14px}
 .tab{padding:10px 6px;text-align:center;border-radius:14px;color:var(--muted);font-weight:bold}
 .tab.active{background:#16314d;color:#fff;border:1px solid #49739d}
 .item,.client,.job{background:var(--panel2);border:1px solid var(--line);padding:12px;border-radius:16px;margin-top:10px}
@@ -68,6 +68,14 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 .modalBody{padding:18px 16px 8px;font-size:1rem;line-height:1.4}
 .modalFoot{padding:14px 16px 18px;display:flex;justify-content:flex-end}
 .modalBtn{min-width:92px}
+
+.sigCanvasWrap{background:#081827;border:1px solid #466a8e;border-radius:14px;padding:8px}
+.sigCanvas{width:100%;height:180px;background:#fff;border-radius:10px;display:block;touch-action:none}
+.itemActions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+@media print{
+  .keepTogether{page-break-inside:avoid;break-inside:avoid}
+}
+
 @media print{
   .tabs,.noprint,.hero,.modalBack{display:none!important}
   body{background:#fff}
@@ -187,9 +195,23 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
     </div>
   </section>
 
+  <section id="signView" class="hidden">
+    <div class="card">
+      <h2>Engineer Signature</h2>
+      <div class="body">
+        <div class="notice">Sign below once, then it will appear on reports until you clear or replace it.</div>
+        <div class="sigCanvasWrap" style="margin-top:10px"><canvas id="sigCanvas" class="sigCanvas"></canvas></div>
+        <div class="btns" style="margin-top:10px">
+          <button id="saveSigBtn">Save Signature</button>
+          <button class="secondary" id="clearSigBtn">Clear Signature</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="reportView" class="hidden">
     <div class="card">
-      <h2>Professional Report</h2>
+      <h2 class="noprint">Report Preview</h2>
       <div class="body">
         <div class="btns noprint"><button id="printReportBtn">Print / Save PDF</button></div>
         <div id="reportArea" style="margin-top:12px"></div>
@@ -222,6 +244,7 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   <div class="tab" data-view="clientsView">Clients</div>
   <div class="tab" data-view="itemsView">Items</div>
   <div class="tab" data-view="labelsView">Labels</div>
+  <div class="tab" data-view="signView">Sign</div>
   <div class="tab" data-view="reportView">Report</div>
   <div class="tab" data-view="settingsView">Settings</div>
 </div>
@@ -247,7 +270,7 @@ const FUSES=['1A','3A','5A','7A','10A','13A','N/A','Other'];
 const IRS=['>200 MΩ','>100 MΩ','>50 MΩ','>20 MΩ','>10 MΩ','>2 MΩ','N/A','Manual'];
 const LOCATIONS=['Office','Reception','Kitchen','Staff Room','Meeting Room','Server Room','Warehouse','Workshop','Store','Hallway','Bedroom','Living Room','Utility Room','Classroom','Other'];
 const defaults = {
-  company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:''},
+  company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:'',signature:''},
   clients:[],jobs:[],activeJobId:null,lastLabelItemId:null,reportCounter:0
 };
 let state = JSON.parse(localStorage.getItem(KEY) || JSON.stringify(defaults));
@@ -274,6 +297,7 @@ function switchView(v){
   if(v==='clientsView') renderClients();
   if(v==='itemsView') renderItems();
   if(v==='labelsView') renderLabel();
+  if(v==='signView') renderSign();
   if(v==='reportView') renderReport();
   if(v==='settingsView') loadSettings();
 }
@@ -315,6 +339,16 @@ $('itemClass').onchange = ()=>{
     if($('itemInsulation').value==='N/A') $('itemInsulation').value='>200 MΩ';
   }
 };
+function syncOverallFromVisual(){
+  const visualFail = $('itemVisual').value==='FAIL';
+  if(visualFail){
+    $('itemResult').value='FAIL';
+    $('itemResult').disabled=true;
+  } else {
+    $('itemResult').disabled=false;
+  }
+}
+$('itemVisual').onchange = syncOverallFromVisual;
 $('jobClientPick').onchange = ()=>{
   const c = state.clients.find(x=>x.id==$('jobClientPick').value); if(!c) return;
   $('jobClient').value=c.name; $('jobContact').value=c.contact; $('jobEmail').value=c.email; $('jobAddress').value=c.address;
@@ -343,6 +377,17 @@ function renderJobs(){
 }
 window.openJob = id => {state.activeJobId=id; save(); switchView('itemsView');};
 window.delJob = id => {state.jobs = state.jobs.filter(j=>j.id!==id); if(state.activeJobId===id) state.activeJobId=null; save(); renderJobs(); renderItems();};
+window.delItem = id => {
+  const job = activeJob(); if(!job) return;
+  job.items = job.items.filter(i=>i.id!==id);
+  if(state.lastLabelItemId===id) state.lastLabelItemId = job.items[0] ? job.items[0].id : null;
+  save(); renderItems(); renderLabel();
+};
+window.selectLabelItem = id => {
+  state.lastLabelItemId = id;
+  save();
+  switchView('labelsView');
+};
 
 $('saveItemBtn').onclick = ()=>saveItem(false);
 $('toLabelsBtn').onclick = ()=>saveItem(true);
@@ -372,16 +417,19 @@ function saveItem(showLabel){
   $('otherWrap').classList.add('hidden'); $('locOtherWrap').classList.add('hidden'); $('fuseOtherWrap').classList.add('hidden'); $('insOtherWrap').classList.add('hidden');
   $('itemEarth').disabled = false; $('itemInsulation').disabled = false;
   $('itemAsset').value = nextAsset('KTL');
+  syncOverallFromVisual();
   renderItems();
   if(showLabel){switchView('labelsView')}
 }
 function renderItems(){
   const job = activeJob();
   $('jobSummary').innerHTML = job ? `<div class="title">${esc(job.client)}</div><div class="small">${esc(job.address)}</div><div class="small">Engineer: ${esc(job.engineer)} · Test date: ${esc(job.date)} · Retest: ${esc(job.retest)} months</div>` : '<div class="small">No active job.</div>';
-  $('itemsList').innerHTML = job && job.items.length ? job.items.map(i=>`<div class="item"><div class="top"><div><div class="title">${esc(i.asset)} · ${esc(i.appliance)}</div><div class="small">${esc(i.location)} · ${esc(i.classType)} · Fuse ${esc(i.fuse)}</div><div class="small">Visual ${esc(i.visual)} · Earth ${esc(i.earth)} · IR ${esc(i.ir)}</div></div><span class="tag ${i.result==='PASS'?'pass':'fail'}">${esc(i.result)}</span></div></div>`).join('') : '<div class="small">No appliances saved yet.</div>';
+  $('itemsList').innerHTML = job && job.items.length ? job.items.map(i=>`<div class="item"><div class="top"><div><div class="title">${esc(i.asset)} · ${esc(i.appliance)}</div><div class="small">${esc(i.location)} · ${esc(i.classType)} · Fuse ${esc(i.fuse)}</div><div class="small">Visual ${esc(i.visual)} · Earth ${esc(i.earth)} · IR ${esc(i.ir)}</div></div><span class="tag ${i.result==='PASS'?'pass':'fail'}">${esc(i.result)}</span></div><div class="itemActions"><button class="secondary" onclick="selectLabelItem('${i.id}')">Print Label</button><button class="red" onclick="delItem('${i.id}')">Delete</button></div></div>`).join('') : '<div class="small">No appliances saved yet.</div>';
 }
 function nextTest(job){
-  const d = new Date(job.date); d.setMonth(d.getMonth()+parseInt(job.retest||12,10)); return d.toLocaleDateString('en-GB');
+  const d = new Date(job.date);
+  d.setMonth(d.getMonth()+parseInt(job.retest||12,10));
+  return d.toLocaleDateString('en-GB');
 }
 function fmtDateDMY(v){
   if(!v) return '';
@@ -408,13 +456,13 @@ function renderLabel(){
   const job = activeJob(); if(!job){$('labelArea').innerHTML='<div class="small">No active job.</div>'; return}
   const item = job.items.find(x=>x.id===state.lastLabelItemId) || job.items[0];
   if(!item){$('labelArea').innerHTML='<div class="small">No items to label yet.</div>'; return}
-  $('labelArea').innerHTML = `<div class="labelCard">
+  $('labelArea').innerHTML = `<div class="small noprint">Selected appliance: ${esc(item.asset)} · ${esc(item.appliance)}</div><div class="labelCard" style="margin-top:10px">
     <div class="labelHead">${esc(state.company.name)}<br>PAT TEST</div>
     <div style="padding:8px 4px;font-size:13px;line-height:1.35">
       <div><b>Asset:</b> ${esc(item.asset)}</div>
       <div><b>Appliance:</b> ${esc(item.appliance)}</div>
       <div><b>Result:</b> <span style="color:${item.result==='PASS'?'#14894c':'#c62828'};font-weight:bold">${esc(item.result)}</span></div>
-      <div><b>Tested:</b> ${esc(job.date)}</div>
+      <div><b>Tested:</b> ${fmtDateDMY(job.date)}</div>
       <div><b>Retest:</b> ${esc(nextTest(job))}</div>
     </div>
   </div>`;
@@ -430,6 +478,9 @@ function renderReport(){
   const logoHtml = state.company.logo
     ? '<img src="' + state.company.logo + '" alt="Logo" style="max-width:180px;max-height:100px;display:block">'
     : '<div style="width:180px;height:90px;border:1px solid #cfd9e6;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#5b6775">Logo</div>';
+  const sigHtml = state.company.signature
+    ? '<img src="' + state.company.signature + '" alt="Signature" style="max-width:220px;max-height:42px;display:block">'
+    : '';
 
   const passRows = pass.length ? pass.map(i =>
     '<tr>' +
@@ -473,13 +524,11 @@ function renderReport(){
     +         '</div>'
     +         '<div style="flex:0 0 auto;text-align:right">' + logoHtml + '</div>'
     +       '</div>'
-
     +       '<div style="margin-top:18px;text-align:center">'
     +         '<div style="font-size:1.3rem;font-weight:900;color:#111">PORTABLE APPLIANCE TESTING REPORT</div>'
     +         '<div style="margin-top:6px;color:#111"><b>Report Number:</b> ' + esc(reportNo) + '</div>'
     +         '<div style="margin-top:4px;color:#111"><b>Test Date:</b> ' + fmtDateDMY(job.date) + ' &nbsp; <b>Retest Date:</b> ' + nextTest(job) + '</div>'
     +       '</div>'
-
     +       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">'
     +         '<div style="border:1px solid #cfd9e6;border-radius:12px;padding:12px">'
     +           '<div style="font-weight:900;color:#111;margin-bottom:8px">Client Details</div>'
@@ -496,42 +545,36 @@ function renderReport(){
     +           '<div style="color:#111"><b>Calibration Due:</b> __________</div>'
     +         '</div>'
     +       '</div>'
-
     +       '<table class="tbl" style="margin-top:16px">'
     +         '<tr><th>Total Tested</th><th>Total Passed</th><th>Total Failed</th><th>Next Test</th></tr>'
     +         '<tr><td style="color:#111">' + job.items.length + '</td><td style="color:#14894c;font-weight:bold">' + pass.length + '</td><td style="color:#c62828;font-weight:bold">' + fail.length + '</td><td style="color:#111">' + nextTest(job) + '</td></tr>'
     +       '</table>'
-
     +       '<h4 style="margin:16px 0 8px;color:#111">Passed Items</h4>'
     +       '<table class="tbl">'
     +         '<tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th></tr>'
     +         passRows
     +       '</table>'
-
     +       '<h4 style="margin:16px 0 8px;color:#111">Failed Items</h4>'
     +       '<table class="tbl">'
     +         '<tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th><th>Notes</th></tr>'
     +         failRows
     +       '</table>'
-
-    +       '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">'
-    +         '<div style="font-weight:900">FAILED APPLIANCES MUST BE REMOVED FROM SERVICE</div>'
-    +         '<div style="margin-top:6px;line-height:1.45">Failed appliances must not be used until repaired and re-tested. These items present a potential electrical safety risk and should be removed from service immediately in accordance with the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
+    +       '<div class="keepTogether">'
+    +         '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">'
+    +           '<div style="font-weight:900">FAILED APPLIANCES MUST BE REMOVED FROM SERVICE</div>'
+    +           '<div style="margin-top:6px;line-height:1.45">Failed appliances must not be used until repaired and re-tested. These items present a potential electrical safety risk and should be removed from service immediately in accordance with the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
+    +         '</div>'
+    +         '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">'
+    +           '<div style="font-weight:900">Compliance Statement</div>'
+    +           '<div style="margin-top:6px;line-height:1.45">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
+    +         '</div>'
+    +         '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:10px">'
+    +           '<div style="font-weight:900;color:#111">Engineer Signature</div>'
+    +           '<div style="height:44px;border:1px solid #bbb;border-radius:8px;margin-top:8px;background:#fff;display:flex;align-items:center;padding:4px 8px">' + sigHtml + '</div>'
+    +           '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;color:#111;font-size:.92rem"><div><b>Engineer:</b> ' + esc(job.engineer) + '</div><div><b>Date:</b> ' + fmtDateDMY(job.date) + '</div></div>'
+    +         '</div>'
+    +         '<div style="margin-top:14px;color:#111;line-height:1.5">Thank you for choosing <b>' + esc(state.company.name) + '</b>.<br>If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.</div>'
     +       '</div>'
-
-    +       '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">'
-    +         '<div style="font-weight:900">Compliance Statement</div>'
-    +         '<div style="margin-top:6px;line-height:1.45">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
-    +       '</div>'
-
-    +       '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px">'
-    +         '<div style="font-weight:900;color:#111">Engineer Signature</div>'
-    +         '<div style="height:62px;border:1px solid #bbb;border-radius:8px;margin-top:8px;background:#fff"></div>'
-    +         '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;color:#111;font-size:.92rem"><div><b>Engineer:</b> ' + esc(job.engineer) + '</div><div><b>Date:</b> ' + fmtDateDMY(job.date) + '</div></div>'
-    +       '</div>'
-
-    +       '<div style="margin-top:14px;color:#111;line-height:1.5">Thank you for choosing <b>' + esc(state.company.name) + '</b>.<br>If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.</div>'
-
     +       '<div style="margin-top:14px;display:flex;justify-content:flex-end;color:#555;font-size:.85rem">Page 1 of 1</div>'
     +     '</div>'
     +   '</div>'
@@ -539,6 +582,76 @@ function renderReport(){
 }
 $('printReportBtn').onclick = ()=>window.print();
 
+function renderSign(){
+  const c = $('sigCanvas');
+  if(!c) return;
+  const wrap = c.parentElement;
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  const w = Math.max(280, Math.floor(wrap.clientWidth - 16));
+  const h = 180;
+  const prev = state.company.signature || '';
+  c.width = Math.floor(w * ratio);
+  c.height = Math.floor(h * ratio);
+  c.style.width = w + 'px';
+  c.style.height = h + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,w,h);
+  if(prev){
+    const img = new Image();
+    img.onload = ()=>{ ctx.drawImage(img, 0, 0, w, h); };
+    img.src = prev;
+  }
+}
+function initSignaturePad(){
+  const c = $('sigCanvas');
+  if(!c || c.dataset.ready==='1') return;
+  c.dataset.ready='1';
+  const getPos = e => {
+    const rect = c.getBoundingClientRect();
+    const p = e.touches ? e.touches[0] : e;
+    return {x:p.clientX - rect.left, y:p.clientY - rect.top};
+  };
+  let drawing = false;
+  const start = e => {
+    drawing = true;
+    const p = getPos(e);
+    const ctx = c.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(p.x,p.y);
+    e.preventDefault();
+  };
+  const move = e => {
+    if(!drawing) return;
+    const p = getPos(e);
+    const ctx = c.getContext('2d');
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#0b3560';
+    ctx.lineTo(p.x,p.y);
+    ctx.stroke();
+    e.preventDefault();
+  };
+  const end = e => { drawing = false; if(e) e.preventDefault(); };
+  c.addEventListener('mousedown', start);
+  c.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  c.addEventListener('touchstart', start, {passive:false});
+  c.addEventListener('touchmove', move, {passive:false});
+  c.addEventListener('touchend', end, {passive:false});
+}
+function saveSignature(){
+  const c = $('sigCanvas');
+  state.company.signature = c.toDataURL('image/png');
+  save();
+  brandedAlert('Signature saved');
+}
+function clearSignature(){
+  state.company.signature = '';
+  save();
+  renderSign();
+}
 function loadSettings(){
   $('setName').value = state.company.name; $('setService').value = state.company.service; $('setPhone').value = state.company.phone; $('setEmail').value = state.company.email; $('setAddress').value = state.company.address;
   if(state.company.logo){$('logoPrev').src=state.company.logo; $('logoPrev').style.display='block'}
@@ -559,11 +672,14 @@ $('saveSettingsBtn').onclick = ()=>{
 };
 $('clearDataBtn').onclick = ()=>{ if(confirm('Reset all app data?')){ localStorage.removeItem(KEY); location.reload(); }};
 
+$('saveSigBtn').onclick = ()=>saveSignature();
+$('clearSigBtn').onclick = ()=>clearSignature();
+window.addEventListener('resize', ()=>{ if(!$('signView').classList.contains('hidden')) renderSign(); });
 $('mhkModalOk').onclick = ()=> $('mhkModalBack').style.display='none';
 $('mhkModalBack').onclick = (e)=>{ if(e.target.id==='mhkModalBack') $('mhkModalBack').style.display='none'; };
 
-renderJobs(); renderClients(); populateLists(); renderItems(); refreshHeader();
-$('itemLocation').value='Office'; $('itemAsset').value='KTL01';
+renderJobs(); renderClients(); populateLists(); renderItems(); refreshHeader(); initSignaturePad(); renderSign();
+$('itemLocation').value='Office'; $('itemAsset').value='KTL01'; syncOverallFromVisual();
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js?final=1').catch(()=>{}); }
 </script>
 </body>
