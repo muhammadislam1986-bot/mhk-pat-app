@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MHK Building Solutions Ltd PAT</title>
 <meta name="theme-color" content="#133553">
+<link rel="manifest" href="/mhk-pat-app/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MHK PAT Pro">
 <style>
 :root{
   --bg:#08131f; --panel:#102338; --panel2:#17314d; --line:#31597f; --text:#eef5ff; --muted:#bfd1e6;
@@ -968,7 +973,11 @@ $('mhkModalBack').onclick = (e)=>{ if(e.target.id==='mhkModalBack') $('mhkModalB
 renderJobs(); renderClients(); populateLists(); renderItems(); refreshHeader(); initSignaturePad(); renderSign();
 $('itemLocation').value='Office'; $('itemAsset').value='KTL01'; syncOverallFromVisual();
 checkPinLock();
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js?final=1').catch(()=>{}); }
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/mhk-pat-app/sw.js', { scope:'/mhk-pat-app/' }).catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
