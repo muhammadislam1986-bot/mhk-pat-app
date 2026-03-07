@@ -248,7 +248,7 @@ const IRS=['>200 MΩ','>100 MΩ','>50 MΩ','>20 MΩ','>10 MΩ','>2 MΩ','N/A','M
 const LOCATIONS=['Office','Reception','Kitchen','Staff Room','Meeting Room','Server Room','Warehouse','Workshop','Store','Hallway','Bedroom','Living Room','Utility Room','Classroom','Other'];
 const defaults = {
   company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:''},
-  clients:[],jobs:[],activeJobId:null,lastLabelItemId:null
+  clients:[],jobs:[],activeJobId:null,lastLabelItemId:null,reportCounter:0
 };
 let state = JSON.parse(localStorage.getItem(KEY) || JSON.stringify(defaults));
 function save(){localStorage.setItem(KEY, JSON.stringify(state))}
@@ -361,7 +361,7 @@ function saveItem(showLabel){
     visual:$('itemVisual').value,
     earth:$('itemClass').value==='Visual Only' ? 'N/A' : $('itemEarth').value.trim(),
     ir:$('itemClass').value==='Visual Only' ? 'N/A' : ($('itemInsulation').value==='Manual' ? $('itemInsOther').value.trim() : $('itemInsulation').value),
-    result:$('itemResult').value,
+    result:$('itemVisual').value==='FAIL' ? 'FAIL' : $('itemResult').value,
     notes:$('itemNotes').value.trim()
   };
   job.items.unshift(item);
@@ -382,6 +382,24 @@ function renderItems(){
 }
 function nextTest(job){
   const d = new Date(job.date); d.setMonth(d.getMonth()+parseInt(job.retest||12,10)); return d.toLocaleDateString('en-GB');
+}
+function fmtDateDMY(v){
+  if(!v) return '';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v)){
+    const [y,m,d] = v.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  const dt = new Date(v);
+  return isNaN(dt.getTime()) ? String(v) : dt.toLocaleDateString('en-GB');
+}
+function ensureReportNumber(job){
+  if(job.reportNo) return job.reportNo;
+  if(typeof state.reportCounter !== 'number') state.reportCounter = 0;
+  state.reportCounter += 1;
+  const year = (job.date && /^\d{4}/.test(job.date)) ? job.date.slice(0,4) : String(new Date().getFullYear());
+  job.reportNo = `MHK-${year}-${String(state.reportCounter).padStart(4,'0')}`;
+  save();
+  return job.reportNo;
 }
 function renderLabel(){
   const job = activeJob(); if(!job){$('labelArea').innerHTML='<div class="small">No active job.</div>'; return}
@@ -405,33 +423,129 @@ function renderReport(){
   if(!job){$('reportArea').innerHTML='<div class="small">No active job.</div>'; return}
   const pass = job.items.filter(i=>i.result==='PASS');
   const fail = job.items.filter(i=>i.result==='FAIL');
-  $('reportArea').innerHTML = `<div class="report" id="reportBox">
-    <div class="report-head">
-      <h3>${esc(state.company.name)}</h3>
-      <div class="service">${esc(state.company.service)}</div>
-      <div class="contact">${esc(state.company.address)}<br>${esc(state.company.phone)} · ${esc(state.company.email)}</div>
-    </div>
-    <h3 style="margin:14px 0 8px">PAT Test Report</h3>
-    <div><b>Client:</b> ${esc(job.client)}</div>
-    <div><b>Contact:</b> ${esc(job.contact)}</div>
-    <div><b>Address:</b> ${esc(job.address)}</div>
-    <div><b>Engineer:</b> ${esc(job.engineer)}</div>
-    <div><b>Test Date:</b> ${esc(job.date)} &nbsp; <b>Retest:</b> ${esc(job.retest)} months</div>
-    <table class="tbl" style="margin-top:12px">
-      <tr><th>Total Tested</th><th>Passed</th><th>Failed</th><th>Next Test</th></tr>
-      <tr><td>${job.items.length}</td><td style="color:#14894c;font-weight:bold">${pass.length}</td><td style="color:#c62828;font-weight:bold">${fail.length}</td><td>${esc(nextTest(job))}</td></tr>
-    </table>
-    <h4 style="color:#14894c;margin:14px 0 8px">Passed Items</h4>
-    <table class="tbl pass"><tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Fuse</th><th>Class</th><th>Earth</th><th>IR</th><th>Visual</th><th>Result</th></tr>
-      ${pass.map(i=>`<tr><td>${esc(i.asset)}</td><td>${esc(i.appliance)}</td><td>${esc(i.location)}</td><td>${esc(i.fuse)}</td><td>${esc(i.classType)}</td><td>${esc(i.earth)}</td><td>${esc(i.ir)}</td><td>${esc(i.visual)}</td><td>${esc(i.result)}</td></tr>`).join('') || '<tr><td colspan="9">None</td></tr>'}
-    </table>
-    <h4 style="color:#c62828;margin:14px 0 8px">Failed Items</h4>
-    <table class="tbl fail"><tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Fuse</th><th>Class</th><th>Earth</th><th>IR</th><th>Visual</th><th>Result</th><th>Notes</th></tr>
-      ${fail.map(i=>`<tr><td>${esc(i.asset)}</td><td>${esc(i.appliance)}</td><td>${esc(i.location)}</td><td>${esc(i.fuse)}</td><td>${esc(i.classType)}</td><td>${esc(i.earth)}</td><td>${esc(i.ir)}</td><td>${esc(i.visual)}</td><td>${esc(i.result)}</td><td>${esc(i.notes)}</td></tr>`).join('') || '<tr><td colspan="10">None</td></tr>'}
-    </table>
-    <div style="margin-top:16px;display:flex;justify-content:space-between;gap:12px;align-items:flex-end">
-      <div style="flex:1"><b>Engineer Signature</b><div style="border:1px solid #bbb;height:50px;border-radius:8px;margin-top:6px"></div></div>
-      <div style="font-size:.85rem;color:#555">Page 1 of 1</div>
+  const reportNo = ensureReportNumber(job);
+  const logoHtml = state.company.logo
+    ? `<img src="${state.company.logo}" alt="Logo" style="max-width:180px;max-height:100px;display:block">`
+    : `<div style="width:180px;height:90px;border:1px solid #cfd9e6;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#5b6775">Logo</div>`;
+
+  $('reportArea').innerHTML = `<div class="report" id="reportBox" style="background:#fff;color:#111;border-radius:18px;padding:18px">
+    <div style="border:1px solid #cfd9e6;border-radius:16px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#133553,#2a6798);height:10px"></div>
+      <div style="padding:18px">
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
+          <div style="flex:1">
+            <div style="font-size:1.55rem;font-weight:900;color:#111">${esc(state.company.name)}</div>
+            <div style="margin-top:4px;font-size:1rem;color:#111">${esc(state.company.service)}</div>
+            <div style="margin-top:10px;line-height:1.5;color:#111">
+              ${esc(state.company.address).replace(/
+/g,'<br>')}<br>
+              ${esc(state.company.phone)} · ${esc(state.company.email)}
+            </div>
+          </div>
+          <div style="flex:0 0 auto;text-align:right">${logoHtml}</div>
+        </div>
+
+        <div style="margin-top:18px;text-align:center">
+          <div style="font-size:1.3rem;font-weight:900;color:#111">PORTABLE APPLIANCE TESTING REPORT</div>
+          <div style="margin-top:6px;color:#111"><b>Report Number:</b> ${esc(reportNo)}</div>
+          <div style="margin-top:4px;color:#111"><b>Test Date:</b> ${fmtDateDMY(job.date)} &nbsp; <b>Retest Date:</b> ${nextTest(job)}</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">
+          <div style="border:1px solid #cfd9e6;border-radius:12px;padding:12px">
+            <div style="font-weight:900;color:#111;margin-bottom:8px">Client Details</div>
+            <div style="color:#111"><b>Client:</b> ${esc(job.client)}</div>
+            <div style="color:#111"><b>Contact:</b> ${esc(job.contact)}</div>
+            <div style="color:#111"><b>Email:</b> ${esc(job.email)}</div>
+            <div style="margin-top:8px;color:#111"><b>Site Address:</b><br>${esc(job.address).replace(/
+/g,'<br>')}</div>
+          </div>
+          <div style="border:1px solid #cfd9e6;border-radius:12px;padding:12px">
+            <div style="font-weight:900;color:#111;margin-bottom:8px">Test Details</div>
+            <div style="color:#111"><b>Engineer:</b> ${esc(job.engineer)}</div>
+            <div style="color:#111"><b>Instrument:</b> Seaward Apollo 400+ PAT Tester</div>
+            <div style="color:#111"><b>Serial Number:</b> __________</div>
+            <div style="color:#111"><b>Calibration Due:</b> __________</div>
+          </div>
+        </div>
+
+        <table class="tbl" style="margin-top:16px">
+          <tr><th>Total Tested</th><th>Total Passed</th><th>Total Failed</th><th>Next Test</th></tr>
+          <tr>
+            <td style="color:#111">${job.items.length}</td>
+            <td style="color:#14894c;font-weight:bold">${pass.length}</td>
+            <td style="color:#c62828;font-weight:bold">${fail.length}</td>
+            <td style="color:#111">${nextTest(job)}</td>
+          </tr>
+        </table>
+
+        <h4 style="margin:16px 0 8px;color:#111">Passed Items</h4>
+        <table class="tbl">
+          <tr>
+            <th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th>
+          </tr>
+          ${pass.map(i=>`<tr>
+            <td style="color:#111">${esc(i.asset)}</td>
+            <td style="color:#111">${esc(i.appliance)}</td>
+            <td style="color:#111">${esc(i.location)}</td>
+            <td style="color:#111">${esc(i.classType)}</td>
+            <td style="color:#111">${esc(i.fuse)}</td>
+            <td style="color:#111">${esc(i.earth)}</td>
+            <td style="color:#111">${esc(i.ir)}</td>
+            <td style="color:#111">${esc(i.visual)}</td>
+            <td style="color:#14894c;font-weight:bold">${esc(i.result)}</td>
+          </tr>`).join('') || '<tr><td colspan="9" style="color:#111">None</td></tr>'}
+        </table>
+
+        <h4 style="margin:16px 0 8px;color:#111">Failed Items</h4>
+        <table class="tbl">
+          <tr>
+            <th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th><th>Notes</th>
+          </tr>
+          ${fail.map(i=>`<tr>
+            <td style="color:#111">${esc(i.asset)}</td>
+            <td style="color:#111">${esc(i.appliance)}</td>
+            <td style="color:#111">${esc(i.location)}</td>
+            <td style="color:#111">${esc(i.classType)}</td>
+            <td style="color:#111">${esc(i.fuse)}</td>
+            <td style="color:#111">${esc(i.earth)}</td>
+            <td style="color:#111">${esc(i.ir)}</td>
+            <td style="color:#111">${esc(i.visual)}</td>
+            <td style="color:#c62828;font-weight:bold">${esc(i.result)}</td>
+            <td style="color:#111">${esc(i.notes)}</td>
+          </tr>`).join('') || '<tr><td colspan="10" style="color:#111">None</td></tr>'}
+        </table>
+
+        <div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">
+          <div style="font-weight:900">FAILED APPLIANCES MUST BE REMOVED FROM SERVICE</div>
+          <div style="margin-top:6px;line-height:1.45">
+            Failed appliances must not be used until repaired and re-tested. These items present a potential electrical safety risk and should be removed from service immediately in accordance with the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.
+          </div>
+        </div>
+
+        <div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">
+          <div style="font-weight:900">Compliance Statement</div>
+          <div style="margin-top:6px;line-height:1.45">
+            Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.
+          </div>
+        </div>
+
+        <div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px">
+          <div style="font-weight:900;color:#111">Engineer Signature</div>
+          <div style="height:62px;border:1px solid #bbb;border-radius:8px;margin-top:8px;background:#fff"></div>
+          <div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;color:#111;font-size:.92rem">
+            <div><b>Engineer:</b> ${esc(job.engineer)}</div>
+            <div><b>Date:</b> ${fmtDateDMY(job.date)}</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;color:#111;line-height:1.5">
+          Thank you for choosing <b>${esc(state.company.name)}</b>.<br>
+          If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.
+        </div>
+
+        <div style="margin-top:14px;display:flex;justify-content:flex-end;color:#555;font-size:.85rem">Page 1 of 1</div>
+      </div>
     </div>
   </div>`;
 }
