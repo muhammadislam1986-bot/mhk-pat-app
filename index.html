@@ -126,8 +126,8 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
           <div><label>Asset Number</label><input id="itemAsset" placeholder="Auto"></div>
         </div>
         <div class="grid g3">
-          <div><label>Location</label><input id="itemLocation"></div>
-          <div><label>Class</label><select id="itemClass"><option>Class I</option><option>Class II</option></select></div>
+          <div><label>Location</label><select id="itemLocation"></select></div><div id="locOtherWrap" class="hidden"><label>Other Location</label><input id="itemLocationOther"></div>
+          <div><label>Class</label><select id="itemClass"><option>Class I</option><option>Class II</option><option>Visual Only</option></select></div>
           <div><label>Fuse</label><select id="itemFuse"></select></div>
         </div>
         <div class="grid g3">
@@ -215,6 +215,7 @@ const APPLIANCES = [
 ];
 const FUSES=['1A','3A','5A','7A','10A','13A','N/A','Other'];
 const IRS=['>200 MΩ','>100 MΩ','>50 MΩ','>20 MΩ','>10 MΩ','>2 MΩ','N/A','Manual'];
+const LOCATIONS=['Office','Reception','Kitchen','Staff Room','Meeting Room','Server Room','Classroom','Workshop','Store','Hallway','Bedroom','Living Room','Other'];
 const defaults = {
   company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:''},
   clients:[],jobs:[],activeJobId:null,lastLabelItemId:null
@@ -227,6 +228,10 @@ function esc(s){return String(s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&l
 function activeJob(){return state.jobs.find(j=>j.id===state.activeJobId)}
 function nextId(prefix){return prefix + Math.random().toString(36).slice(2,7).toUpperCase()}
 function prefixFor(appliance){const x=APPLIANCES.find(a=>a[0]===appliance); return x?x[1]:'OTH'}
+function brandedAlert(msg){
+  const host = location.hostname.includes('github.io') ? 'MHK says\n\n' : '';
+  alert(host + msg);
+}
 function nextAsset(prefix){
   const job = activeJob();
   const items = job ? job.items : [];
@@ -251,14 +256,28 @@ function populateLists(){
   $('itemAppliance').innerHTML = APPLIANCES.map(a=>`<option>${a[0]}</option>`).join('');
   $('itemFuse').innerHTML = FUSES.map(x=>`<option>${x}</option>`).join('');
   $('itemInsulation').innerHTML = IRS.map(x=>`<option>${x}</option>`).join('');
+  $('itemLocation').innerHTML = LOCATIONS.map(x=>`<option>${x}</option>`).join('');
   $('jobClientPick').innerHTML = '<option value="">-- Select saved client --</option>' + state.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
 }
 $('itemAppliance').onchange = ()=>{
   $('otherWrap').classList.toggle('hidden', $('itemAppliance').value!=='Other');
-  if(!$('itemAsset').value) $('itemAsset').value = nextAsset(prefixFor($('itemAppliance').value));
+  $('itemAsset').value = nextAsset(prefixFor($('itemAppliance').value));
 };
 $('itemFuse').onchange = ()=> $('fuseOtherWrap').classList.toggle('hidden', $('itemFuse').value!=='Other');
 $('itemInsulation').onchange = ()=> $('insOtherWrap').classList.toggle('hidden', $('itemInsulation').value!=='Manual');
+$('itemLocation').onchange = ()=> $('locOtherWrap').classList.toggle('hidden', $('itemLocation').value!=='Other');
+$('itemClass').onchange = ()=>{
+  const visualOnly = $('itemClass').value==='Visual Only';
+  $('itemEarth').disabled = visualOnly;
+  $('itemInsulation').disabled = visualOnly;
+  if(visualOnly){
+    $('itemEarth').value='N/A';
+    $('itemInsulation').value='N/A';
+    $('insOtherWrap').classList.add('hidden');
+  } else {
+    if($('itemEarth').value==='N/A') $('itemEarth').value='';
+  }
+};
 $('jobClientPick').onchange = ()=>{
   const c = state.clients.find(x=>x.id==$('jobClientPick').value); if(!c) return;
   $('jobClient').value=c.name; $('jobContact').value=c.contact; $('jobEmail').value=c.email; $('jobAddress').value=c.address;
@@ -266,7 +285,7 @@ $('jobClientPick').onchange = ()=>{
 $('jobDate').value = today();
 
 $('saveClientBtn').onclick = ()=>{
-  const name = $('clientName').value.trim(); if(!name) return alert('Enter client name');
+  const name = $('clientName').value.trim(); if(!name) return brandedAlert('Enter client name');
   state.clients.unshift({id:nextId('CLI'),name,contact:$('clientContact').value.trim(),email:$('clientEmail').value.trim(),phone:$('clientPhone').value.trim(),address:$('clientAddress').value.trim()});
   save(); populateLists(); renderClients();
   ['clientName','clientContact','clientEmail','clientPhone','clientAddress'].forEach(id=>$(id).value='');
@@ -278,7 +297,7 @@ window.delClient = id => {state.clients = state.clients.filter(c=>c.id!==id); sa
 
 $('createJobBtn').onclick = ()=>{
   const client = $('jobClient').value.trim(), addr = $('jobAddress').value.trim();
-  if(!client || !addr) return alert('Enter client name and site address');
+  if(!client || !addr) return brandedAlert('Enter client name and site address');
   const job = {id:nextId('JOB'),client,contact:$('jobContact').value.trim(),email:$('jobEmail').value.trim(),engineer:$('jobEngineer').value.trim(),address:addr,date:$('jobDate').value || today(),retest:$('jobRetest').value.trim()||'12',notes:$('jobNotes').value.trim(),items:[]};
   state.jobs.unshift(job); state.activeJobId=job.id; save(); renderJobs(); switchView('itemsView');
 };
@@ -292,28 +311,29 @@ $('saveItemBtn').onclick = ()=>saveItem(false);
 $('toLabelsBtn').onclick = ()=>saveItem(true);
 
 function saveItem(showLabel){
-  const job = activeJob(); if(!job) return alert('Create or open a job first');
+  const job = activeJob(); if(!job) return brandedAlert('Create or open a job first');
   let appliance = $('itemAppliance').value==='Other' ? ($('itemOther').value.trim() || 'Other') : $('itemAppliance').value;
   const prefix = prefixFor($('itemAppliance').value);
   const item = {
     id:nextId('ITM'),
     appliance,
     asset:$('itemAsset').value.trim() || nextAsset(prefix),
-    location:$('itemLocation').value.trim(),
+    location:$('itemLocation').value==='Other' ? $('itemLocationOther').value.trim() : $('itemLocation').value,
     classType:$('itemClass').value,
     fuse:$('itemFuse').value==='Other' ? $('itemFuseOther').value.trim() : $('itemFuse').value,
     visual:$('itemVisual').value,
-    earth:$('itemEarth').value.trim(),
-    ir:$('itemInsulation').value==='Manual' ? $('itemInsOther').value.trim() : $('itemInsulation').value,
+    earth:$('itemClass').value==='Visual Only' ? 'N/A' : $('itemEarth').value.trim(),
+    ir:$('itemClass').value==='Visual Only' ? 'N/A' : ($('itemInsulation').value==='Manual' ? $('itemInsOther').value.trim() : $('itemInsulation').value),
     result:$('itemResult').value,
     notes:$('itemNotes').value.trim()
   };
   job.items.unshift(item);
   state.lastLabelItemId = item.id;
   save();
-  ['itemAsset','itemLocation','itemOther','itemFuseOther','itemEarth','itemInsOther','itemNotes'].forEach(id=>$(id).value='');
-  $('itemAppliance').value='Kettle'; $('itemFuse').value='1A'; $('itemInsulation').value='>200 MΩ'; $('itemVisual').value='PASS'; $('itemResult').value='PASS'; $('itemClass').value='Class I';
-  $('otherWrap').classList.add('hidden'); $('fuseOtherWrap').classList.add('hidden'); $('insOtherWrap').classList.add('hidden');
+  ['itemAsset','itemLocationOther','itemOther','itemFuseOther','itemEarth','itemInsOther','itemNotes'].forEach(id=>{ if($(id)) $(id).value=''; });
+  $('itemAppliance').value='Kettle'; $('itemLocation').value='Office'; $('itemFuse').value='1A'; $('itemInsulation').value='>200 MΩ'; $('itemVisual').value='PASS'; $('itemResult').value='PASS'; $('itemClass').value='Class I';
+  $('otherWrap').classList.add('hidden'); $('locOtherWrap').classList.add('hidden'); $('fuseOtherWrap').classList.add('hidden'); $('insOtherWrap').classList.add('hidden');
+  $('itemEarth').disabled = false; $('itemInsulation').disabled = false;
   $('itemAsset').value = nextAsset('KTL');
   renderItems();
   if(showLabel){switchView('labelsView')}
@@ -392,11 +412,11 @@ $('saveSettingsBtn').onclick = ()=>{
   state.company.phone=$('setPhone').value.trim();
   state.company.email=$('setEmail').value.trim();
   state.company.address=$('setAddress').value.trim();
-  save(); alert('Settings saved');
+  save(); brandedAlert('Settings saved');
 };
 $('clearDataBtn').onclick = ()=>{if(confirm('Reset all app data?')){localStorage.removeItem(KEY); location.reload();}};
 
-renderJobs(); renderClients(); populateLists(); renderItems(); $('itemAsset').value='KTL01';
+renderJobs(); renderClients(); populateLists(); renderItems(); $('itemLocation').value='Office'; $('itemAsset').value='KTL01';
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}
 </script>
 </body>
