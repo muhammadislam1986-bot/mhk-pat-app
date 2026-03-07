@@ -80,6 +80,9 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   .tabs,.noprint,.hero,.modalBack{display:none!important}
   body{background:#fff}
   .wrap{padding:0;max-width:none}
+  .pdfPage{page-break-after:always;min-height:calc(297mm - 24mm);padding-bottom:18mm}
+  .pdfPage:last-child{page-break-after:auto}
+  .pageFooter{position:relative;margin-top:12mm;padding-top:4mm;border-top:1px solid #cfd9e6;color:#666;font-size:12px;display:flex;justify-content:space-between}
 }
 </style>
 </head>
@@ -477,9 +480,9 @@ function renderReport(){
   const reportNo = ensureReportNumber(job);
   const logoHtml = state.company.logo
     ? '<img src="' + state.company.logo + '" alt="Logo" style="max-width:180px;max-height:100px;display:block">'
-    : '<div style="width:180px;height:90px;border:1px solid #cfd9e6;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#5b6775">Logo</div>';
+    : '<div style="width:180px;height:90px;border:1px solid #cfd9e6;display:flex;align-items:center;justify-content:center;color:#5b6775">Logo</div>';
   const sigHtml = state.company.signature
-    ? '<img src="' + state.company.signature + '" alt="Signature" style="max-width:220px;max-height:42px;display:block">'
+    ? '<img src="' + state.company.signature + '" alt="Signature" style="max-width:220px;max-height:34px;display:block">'
     : '';
 
   const passRows = pass.length ? pass.map(i =>
@@ -512,10 +515,9 @@ function renderReport(){
   ).join('') : '<tr><td colspan="10" style="color:#111">None</td></tr>';
 
   $('reportArea').innerHTML = ''
-    + '<div class="report" id="reportBox" style="background:#fff;color:#111;border-radius:18px;padding:18px">'
-    +   '<div style="border:1px solid #cfd9e6;border-radius:16px;overflow:hidden">'
-    +     '<div style="background:linear-gradient(135deg,#133553,#2a6798);height:10px"></div>'
-    +     '<div style="padding:18px">'
+    + '<div id="reportBox" style="background:#fff;color:#111;padding:0">'
+    +   '<div class="pdfPage" style="padding:16px 16px 0 16px">'
+    +     '<div style="border-top:10px solid #133553;padding-top:16px">'
     +       '<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">'
     +         '<div style="flex:1">'
     +           '<div style="font-size:1.55rem;font-weight:900;color:#111">' + esc(state.company.name) + '</div>'
@@ -530,14 +532,14 @@ function renderReport(){
     +         '<div style="margin-top:4px;color:#111"><b>Test Date:</b> ' + fmtDateDMY(job.date) + ' &nbsp; <b>Retest Date:</b> ' + nextTest(job) + '</div>'
     +       '</div>'
     +       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">'
-    +         '<div style="border:1px solid #cfd9e6;border-radius:12px;padding:12px">'
+    +         '<div style="border:1px solid #cfd9e6;padding:12px">'
     +           '<div style="font-weight:900;color:#111;margin-bottom:8px">Client Details</div>'
     +           '<div style="color:#111"><b>Client:</b> ' + esc(job.client) + '</div>'
     +           '<div style="color:#111"><b>Contact:</b> ' + esc(job.contact) + '</div>'
     +           '<div style="color:#111"><b>Email:</b> ' + esc(job.email) + '</div>'
     +           '<div style="margin-top:8px;color:#111"><b>Site Address:</b><br>' + nl2br(job.address) + '</div>'
     +         '</div>'
-    +         '<div style="border:1px solid #cfd9e6;border-radius:12px;padding:12px">'
+    +         '<div style="border:1px solid #cfd9e6;padding:12px">'
     +           '<div style="font-weight:900;color:#111;margin-bottom:8px">Test Details</div>'
     +           '<div style="color:#111"><b>Engineer:</b> ' + esc(job.engineer) + '</div>'
     +           '<div style="color:#111"><b>Instrument:</b> Seaward Apollo 400+ PAT Tester</div>'
@@ -559,23 +561,26 @@ function renderReport(){
     +         '<tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th><th>Notes</th></tr>'
     +         failRows
     +       '</table>'
-    +       '<div class="keepTogether">'
-    +         '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">'
-    +           '<div style="font-weight:900">FAILED APPLIANCES MUST BE REMOVED FROM SERVICE</div>'
-    +           '<div style="margin-top:6px;line-height:1.45">Failed appliances must not be used until repaired and re-tested. These items present a potential electrical safety risk and should be removed from service immediately in accordance with the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
-    +         '</div>'
-    +         '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">'
-    +           '<div style="font-weight:900">Compliance Statement</div>'
-    +           '<div style="margin-top:6px;line-height:1.45">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
-    +         '</div>'
-    +         '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:10px">'
-    +           '<div style="font-weight:900;color:#111">Engineer Signature</div>'
-    +           '<div style="height:44px;border:1px solid #bbb;border-radius:8px;margin-top:8px;background:#fff;display:flex;align-items:center;padding:4px 8px">' + sigHtml + '</div>'
-    +           '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;color:#111;font-size:.92rem"><div><b>Engineer:</b> ' + esc(job.engineer) + '</div><div><b>Date:</b> ' + fmtDateDMY(job.date) + '</div></div>'
-    +         '</div>'
-    +         '<div style="margin-top:14px;color:#111;line-height:1.5">Thank you for choosing <b>' + esc(state.company.name) + '</b>.<br>If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.</div>'
+    +       '<div class="pageFooter"><div>' + esc(state.company.name) + '</div><div>Page 1 of 2</div></div>'
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="pdfPage" style="padding:16px 16px 0 16px">'
+    +     '<div style="border-top:10px solid #133553;padding-top:16px">'
+    +       '<div style="border:1px solid #cfd9e6;padding:12px;color:#111">'
+    +         '<div style="font-weight:900">FAILED APPLIANCES MUST BE REMOVED FROM SERVICE</div>'
+    +         '<div style="margin-top:6px;line-height:1.45">Failed appliances must not be used until repaired and re-tested. These items present a potential electrical safety risk and should be removed from service immediately in accordance with the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
     +       '</div>'
-    +       '<div style="margin-top:14px;display:flex;justify-content:flex-end;color:#555;font-size:.85rem">Page 1 of 1</div>'
+    +       '<div style="margin-top:14px;border:1px solid #cfd9e6;padding:12px;color:#111">'
+    +         '<div style="font-weight:900">Compliance Statement</div>'
+    +         '<div style="margin-top:6px;line-height:1.45">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
+    +       '</div>'
+    +       '<div style="margin-top:14px;border:1px solid #cfd9e6;padding:10px">'
+    +         '<div style="font-weight:900;color:#111">Engineer Signature</div>'
+    +         '<div style="height:36px;border:1px solid #bbb;margin-top:8px;background:#fff;display:flex;align-items:center;padding:4px 8px">' + sigHtml + '</div>'
+    +         '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;color:#111;font-size:.92rem"><div><b>Engineer:</b> ' + esc(job.engineer) + '</div><div><b>Date:</b> ' + fmtDateDMY(job.date) + '</div></div>'
+    +       '</div>'
+    +       '<div style="margin-top:14px;color:#111;line-height:1.5">Thank you for choosing <b>' + esc(state.company.name) + '</b>.<br>If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.</div>'
+    +       '<div class="pageFooter"><div>' + esc(state.company.name) + '</div><div>Page 2 of 2</div></div>'
     +     '</div>'
     +   '</div>'
     + '</div>';
