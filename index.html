@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MHK PAT Pro V4</title>
+<title>MHK Building Solutions Ltd PAT</title>
 <meta name="theme-color" content="#133553">
 <style>
 :root{
@@ -55,6 +55,14 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 .tbl.fail th{background:#c62828}
 .notice{background:rgba(77,136,191,.12);border:1px solid rgba(77,136,191,.3);border-radius:14px;padding:12px}
 .logoPrev{max-width:220px;max-height:90px;display:none;background:rgba(255,255,255,.05);padding:8px;border-radius:12px}
+
+.modalBack{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:18px}
+.modal{width:min(92vw,420px);background:#fff;color:#111;border-radius:22px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.modalHead{background:linear-gradient(135deg,#133553,#2a6798);color:#fff;padding:14px 16px;font-weight:bold}
+.modalBody{padding:18px 16px 8px;font-size:1rem;line-height:1.4}
+.modalFoot{padding:14px 16px 18px;display:flex;justify-content:flex-end}
+.modalBtn{min-width:92px}
+
 @media print{
   .tabs,.noprint,.hero{display:none!important}
   body{background:#fff}
@@ -78,17 +86,17 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
           <div><label>Test Date</label><input id="jobDate" type="date"></div>
         </div>
         <div class="grid g2">
-          <div><label>Client Name</label><input id="jobClient"></div>
-          <div><label>Contact Name</label><input id="jobContact"></div>
+          <div><label>Client Name</label><input id="jobClient" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+          <div><label>Contact Name</label><input id="jobContact" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
         </div>
         <div class="grid g2">
-          <div><label>Contact Email</label><input id="jobEmail"></div>
-          <div><label>Engineer</label><input id="jobEngineer"></div>
+          <div><label>Contact Email</label><input id="jobEmail" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+          <div><label>Engineer</label><input id="jobEngineer" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
         </div>
-        <div><label>Site Address</label><textarea id="jobAddress"></textarea></div>
+        <div><label>Site Address</label><textarea id="jobAddress" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></div>
         <div class="grid g2">
           <div><label>Retest Interval (months)</label><input id="jobRetest" value="12"></div>
-          <div><label>Notes</label><input id="jobNotes"></div>
+          <div><label>Notes</label><input id="jobNotes" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
         </div>
         <div class="btns"><button id="createJobBtn">Create Job</button></div>
       </div>
@@ -101,14 +109,14 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
       <h2>Client Database</h2>
       <div class="body grid">
         <div class="grid g2">
-          <div><label>Client Name</label><input id="clientName"></div>
-          <div><label>Contact Name</label><input id="clientContact"></div>
+          <div><label>Client Name</label><input id="clientName" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+          <div><label>Contact Name</label><input id="clientContact" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
         </div>
         <div class="grid g2">
-          <div><label>Email</label><input id="clientEmail"></div>
-          <div><label>Phone</label><input id="clientPhone"></div>
+          <div><label>Email</label><input id="clientEmail" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+          <div><label>Phone</label><input id="clientPhone" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
         </div>
-        <div><label>Address</label><textarea id="clientAddress"></textarea></div>
+        <div><label>Address</label><textarea id="clientAddress" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></div>
         <div class="btns"><button id="saveClientBtn">Save Client</button></div>
       </div>
     </div>
@@ -122,25 +130,25 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
       <div class="body grid">
         <div class="grid g3">
           <div><label>Appliance</label><select id="itemAppliance"></select></div>
-          <div id="otherWrap" class="hidden"><label>Other Appliance</label><input id="itemOther"></div>
-          <div><label>Asset Number</label><input id="itemAsset" placeholder="Auto"></div>
+          <div id="otherWrap" class="hidden"><label>Other Appliance</label><input id="itemOther" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+          <div><label>Asset Number</label><input id="itemAsset" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Auto"></div>
         </div>
         <div class="grid g3">
-          <div><label>Location</label><select id="itemLocation"></select></div><div id="locOtherWrap" class="hidden"><label>Other Location</label><input id="itemLocationOther"></div>
+          <div><label>Location</label><select id="itemLocation"></select></div><div id="locOtherWrap" class="hidden"><label>Other Location</label><input id="itemLocationOther" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
           <div><label>Class</label><select id="itemClass"><option>Class I</option><option>Class II</option><option>Visual Only</option></select></div>
           <div><label>Fuse</label><select id="itemFuse"></select></div>
         </div>
         <div class="grid g3">
-          <div id="fuseOtherWrap" class="hidden"><label>Other Fuse</label><input id="itemFuseOther"></div>
+          <div id="fuseOtherWrap" class="hidden"><label>Other Fuse</label><input id="itemFuseOther" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
           <div><label>Visual Inspection</label><select id="itemVisual"><option>PASS</option><option>FAIL</option></select></div>
-          <div><label>Earth Continuity (Ω)</label><input id="itemEarth" placeholder="e.g. 0.12"></div>
+          <div><label>Earth Continuity (Ω)</label><input id="itemEarth" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="e.g. 0.12"></div>
         </div>
         <div class="grid g3">
           <div><label>Insulation Resistance</label><select id="itemInsulation"></select></div>
-          <div id="insOtherWrap" class="hidden"><label>Manual IR</label><input id="itemInsOther"></div>
+          <div id="insOtherWrap" class="hidden"><label>Manual IR</label><input id="itemInsOther" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
           <div><label>Overall Result</label><select id="itemResult"><option>PASS</option><option>FAIL</option></select></div>
         </div>
-        <div><label>Notes / Failure Reason</label><input id="itemNotes"></div>
+        <div><label>Notes / Failure Reason</label><input id="itemNotes" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
         <div class="btns">
           <button class="green" id="saveItemBtn">Save Appliance</button>
           <button class="secondary" id="toLabelsBtn">Save + Show Label</button>
@@ -229,8 +237,8 @@ function activeJob(){return state.jobs.find(j=>j.id===state.activeJobId)}
 function nextId(prefix){return prefix + Math.random().toString(36).slice(2,7).toUpperCase()}
 function prefixFor(appliance){const x=APPLIANCES.find(a=>a[0]===appliance); return x?x[1]:'OTH'}
 function brandedAlert(msg){
-  const host = location.hostname.includes('github.io') ? 'MHK says\n\n' : '';
-  alert(host + msg);
+  $('mhkModalMsg').textContent = msg;
+  $('mhkModalBack').style.display = 'flex';
 }
 function nextAsset(prefix){
   const job = activeJob();
@@ -416,8 +424,19 @@ $('saveSettingsBtn').onclick = ()=>{
 };
 $('clearDataBtn').onclick = ()=>{if(confirm('Reset all app data?')){localStorage.removeItem(KEY); location.reload();}};
 
+$('mhkModalOk').onclick = ()=> $('mhkModalBack').style.display='none';
+$('mhkModalBack').onclick = (e)=>{ if(e.target.id==='mhkModalBack') $('mhkModalBack').style.display='none'; };
 renderJobs(); renderClients(); populateLists(); renderItems(); $('itemLocation').value='Office'; $('itemAsset').value='KTL01';
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}
 </script>
+
+<div class="modalBack" id="mhkModalBack">
+  <div class="modal">
+    <div class="modalHead">MHK says</div>
+    <div class="modalBody" id="mhkModalMsg"></div>
+    <div class="modalFoot"><button class="modalBtn" id="mhkModalOk">OK</button></div>
+  </div>
+</div>
+
 </body>
 </html>
