@@ -2,8 +2,8 @@
   "name": "MHK Building Solutions Ltd PAT",
   "short_name": "MHK PAT",
   "description": "Portable Appliance Testing app for jobs, clients, items, labels and reports.",
-  "start_url": "./index.html",
-  "scope": "./",
+  "start_url": "/mhk-pat-app/",
+  "scope": "/mhk-pat-app/",
   "display": "standalone",
   "background_color": "#08131f",
   "theme_color": "#133553",
@@ -20,5 +20,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "id": "/mhk-pat-app/"
 }
