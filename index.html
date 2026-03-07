@@ -1,1 +1,150 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#153553" />
+  <title>MHK PAT Pro</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root{--bg:#08131f;--panel:#102338;--panel2:#17314d;--line:#2f557d;--input:#0b1827;--text:#eef5ff;--muted:#b8cbe0;--blue:#153553;--blue2:#1f4e79;--blue3:#3f7fb8;--green:#0b8f47;--red:#c62828;--shadow:0 12px 28px rgba(0,0,0,.28);--radius:18px}
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#09131d,#0f1d2e 45%,#08131f);color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:14px 14px 100px}
+    .hero{background:linear-gradient(135deg,#10263c,#153553 60%,#3f7fb8 125%);border:1px solid #365d86;border-radius:26px;padding:18px;box-shadow:var(--shadow);position:sticky;top:0;z-index:20}
+    .heroRow{display:flex;gap:14px;align-items:center}.heroLogo{width:82px;height:82px;object-fit:contain;background:rgba(255,255,255,.1);padding:8px;border-radius:18px;border:1px solid rgba(255,255,255,.16);display:none}
+    .hero h1{margin:0;font-size:1.55rem}.hero p{margin:.35rem 0 0;color:#dbeafe}
+    .grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+    @media (max-width:800px){.g2,.g3,.g4{grid-template-columns:1fr}}
+    .card{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .card h2{margin:0;padding:14px 16px;border-bottom:1px solid var(--line);font-size:1rem;background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(0,0,0,.04))}
+    .body{padding:14px} label{display:block;font-size:.83rem;color:var(--muted);margin:0 0 6px;font-weight:700}
+    input,textarea,select{width:100%;padding:12px;border-radius:14px;border:1px solid #3a618b;background:var(--input);color:var(--text);font-size:16px;outline:none}
+    textarea{min-height:88px;resize:vertical}
+    button{border:0;border-radius:14px;padding:12px 14px;background:#264b71;color:#fff;font-weight:800;cursor:pointer}
+    button.primary{background:linear-gradient(180deg,var(--blue3),var(--blue2))} button.green{background:linear-gradient(180deg,#17a65a,#0d7d42)} button.red{background:linear-gradient(180deg,#ef5350,#b71c1c)} button.ghost{background:transparent;border:1px solid #506f91} button.small{padding:9px 11px;font-size:.86rem;border-radius:12px}
+    .btns{display:flex;gap:10px;flex-wrap:wrap}
+    .tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(9,18,29,.98);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:10px 10px 14px;z-index:25}
+    .tab{padding:10px 6px;text-align:center;border-radius:14px;color:var(--muted);font-weight:800;border:1px solid transparent}.tab.active{background:#16314d;color:#fff;border-color:#436990}
+    .hidden{display:none}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px} @media (max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}}
+    .stat{background:var(--panel2);border:1px solid var(--line);padding:12px;border-radius:16px;text-align:center}.stat .n{font-size:1.35rem;font-weight:900}.good{color:#62e59b}.bad{color:#ffabab}
+    .job,.item{background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:12px;margin-top:10px}.job.active{border-color:#77b6ea}.topline{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.title{font-weight:900}.sub{font-size:.88rem;color:var(--muted)}
+    .pill{display:inline-block;padding:5px 10px;border-radius:999px;font-size:.75rem;font-weight:900}.pill.pass{background:rgba(11,143,71,.18);color:#85f2b4}.pill.fail{background:rgba(198,40,40,.18);color:#ffb8b8}.pill.pending{background:rgba(201,151,0,.18);color:#ffe07d}
+    .hr{height:1px;background:var(--line);margin:14px 0}.notice{background:rgba(63,127,184,.12);border:1px solid rgba(63,127,184,.35);color:#dbeafe;border-radius:16px;padding:12px}
+    .logoPreview{max-width:220px;max-height:90px;object-fit:contain;background:rgba(255,255,255,.05);padding:8px;border:1px solid var(--line);border-radius:12px;display:none}
+    .report{background:#fff;color:#111;border-radius:22px;padding:18px}.rhead{background:linear-gradient(135deg,#153553,#2f6a9f);color:#fff;border-radius:18px;padding:16px;margin-bottom:14px}.rheadRow{display:flex;gap:14px;align-items:center}
+    .rlogo{width:110px;height:110px;object-fit:contain;background:rgba(255,255,255,.1);padding:10px;border-radius:16px;border:1px solid rgba(255,255,255,.16);display:none}
+    .metaGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px} @media (max-width:800px){.metaGrid{grid-template-columns:1fr}}
+    .metaBox{border:1px solid #d9e1ea;border-radius:14px;padding:10px}
+    table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.88rem} th,td{border:1px solid #d1dbe5;padding:7px;vertical-align:top;text-align:left}
+    .summaryTable th{background:#153553;color:#fff}.passTable th{background:#0b8f47;color:#fff}.failTable th{background:#c62828;color:#fff}.passText{color:#0b8f47;font-weight:800}.failText{color:#c62828;font-weight:800}
+    .sigBox{margin-top:14px;border:1px solid #d9e1ea;border-radius:16px;padding:10px}.sigCanvas{width:100%;height:180px;border:1px dashed #8ea7c0;border-radius:12px;touch-action:none;background:#fff}.small{font-size:.8rem;color:var(--muted)}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero"><div class="heroRow"><img id="heroLogo" class="heroLogo" alt="Logo"><div><h1>MHK PAT Pro</h1><p>Fresh PAT app with readings, engineer signature, branded reports, and offline install support.</p></div></div></div>
+
+  <section id="view-jobs">
+    <div class="card"><h2>Create Job</h2><div class="body grid">
+      <div class="grid g2"><div><label>Client Name</label><input id="jobClient"></div><div><label>Contact Name</label><input id="jobContact"></div></div>
+      <div class="grid g2"><div><label>Contact Email</label><input id="jobEmail" type="email"></div><div><label>Test Date</label><input id="jobDate" type="date"></div></div>
+      <div><label>Site Address</label><textarea id="jobAddress"></textarea></div>
+      <div class="grid g2"><div><label>Retest Interval (months)</label><input id="jobRetest" value="12"></div><div><label>Engineer</label><input id="jobEngineer"></div></div>
+      <button class="primary" id="createJobBtn">Create Job</button>
+    </div></div>
+    <div class="card"><h2>Saved Jobs</h2><div class="body"><div id="jobsList"></div></div></div>
+  </section>
+
+  <section id="view-items" class="hidden">
+    <div id="jobSummaryCard" class="card"></div>
+    <div class="card"><h2>Add Appliance Reading</h2><div class="body grid">
+      <div class="grid g3"><div><label>Asset Number</label><input id="itemAsset" placeholder="e.g. KTL01"></div><div><label>Location</label><input id="itemLocation" placeholder="e.g. Kitchen"></div><div><label>Description</label><input id="itemDesc" placeholder="e.g. Russell Hobbs Kettle"></div></div>
+      <div class="grid g4"><div><label>Class</label><select id="itemClass"><option>Class I</option><option>Class II</option></select></div><div><label>Fuse Rating</label><input id="itemFuse" placeholder="e.g. 13A / N/A"></div><div><label>Visual Inspection</label><select id="itemVisual"><option>PASS</option><option>FAIL</option></select></div><div><label>Polarity</label><select id="itemPolarity"><option>PASS</option><option>FAIL</option><option>N/A</option></select></div></div>
+      <div class="grid g4"><div id="earthWrap"><label>Earth Continuity (Ω)</label><input id="itemEarth" placeholder="e.g. 0.12"></div><div><label>Insulation Resistance (MΩ)</label><input id="itemInsulation" placeholder="e.g. >299"></div><div><label>Overall Result</label><select id="itemResult"><option>PASS</option><option>FAIL</option><option>PENDING</option></select></div><div><label>Failure Reason / Notes</label><input id="itemReason" placeholder="If failed or notes"></div></div>
+      <button class="green" id="addItemBtn">Add Appliance</button>
+    </div></div>
+    <div class="card"><h2>Appliance Register</h2><div class="body"><input id="itemSearch" placeholder="Search appliances..."><div id="itemsList"></div></div></div>
+  </section>
+
+  <section id="view-sign" class="hidden">
+    <div class="card"><h2>Engineer Signature</h2><div class="body"><div class="small">Engineer signature only. This will appear on the report.</div><div class="sigBox"><canvas id="sigCanvas" class="sigCanvas"></canvas></div><div class="btns" style="margin-top:10px"><button class="primary" id="saveSigBtn">Save Signature</button><button class="ghost" id="clearSigBtn">Clear</button></div></div></div>
+  </section>
+
+  <section id="view-report" class="hidden">
+    <div class="card"><h2>Report & Export</h2><div class="body"><div class="btns"><button class="primary" id="printBtn">Print / Save PDF</button><button id="csvBtn">Export CSV</button><button id="jsonBtn">Backup JSON</button></div><div class="hr"></div><div id="reportPreview"></div></div></div>
+  </section>
+
+  <section id="view-settings" class="hidden">
+    <div class="card"><h2>Company Settings</h2><div class="body grid">
+      <div class="grid g2"><div><label>Company Name</label><input id="setName"></div><div><label>Phone</label><input id="setPhone"></div></div>
+      <div class="grid g2"><div><label>Email</label><input id="setEmail"></div><div><label>Default Engineer</label><input id="setEngineer"></div></div>
+      <div class="grid g2"><div><label>Test Instrument</label><input id="setInstrument"></div><div><label>Instrument Serial No</label><input id="setSerial"></div></div>
+      <div class="grid g2"><div><label>Calibration Due</label><input id="setCalibration" type="date"></div><div><label>Address</label><textarea id="setAddress"></textarea></div></div>
+      <div><label>Company Logo</label><input id="setLogoFile" type="file" accept="image/*"><div class="small">Upload PNG or JPG. Stored on this device.</div><img id="logoPreview" class="logoPreview" alt="Logo preview"></div>
+      <div class="btns"><button class="primary" id="saveSettingsBtn">Save Settings</button><button class="ghost" id="clearLogoBtn">Remove Logo</button><button class="ghost" id="resetBtn">Reset App</button></div>
+      <div class="notice">This app saves data in your browser on this device. Use JSON backup regularly.</div>
+    </div></div>
+  </section>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="jobs">Jobs</div>
+  <div class="tab" data-tab="items">Items</div>
+  <div class="tab" data-tab="sign">Sign</div>
+  <div class="tab" data-tab="report">Report</div>
+  <div class="tab" data-tab="settings">Settings</div>
+</div>
+
+<script>
+const KEY="mhk_pat_fresh_readings_v1";
+const defaultState={company:{name:"MHK Building Solutions Ltd.",address:"60 Little Horton Lane, Bradford, BD5 0BS",phone:"07876786286",email:"mhkbuildingsolutions@gmail.com",engineer:"",instrument:"Seaward Apollo 400+ PAT Tester",serialNumber:"",calibrationDue:"",logoData:"",engineerSignature:""},jobs:[],activeJobId:null};
+let state=loadState(); let pendingLogoData="";
+function clone(x){return JSON.parse(JSON.stringify(x));}
+function loadState(){try{const raw=localStorage.getItem(KEY);return raw?JSON.parse(raw):clone(defaultState);}catch(e){return clone(defaultState);}}
+function saveState(){localStorage.setItem(KEY,JSON.stringify(state));}
+function uid(prefix){return prefix+"-"+Math.random().toString(36).slice(2,8).toUpperCase();}
+function today(){return new Date().toISOString().slice(0,10);}
+function activeJob(){return state.jobs.find(j=>j.id===state.activeJobId)||null;}
+function val(id){return document.getElementById(id).value.trim();}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function safe(s){return String(s||"job").replace(/\s+/g,"_").replace(/[^\w\-]/g,"");}
+document.getElementById("jobDate").value=today();
+document.querySelectorAll(".tab").forEach(tab=>tab.addEventListener("click",()=>showTab(tab.dataset.tab)));
+function showTab(tab){["jobs","items","sign","report","settings"].forEach(t=>{document.getElementById("view-"+t).classList.toggle("hidden",t!==tab);document.querySelector('.tab[data-tab="'+t+'"]').classList.toggle("active",t===tab);}); if(tab==="items")renderItems(); if(tab==="report")renderReport(); if(tab==="settings")populateSettings(); if(tab==="sign")setTimeout(initSignaturePad,30);}
+document.getElementById("createJobBtn").addEventListener("click", createJob);
+function createJob(){const clientName=val("jobClient"), siteAddress=val("jobAddress"); if(!clientName||!siteAddress){alert("Please enter at least client name and site address."); return;} const job={id:uid("JOB"),clientName,contactName:val("jobContact"),contactEmail:val("jobEmail"),siteAddress,testDate:val("jobDate")||today(),retestMonths:val("jobRetest")||"12",engineer:val("jobEngineer"),items:[]}; state.jobs.unshift(job); state.activeJobId=job.id; saveState(); ["jobClient","jobContact","jobEmail","jobAddress","jobEngineer"].forEach(id=>document.getElementById(id).value=""); document.getElementById("jobRetest").value="12"; document.getElementById("jobDate").value=today(); renderJobs(); renderItems(); renderReport(); showTab("items");}
+function renderJobs(){const wrap=document.getElementById("jobsList"); if(!state.jobs.length){wrap.innerHTML='<div class="sub">No jobs saved yet.</div>'; return;} wrap.innerHTML=state.jobs.map(job=>{const total=job.items.length, passed=job.items.filter(i=>i.result==="PASS").length, failed=job.items.filter(i=>i.result==="FAIL").length, pending=job.items.filter(i=>i.result==="PENDING").length; return '<div class="job '+(job.id===state.activeJobId?'active':'')+'"><div class="topline"><div><div class="title">'+esc(job.clientName)+'</div><div class="sub">'+esc(job.siteAddress)+'</div><div class="sub">'+job.testDate+' · '+job.id+'</div></div><div class="btns"><button class="small primary" onclick="openJob(\''+job.id+'\')">Open</button><button class="small red" onclick="deleteJob(\''+job.id+'\')">Delete</button></div></div><div class="hr"></div><div class="stats"><div class="stat"><div class="n">'+total+'</div><div class="sub">Tested</div></div><div class="stat"><div class="n good">'+passed+'</div><div class="sub">Passed</div></div><div class="stat"><div class="n bad">'+failed+'</div><div class="sub">Failed</div></div><div class="stat"><div class="n">'+pending+'</div><div class="sub">Pending</div></div></div></div>';}).join("");}
+window.openJob=function(id){state.activeJobId=id; saveState(); renderJobs(); renderItems(); renderReport(); showTab("items");}
+window.deleteJob=function(id){if(!confirm("Delete this job?"))return; state.jobs=state.jobs.filter(j=>j.id!==id); if(state.activeJobId===id) state.activeJobId=state.jobs[0]?state.jobs[0].id:null; saveState(); renderJobs(); renderItems(); renderReport();}
+document.getElementById("itemClass").addEventListener("change", toggleEarthField);
+function toggleEarthField(){document.getElementById("earthWrap").style.display=val("itemClass")==="Class II"?"none":"block";}
+toggleEarthField();
+document.getElementById("addItemBtn").addEventListener("click", addItem);
+document.getElementById("itemSearch").addEventListener("input", renderItems);
+function addItem(){const job=activeJob(); if(!job){alert("Create or open a job first."); return;} const description=val("itemDesc"); if(!description){alert("Enter appliance description."); return;} const classType=val("itemClass"); const item={id:uid("ITEM"),assetNo:val("itemAsset")||uid("AST"),location:val("itemLocation"),description,classType,fuseRating:val("itemFuse"),visual:val("itemVisual"),polarity:val("itemPolarity"),earth:classType==="Class II"?"N/A":val("itemEarth"),insulation:val("itemInsulation"),result:val("itemResult"),failureReason:val("itemReason")}; job.items.unshift(item); saveState(); ["itemAsset","itemLocation","itemDesc","itemFuse","itemEarth","itemInsulation","itemReason"].forEach(id=>document.getElementById(id).value=""); document.getElementById("itemClass").value="Class I"; document.getElementById("itemVisual").value="PASS"; document.getElementById("itemPolarity").value="PASS"; document.getElementById("itemResult").value="PASS"; toggleEarthField(); renderJobs(); renderItems(); renderReport();}
+function renderItems(){const job=activeJob(), summary=document.getElementById("jobSummaryCard"), list=document.getElementById("itemsList"); if(!job){summary.innerHTML='<h2>Current Job</h2><div class="body sub">Open or create a job first.</div>'; list.innerHTML=""; return;} const total=job.items.length, passed=job.items.filter(i=>i.result==="PASS").length, failed=job.items.filter(i=>i.result==="FAIL").length, pending=job.items.filter(i=>i.result==="PENDING").length; summary.innerHTML='<h2>Current Job</h2><div class="body"><div class="title">'+esc(job.clientName)+'</div><div class="sub">'+esc(job.siteAddress)+'</div><div class="sub">'+job.testDate+' · Retest '+esc(job.retestMonths)+' months</div><div class="hr"></div><div class="stats"><div class="stat"><div class="n">'+total+'</div><div class="sub">Tested</div></div><div class="stat"><div class="n good">'+passed+'</div><div class="sub">Passed</div></div><div class="stat"><div class="n bad">'+failed+'</div><div class="sub">Failed</div></div><div class="stat"><div class="n">'+pending+'</div><div class="sub">Pending</div></div></div></div>'; const q=document.getElementById("itemSearch").value.trim().toLowerCase(); const items=job.items.filter(i=>[i.assetNo,i.location,i.description,i.classType,i.result,i.failureReason,i.earth,i.insulation].join(" ").toLowerCase().includes(q)); if(!items.length){list.innerHTML='<div class="sub" style="margin-top:10px">No items found.</div>'; return;} list.innerHTML=items.map(i=>{const cls=i.result==="PASS"?"pass":i.result==="FAIL"?"fail":"pending"; return '<div class="item"><div class="topline"><div><div class="title">'+esc(i.description)+'</div><div class="sub">'+esc(i.assetNo)+' · '+esc(i.location||"No location")+'</div><div class="sub">'+esc(i.classType)+' · Fuse: '+esc(i.fuseRating||"N/A")+' · Visual: '+esc(i.visual||"")+' · Earth: '+esc(i.earth||"")+' · IR: '+esc(i.insulation||"")+'</div>'+(i.failureReason?'<div class="sub" style="color:#ffb8b8">Reason: '+esc(i.failureReason)+'</div>':'')+'</div><div class="btns"><span class="pill '+cls+'">'+esc(i.result)+'</span><button class="small red" onclick="deleteItem(\''+i.id+'\')">Delete</button></div></div></div>';}).join("");}
+window.deleteItem=function(id){const job=activeJob(); if(!job)return; if(!confirm("Delete this item?"))return; job.items=job.items.filter(i=>i.id!==id); saveState(); renderJobs(); renderItems(); renderReport();}
+function tableRows(rows){return rows.map(i=>'<tr><td>'+esc(i.assetNo||"")+'</td><td>'+esc(i.location||"")+'</td><td>'+esc(i.description||"")+'</td><td>'+esc(i.classType||"")+'</td><td>'+esc(i.fuseRating||"")+'</td><td>'+esc(i.visual||"")+'</td><td>'+esc(i.earth||"")+'</td><td>'+esc(i.insulation||"")+'</td><td>'+esc(i.polarity||"")+'</td><td class="'+(i.result==="PASS"?"passText":"failText")+'">'+esc(i.result||"")+'</td><td>'+esc(i.failureReason||"")+'</td></tr>').join("");}
+function renderReport(){const job=activeJob(), wrap=document.getElementById("reportPreview"); if(!job){wrap.innerHTML='<div class="sub">Create or open a job first.</div>'; return;} const passed=job.items.filter(i=>i.result==="PASS"), failed=job.items.filter(i=>i.result==="FAIL"), pending=job.items.filter(i=>i.result==="PENDING"); const logo=state.company.logoData?'<img class="rlogo" src="'+state.company.logoData+'" style="display:block" alt="Logo">':''; const sig=state.company.engineerSignature?'<div class="metaBox"><strong>Engineer Signature</strong><br><img src="'+state.company.engineerSignature+'" style="margin-top:8px;max-width:260px;max-height:90px" alt="Signature"></div>':''; wrap.innerHTML='<div class="report" id="printableReport"><div class="rhead"><div class="rheadRow">'+logo+'<div><h3 style="margin:.1rem 0">'+esc(state.company.name)+'</h3><p style="margin:.2rem 0">'+esc(state.company.address)+'<br>'+esc(state.company.phone)+' · '+esc(state.company.email)+'</p></div></div></div><h3>Portable Appliance Testing (PAT) Report</h3><div class="metaGrid"><div class="metaBox"><strong>Client Details</strong><br>Client: '+esc(job.clientName)+'<br>Contact: '+esc(job.contactName||"")+'<br>Email: '+esc(job.contactEmail||"")+'<br>Site: '+esc(job.siteAddress)+'</div><div class="metaBox"><strong>Test Details</strong><br>Test Date: '+esc(job.testDate)+'<br>Retest Period: '+esc(job.retestMonths)+' months<br>Engineer: '+esc(job.engineer || state.company.engineer || "")+'<br>Instrument: '+esc(state.company.instrument)+'<br>Serial No: '+esc(state.company.serialNumber||"")+'<br>Calibration Due: '+esc(state.company.calibrationDue||"")+'</div></div><h4 style="margin-top:14px">Summary</h4><table class="summaryTable"><tr><th>Total Tested</th><th>Total Passed</th><th>Total Failed</th><th>Total Pending</th></tr><tr><td>'+job.items.length+'</td><td class="passText">'+passed.length+'</td><td class="failText">'+failed.length+'</td><td>'+pending.length+'</td></tr></table><h4 style="margin-top:16px;color:#0b8f47">Passed Items</h4>'+(passed.length?'<table class="passTable"><tr><th>Asset</th><th>Location</th><th>Description</th><th>Class</th><th>Fuse</th><th>Visual</th><th>Earth Ω</th><th>IR MΩ</th><th>Polarity</th><th>Result</th><th>Notes</th></tr>'+tableRows(passed)+'</table>':'<p>No passed items recorded.</p>')+'<h4 style="margin-top:16px;color:#c62828">Failed Items</h4>'+(failed.length?'<table class="failTable"><tr><th>Asset</th><th>Location</th><th>Description</th><th>Class</th><th>Fuse</th><th>Visual</th><th>Earth Ω</th><th>IR MΩ</th><th>Polarity</th><th>Result</th><th>Notes</th></tr>'+tableRows(failed)+'</table>':'<p>No failed items recorded.</p>')+(sig?'<div style="margin-top:16px">'+sig+'</div>':'')+'<h4 style="margin-top:16px">Compliance Statement</h4><p>Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment. Failed items should be removed from service until repaired or replaced.</p></div>';}
+document.getElementById("printBtn").addEventListener("click",()=>{const job=activeJob(); if(!job){alert("Open a job first."); return;} renderReport(); const html=document.getElementById("printableReport").outerHTML; const w=window.open("","_blank"); w.document.write('<!DOCTYPE html><html><head><title>PAT Report</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Arial,sans-serif;padding:20px;color:#111}.rhead{background:linear-gradient(135deg,#153553,#2f6a9f);color:#fff;border-radius:18px;padding:16px;margin-bottom:14px}.rheadRow{display:flex;gap:14px;align-items:center}.rlogo{width:110px;height:110px;object-fit:contain;background:rgba(255,255,255,.10);padding:10px;border-radius:16px;border:1px solid rgba(255,255,255,.16)}.metaGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}.metaBox{border:1px solid #d9e1ea;border-radius:14px;padding:10px}table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}th,td{border:1px solid #d1dbe5;padding:6px;vertical-align:top;text-align:left}.summaryTable th{background:#153553;color:#fff}.passTable th{background:#0b8f47;color:#fff}.failTable th{background:#c62828;color:#fff}.passText{color:#0b8f47;font-weight:800}.failText{color:#c62828;font-weight:800}</style></head><body>'+html+'</body></html>'); w.document.close(); setTimeout(()=>w.print(),350);});
+function rowsToCSV(rows){return rows.map(r=>r.map(v=>{v=String(v==null?"":v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(",")).join("\n");}
+function download(filename,content,type){const blob=new Blob([content],{type}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);}
+document.getElementById("csvBtn").addEventListener("click",()=>{const job=activeJob(); if(!job){alert("Open a job first."); return;} const rows=[["Job ID",job.id],["Client",job.clientName],["Site Address",job.siteAddress],["Test Date",job.testDate],["Retest Months",job.retestMonths],[],["Asset","Location","Description","Class","Fuse","Visual","Earth Ω","IR MΩ","Polarity","Result","Notes"]].concat(job.items.map(i=>[i.assetNo,i.location,i.description,i.classType,i.fuseRating,i.visual,i.earth,i.insulation,i.polarity,i.result,i.failureReason])); download(safe(job.clientName)+"_PAT_"+job.testDate+".csv",rowsToCSV(rows),"text/csv;charset=utf-8;");});
+document.getElementById("jsonBtn").addEventListener("click",()=>{const job=activeJob(); if(!job){alert("Open a job first."); return;} download(safe(job.clientName)+"_PAT_"+job.testDate+".json",JSON.stringify(job,null,2),"application/json");});
+function populateSettings(){document.getElementById("setName").value=state.company.name||""; document.getElementById("setPhone").value=state.company.phone||""; document.getElementById("setEmail").value=state.company.email||""; document.getElementById("setEngineer").value=state.company.engineer||""; document.getElementById("setInstrument").value=state.company.instrument||""; document.getElementById("setSerial").value=state.company.serialNumber||""; document.getElementById("setCalibration").value=state.company.calibrationDue||""; document.getElementById("setAddress").value=state.company.address||""; updateLogoViews();}
+document.getElementById("setLogoFile").addEventListener("change",e=>{const file=e.target.files&&e.target.files[0]; if(!file)return; const reader=new FileReader(); reader.onload=ev=>{pendingLogoData=ev.target.result; document.getElementById("logoPreview").src=pendingLogoData; document.getElementById("logoPreview").style.display="block";}; reader.readAsDataURL(file);});
+function updateLogoViews(){const logo=state.company.logoData||pendingLogoData||""; const hero=document.getElementById("heroLogo"); const preview=document.getElementById("logoPreview"); if(logo){hero.src=logo; hero.style.display="block"; preview.src=logo; preview.style.display="block";}else{hero.removeAttribute("src"); hero.style.display="none"; preview.removeAttribute("src"); preview.style.display="none";}}
+document.getElementById("saveSettingsBtn").addEventListener("click",()=>{state.company.name=val("setName"); state.company.phone=val("setPhone"); state.company.email=val("setEmail"); state.company.engineer=val("setEngineer"); state.company.instrument=val("setInstrument"); state.company.serialNumber=val("setSerial"); state.company.calibrationDue=val("setCalibration"); state.company.address=val("setAddress"); if(pendingLogoData){state.company.logoData=pendingLogoData; pendingLogoData="";} saveState(); updateLogoViews(); renderReport(); alert("Settings saved.");});
+document.getElementById("clearLogoBtn").addEventListener("click",()=>{pendingLogoData=""; state.company.logoData=""; saveState(); document.getElementById("setLogoFile").value=""; updateLogoViews(); renderReport();});
+document.getElementById("resetBtn").addEventListener("click",()=>{if(!confirm("Reset the app and delete all saved jobs on this device?"))return; state=clone(defaultState); pendingLogoData=""; saveState(); renderJobs(); renderItems(); renderReport(); populateSettings(); clearSignatureOnly(); showTab("jobs");});
+function initSignaturePad(){const canvas=document.getElementById("sigCanvas"); const ratio=Math.max(window.devicePixelRatio||1,1); const rect=canvas.getBoundingClientRect(); canvas.width=rect.width*ratio; canvas.height=rect.height*ratio; const ctx=canvas.getContext("2d"); ctx.scale(ratio,ratio); ctx.lineWidth=2.2; ctx.lineCap="round"; ctx.strokeStyle="#12385a"; ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,rect.width,rect.height); if(state.company.engineerSignature){const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,rect.width,rect.height); img.src=state.company.engineerSignature;} let drawing=false; function pos(e){const r=canvas.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return {x:t.clientX-r.left,y:t.clientY-r.top};} function start(e){drawing=true; const p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault();} function move(e){if(!drawing)return; const p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault();} function end(){drawing=false;} canvas.onmousedown=start; canvas.onmousemove=move; window.onmouseup=end; canvas.ontouchstart=start; canvas.ontouchmove=move; canvas.ontouchend=end;}
+function clearSignatureOnly(){const canvas=document.getElementById("sigCanvas"); if(!canvas)return; const ctx=canvas.getContext("2d"); if(!ctx)return; const rect=canvas.getBoundingClientRect(); ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,rect.width,rect.height);}
+document.getElementById("saveSigBtn").addEventListener("click",()=>{const canvas=document.getElementById("sigCanvas"); state.company.engineerSignature=canvas.toDataURL("image/png"); saveState(); renderReport(); alert("Engineer signature saved.");});
+document.getElementById("clearSigBtn").addEventListener("click",()=>{state.company.engineerSignature=""; saveState(); clearSignatureOnly(); renderReport();});
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}
+renderJobs(); renderItems(); renderReport(); populateSettings(); updateLogoViews();
+</script>
+</body>
+</html>
