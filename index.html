@@ -80,54 +80,57 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   width:210mm;
   min-height:297mm;
   margin:0 auto 10px;
-  padding:12mm 12mm 10mm;
+  padding:10mm 10mm 8mm;
   box-sizing:border-box;
   display:flex;
   flex-direction:column;
   page-break-after:always;
 }
 .reportPage:last-child{page-break-after:auto}
-.reportPageInner{display:flex;flex-direction:column;min-height:100%}
-.reportTopLine{height:5px;background:#133553;margin:0 0 10px 0}
-.reportSplit{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.reportPageInner{display:flex;flex-direction:column;min-height:100%;border:none}
+.reportTopLine{height:4px;background:#133553;margin:0 0 10px 0}
+.reportSplit{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .reportBoxSq{
   border:1px solid #c9d2dc;
-  padding:9px 10px;
-  margin-top:10px;
+  padding:8px 9px;
+  margin-top:8px;
   border-radius:0;
   background:#fff;
 }
-.reportBoxSq h4,.reportSectionTitle{margin:0 0 8px 0;color:#111;font-size:1rem;font-weight:800}
-.reportTable{width:100%;border-collapse:collapse;margin-top:8px;font-size:.83rem}
-.reportTable th,.reportTable td{border:1px solid #c9d2dc;padding:6px;text-align:left;vertical-align:top;color:#111}
+.reportBoxSq h4,.reportSectionTitle{margin:0 0 6px 0;color:#111;font-size:.95rem;font-weight:800}
+.reportTable{width:100%;border-collapse:collapse;margin-top:6px;font-size:.76rem}
+.reportTable th,.reportTable td{border:1px solid #c9d2dc;padding:4px 5px;text-align:left;vertical-align:top;color:#111}
 .reportTable th{background:#133553;color:#fff;font-weight:700}
 .reportFoot{
   margin-top:auto;
   border-top:1px solid #c9d2dc;
-  padding-top:7px;
+  padding-top:6px;
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:12px;
   color:#555;
-  font-size:.8rem;
+  font-size:.74rem;
 }
 .reportMuted{color:#4f5e70}
-.reportPhotoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-.reportPhotoCard{border:1px solid #c9d2dc;padding:8px;background:#fff}
+.reportPhotoGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.reportPhotoCard{border:1px solid #c9d2dc;padding:7px;background:#fff}
 .reportPhotoCard img{width:100%;max-height:185px;object-fit:contain;border:1px solid #d7dfe8;background:#fff}
-.reportSignatureBox{height:44px;border:1px solid #bbb;background:#fff;margin-top:8px;padding:5px}
+.reportSignatureBox{height:38px;border:1px solid #bbb;background:#fff;margin-top:6px;padding:4px}
 .lockInput{background:#fff;color:#111;border:1px solid #cfd9e6}
 @media print{
   .reportPage{
     width:auto;
     min-height:277mm;
     margin:0;
-    padding:9mm 9mm 8mm;
+    padding:10mm 10mm 8mm;
     box-shadow:none;
     break-after:page;
     page-break-after:always;
   }
+  .reportPage:last-child{break-after:auto;page-break-after:auto}
+  .reportPhotoGrid{grid-template-columns:1fr 1fr}
+}
 
 @media print{
   .keepTogether{page-break-inside:avoid;break-inside:avoid}
@@ -290,11 +293,6 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
         </div>
         <div><label>Address</label><textarea id="setAddress" autocomplete="off"></textarea></div>
         <div><label>Logo</label><input id="setLogo" type="file" accept="image/*"><img id="logoPrev" class="logoPrev"></div>
-        <div class="grid g3">
-          <div><label>PAT Tester / Instrument</label><input id="setTesterModel" autocomplete="off"></div>
-          <div><label>Tester Serial Number</label><input id="setTesterSerial" autocomplete="off"></div>
-          <div><label>Calibration Due</label><input id="setTesterCalDue" type="date" autocomplete="off"></div>
-        </div>
         <div class="grid g2">
           <div><label>App PIN (optional)</label><input id="setPin" type="password" placeholder="4-8 digits" autocomplete="new-password"></div>
           <div><label>Backup</label><div class="btns"><button type="button" id="exportDataBtn">Export Data</button><button type="button" class="secondary" id="importDataBtn">Import Data</button></div></div>
@@ -362,7 +360,7 @@ const FUSES=['1A','3A','5A','7A','10A','13A','N/A','Other'];
 const IRS=['>200 MΩ','>100 MΩ','>50 MΩ','>20 MΩ','>10 MΩ','>2 MΩ','N/A','Manual'];
 const LOCATIONS=['Office','Reception','Kitchen','Staff Room','Meeting Room','Server Room','Warehouse','Workshop','Store','Hallway','Bedroom','Living Room','Utility Room','Classroom','Other'];
 const defaults = {
-  company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:'',signature:'',pin:'',testerModel:'Seaward Apollo 400+ PAT Tester',testerSerial:'',testerCalDue:''},
+  company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:'',signature:'',pin:''},
   clients:[],jobs:[],activeJobId:null,lastLabelItemId:null,reportCounter:0
 };
 let state = JSON.parse(localStorage.getItem(KEY) || JSON.stringify(defaults));
@@ -644,8 +642,8 @@ function renderReport(){
   const fail = job.items.filter(i=>i.result==='FAIL');
   const failPhotos = fail.filter(i=>i.photo);
   const reportNo = ensureReportNumber(job);
-  const logoHtml = state.company.logo ? '<img src="' + state.company.logo + '" alt="Logo" style="max-width:155px;max-height:76px;display:block">' : '';
-  const sigHtml = state.company.signature ? '<img src="' + state.company.signature + '" alt="Signature" style="max-width:220px;max-height:30px;display:block">' : '';
+  const logoHtml = state.company.logo ? '<img src="' + state.company.logo + '" alt="Logo" style="max-width:145px;max-height:66px;display:block">' : '';
+  const sigHtml = state.company.signature ? '<img src="' + state.company.signature + '" alt="Signature" style="max-width:200px;max-height:26px;display:block">' : '';
   const testerModel = state.company.testerModel || 'Seaward Apollo 400+ PAT Tester';
   const testerSerial = state.company.testerSerial || '____________';
   const testerCalDue = state.company.testerCalDue ? fmtDateDMY(state.company.testerCalDue) : '____________';
@@ -679,13 +677,13 @@ function renderReport(){
     '</tr>'
   ).join('') : '<tr><td colspan="10">None</td></tr>';
 
-  const photoBlocks = failPhotos.map(i =>
+  const photoBlocks = failPhotos.length ? failPhotos.map(i =>
     '<div class="reportPhotoCard">' +
       '<div style="font-weight:800;color:#111">' + esc(i.asset) + ' · ' + esc(i.appliance) + '</div>' +
-      '<div class="reportMuted" style="margin-top:4px;font-size:.88rem"><b>Failure reason:</b> ' + esc(i.notes || 'See failed items table') + '</div>' +
-      '<div style="margin-top:8px"><img src="' + i.photo + '" alt="Failure photo"></div>' +
+      '<div class="reportMuted" style="margin-top:3px;font-size:.82rem"><b>Failure reason:</b> ' + esc(i.notes || 'See failed items table') + '</div>' +
+      '<div style="margin-top:6px"><img src="' + i.photo + '" alt="Failure photo"></div>' +
     '</div>'
-  ).join('');
+  ).join('') : '<div style="color:#111">No failure photos attached.</div>';
 
   $('reportArea').innerHTML = ''
     + '<div id="reportBox">'
@@ -695,37 +693,36 @@ function renderReport(){
 
     +       '<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">'
     +         '<div style="flex:1">'
-    +           '<div style="font-size:1.48rem;font-weight:900;color:#111">' + esc(state.company.name) + '</div>'
-    +           '<div style="margin-top:4px;font-size:1rem;color:#111">' + esc(state.company.service) + '</div>'
-    +           '<div style="margin-top:8px;line-height:1.42;color:#111">' + nl2br(state.company.address) + '<br>' + esc(state.company.phone) + ' · ' + esc(state.company.email) + '</div>'
+    +           '<div style="font-size:1.45rem;font-weight:900;color:#111;line-height:1.1">' + esc(state.company.name) + '</div>'
+    +           '<div style="margin-top:3px;font-size:.98rem;color:#111">' + esc(state.company.service) + '</div>'
+    +           '<div style="margin-top:8px;line-height:1.35;color:#111;font-size:.92rem">' + nl2br(state.company.address) + '<br>' + esc(state.company.phone) + ' · ' + esc(state.company.email) + '</div>'
     +         '</div>'
     +         '<div style="flex:0 0 auto;text-align:right">' + logoHtml + '</div>'
     +       '</div>'
 
-    +       '<div style="margin-top:14px;text-align:center">'
-    +         '<div style="font-size:1.18rem;font-weight:900;color:#111;letter-spacing:.25px">PORTABLE APPLIANCE TESTING REPORT</div>'
-    +         '<div style="margin-top:6px;color:#111"><b>Report Number:</b> ' + esc(reportNo) + '</div>'
-    +         '<div style="margin-top:4px;color:#111"><b>Test Date:</b> ' + fmtDateDMY(job.date) + ' &nbsp; <b>Retest Date:</b> ' + nextTest(job) + '</div>'
+    +       '<div style="margin-top:12px;text-align:center;border-top:1px solid #c9d2dc;border-bottom:1px solid #c9d2dc;padding:8px 0">'
+    +         '<div style="font-size:1.08rem;font-weight:900;color:#111;letter-spacing:.25px">PORTABLE APPLIANCE TESTING REPORT</div>'
+    +         '<div style="margin-top:5px;color:#111;font-size:.9rem"><b>Report Number:</b> ' + esc(reportNo) + ' &nbsp; <b>Test Date:</b> ' + fmtDateDMY(job.date) + ' &nbsp; <b>Retest Date:</b> ' + nextTest(job) + '</div>'
     +       '</div>'
 
-    +       '<div class="reportSplit" style="margin-top:12px">'
+    +       '<div class="reportSplit" style="margin-top:10px">'
     +         '<div class="reportBoxSq">'
     +           '<div class="reportSectionTitle">Client Details</div>'
-    +           '<div><b>Client:</b> ' + esc(job.client) + '</div>'
-    +           '<div><b>Contact:</b> ' + esc(job.contact) + '</div>'
-    +           '<div><b>Email:</b> ' + esc(job.email) + '</div>'
-    +           '<div style="margin-top:6px"><b>Site Address:</b><br>' + nl2br(job.address) + '</div>'
+    +           '<div style="font-size:.9rem"><b>Client:</b> ' + esc(job.client) + '</div>'
+    +           '<div style="font-size:.9rem"><b>Contact:</b> ' + esc(job.contact) + '</div>'
+    +           '<div style="font-size:.9rem"><b>Email:</b> ' + esc(job.email) + '</div>'
+    +           '<div style="margin-top:6px;font-size:.9rem"><b>Site Address:</b><br>' + nl2br(job.address) + '</div>'
     +         '</div>'
     +         '<div class="reportBoxSq">'
     +           '<div class="reportSectionTitle">Test Details</div>'
-    +           '<div><b>Engineer:</b> ' + esc(job.engineer) + '</div>'
-    +           '<div><b>Instrument:</b> ' + esc(testerModel) + '</div>'
-    +           '<div><b>Serial Number:</b> ' + esc(testerSerial) + '</div>'
-    +           '<div><b>Calibration Due:</b> ' + esc(testerCalDue) + '</div>'
+    +           '<div style="font-size:.9rem"><b>Engineer:</b> ' + esc(job.engineer) + '</div>'
+    +           '<div style="font-size:.9rem"><b>Instrument:</b> ' + esc(testerModel) + '</div>'
+    +           '<div style="font-size:.9rem"><b>Serial Number:</b> ' + esc(testerSerial) + '</div>'
+    +           '<div style="font-size:.9rem"><b>Calibration Due:</b> ' + esc(testerCalDue) + '</div>'
     +         '</div>'
     +       '</div>'
 
-    +       '<table class="reportTable" style="margin-top:12px">'
+    +       '<table class="reportTable" style="margin-top:8px">'
     +         '<tr><th>Total Tested</th><th>Total Passed</th><th>Total Failed</th><th>Next Test</th></tr>'
     +         '<tr>'
     +           '<td>' + job.items.length + '</td>'
@@ -752,7 +749,7 @@ function renderReport(){
     +       '</div>'
 
     +       '<div class="reportFoot">'
-    +         '<div>' + esc(state.company.name) + ' · Report ' + esc(reportNo) + '</div>'
+    +         '<div>' + esc(state.company.name) + ' · Portable Appliance Testing (PAT)</div>'
     +         '<div>Page 1 of 2</div>'
     +       '</div>'
     +     '</div>'
@@ -764,23 +761,23 @@ function renderReport(){
 
     +       '<div class="reportBoxSq keepTogether">'
     +         '<div class="reportSectionTitle">Failed Appliance Safety Notice</div>'
-    +         '<div style="line-height:1.45;color:#111">Appliances that have failed testing must be removed from service immediately and must not be used until they have been repaired and successfully re-tested. These items may present an electrical safety risk and should be clearly identified and isolated from normal use.</div>'
+    +         '<div style="line-height:1.4;color:#111;font-size:.9rem">Appliances that have failed testing must be removed from service immediately and must not be used until they have been repaired and successfully re-tested. These items may present an electrical safety risk and should be clearly identified and isolated from normal use.</div>'
     +       '</div>'
 
     +       '<div class="reportBoxSq keepTogether">'
     +         '<div class="reportSectionTitle">Compliance Statement</div>'
-    +         '<div style="line-height:1.45;color:#111">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
+    +         '<div style="line-height:1.4;color:#111;font-size:.9rem">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
     +       '</div>'
 
     +       '<div class="reportBoxSq">'
     +         '<div class="reportSectionTitle">Failure Photos</div>'
-    +         (failPhotos.length ? '<div class="reportPhotoGrid">' + photoBlocks + '</div>' : '<div style="color:#111">No failure photos attached.</div>')
+    +         (failPhotos.length ? '<div class="reportPhotoGrid">' + photoBlocks + '</div>' : '<div style="color:#111;font-size:.9rem">No failure photos attached.</div>')
     +       '</div>'
 
     +       '<div class="reportBoxSq keepTogether">'
     +         '<div class="reportSectionTitle">Engineer Sign-off</div>'
     +         '<div class="reportSignatureBox">' + sigHtml + '</div>'
-    +         '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;color:#111;font-size:.92rem">'
+    +         '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:6px;color:#111;font-size:.88rem">'
     +           '<div><b>Engineer:</b> ' + esc(job.engineer) + '</div>'
     +           '<div><b>Date:</b> ' + fmtDateDMY(job.date) + '</div>'
     +         '</div>'
@@ -788,11 +785,11 @@ function renderReport(){
 
     +       '<div class="reportBoxSq keepTogether">'
     +         '<div class="reportSectionTitle">Thank You</div>'
-    +         '<div style="line-height:1.45;color:#111">Thank you for choosing <b>' + esc(state.company.name) + '</b>. If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details on page 1 of this report.</div>'
+    +         '<div style="line-height:1.4;color:#111;font-size:.9rem">Thank you for choosing <b>' + esc(state.company.name) + '</b>. If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details on page 1 of this report.</div>'
     +       '</div>'
 
     +       '<div class="reportFoot">'
-    +         '<div>' + esc(state.company.name) + ' · Report ' + esc(reportNo) + '</div>'
+    +         '<div>' + esc(state.company.name) + ' · Portable Appliance Testing (PAT)</div>'
     +         '<div>Page 2 of 2</div>'
     +       '</div>'
     +     '</div>'
@@ -872,15 +869,7 @@ function clearSignature(){
   renderSign();
 }
 function loadSettings(){
-  $('setName').value = state.company.name;
-  $('setService').value = state.company.service;
-  $('setPhone').value = state.company.phone;
-  $('setEmail').value = state.company.email;
-  $('setAddress').value = state.company.address;
-  $('setPin').value = state.company.pin || '';
-  $('setTesterModel').value = state.company.testerModel || '';
-  $('setTesterSerial').value = state.company.testerSerial || '';
-  $('setTesterCalDue').value = state.company.testerCalDue || '';
+  $('setName').value = state.company.name; $('setService').value = state.company.service; $('setPhone').value = state.company.phone; $('setEmail').value = state.company.email; $('setAddress').value = state.company.address; $('setPin').value = state.company.pin || '';
   if(state.company.logo){$('logoPrev').src=state.company.logo; $('logoPrev').style.display='block'}
 }
 $('setLogo').onchange = e => {
@@ -896,9 +885,6 @@ $('saveSettingsBtn').onclick = ()=>{
   state.company.email=$('setEmail').value.trim();
   state.company.address=$('setAddress').value.trim();
   state.company.pin=$('setPin').value.trim();
-  state.company.testerModel=$('setTesterModel').value.trim();
-  state.company.testerSerial=$('setTesterSerial').value.trim();
-  state.company.testerCalDue=$('setTesterCalDue').value.trim();
   save(); refreshHeader(); brandedAlert('Settings saved');
 };
 $('clearDataBtn').onclick = ()=>{ if(confirm('Reset all app data?')){ localStorage.removeItem(KEY); location.reload(); }};
