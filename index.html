@@ -12,10 +12,14 @@
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#08131f,#0d1d2f);color:var(--text)}
-.wrap{max-width:980px;margin:0 auto;padding:14px 14px 88px}
+.wrap{max-width:1080px;margin:0 auto;padding:14px 14px 88px}
 .hero{background:linear-gradient(135deg,#10263c,#133553 58%,#3d7cb2 130%);border:1px solid #416a94;border-radius:24px;padding:18px;box-shadow:0 10px 24px rgba(0,0,0,.28)}
-.hero h1{margin:0;font-size:1.8rem}
+.heroRow{display:flex;gap:16px;align-items:center}
+.logoBox{width:110px;height:84px;border-radius:18px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto}
+.logoBox img{max-width:100%;max-height:100%;display:block}
+.hero h1{margin:0;font-size:1.9rem}
 .hero .sub{margin-top:6px;color:#d8e7f8}
+.hero .meta{margin-top:8px;color:#d8e7f8;font-size:.92rem;line-height:1.45}
 .card{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 8px 22px rgba(0,0,0,.25)}
 .card h2{margin:0;padding:14px 16px;border-bottom:1px solid var(--line);font-size:1rem;background:rgba(255,255,255,.03)}
 .body{padding:14px}
@@ -23,7 +27,7 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(
 .g2{grid-template-columns:1fr 1fr}
 .g3{grid-template-columns:repeat(3,1fr)}
 .g4{grid-template-columns:repeat(4,1fr)}
-@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}}
+@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}.heroRow{display:block}.logoBox{margin-bottom:12px}}
 label{display:block;font-size:.84rem;color:var(--muted);margin:0 0 6px;font-weight:bold}
 input,select,textarea{width:100%;padding:12px;border-radius:14px;border:1px solid #466a8e;background:#081827;color:var(--text);font-size:16px}
 textarea{min-height:84px;resize:vertical}
@@ -34,7 +38,7 @@ button.red{background:var(--red)}
 button.ghost{background:transparent;border:1px solid #5d7fa2}
 .btns{display:flex;gap:10px;flex-wrap:wrap}
 .small{font-size:.82rem;color:var(--muted)}
-.hidden{display:none}
+.hidden{display:none!important}
 .tabs{position:fixed;left:0;right:0;bottom:0;background:#091522;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:10px 10px 14px}
 .tab{padding:10px 6px;text-align:center;border-radius:14px;color:var(--muted);font-weight:bold}
 .tab.active{background:#16314d;color:#fff;border:1px solid #49739d}
@@ -46,25 +50,26 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 .fail{background:rgba(198,40,40,.18);color:#ffb4b4}
 .report{background:#fff;color:#111;border-radius:18px;padding:16px}
 .report-head{background:linear-gradient(135deg,#133553,#2a6798);color:#fff;border-radius:16px;padding:16px}
-.report-head h3{margin:0}
+.report-head h3{margin:0;font-size:1.5rem}
 .report-head .service{opacity:.95;margin-top:4px}
+.report-head .contact{margin-top:8px;font-size:.92rem;line-height:1.4}
 .tbl{width:100%;border-collapse:collapse;margin-top:10px;font-size:.84rem}
 .tbl th,.tbl td{border:1px solid #d7dfeb;padding:6px;text-align:left;vertical-align:top}
 .tbl th{background:#133553;color:#fff}
 .tbl.pass th{background:#14894c}
 .tbl.fail th{background:#c62828}
 .notice{background:rgba(77,136,191,.12);border:1px solid rgba(77,136,191,.3);border-radius:14px;padding:12px}
-.logoPrev{max-width:220px;max-height:90px;display:none;background:rgba(255,255,255,.05);padding:8px;border-radius:12px}
-
+.logoPrev{max-width:240px;max-height:100px;display:none;background:rgba(255,255,255,.05);padding:8px;border-radius:12px}
+.labelCard{background:#fff;color:#111;border:2px solid #133553;border-radius:12px;padding:10px;width:260px}
+.labelHead{background:#133553;color:#fff;padding:8px 10px;border-radius:8px;font-weight:bold}
 .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:18px}
 .modal{width:min(92vw,420px);background:#fff;color:#111;border-radius:22px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,.45)}
 .modalHead{background:linear-gradient(135deg,#133553,#2a6798);color:#fff;padding:14px 16px;font-weight:bold}
 .modalBody{padding:18px 16px 8px;font-size:1rem;line-height:1.4}
 .modalFoot{padding:14px 16px 18px;display:flex;justify-content:flex-end}
 .modalBtn{min-width:92px}
-
 @media print{
-  .tabs,.noprint,.hero{display:none!important}
+  .tabs,.noprint,.hero,.modalBack{display:none!important}
   body{background:#fff}
   .wrap{padding:0;max-width:none}
 }
@@ -73,8 +78,14 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 <body>
 <div class="wrap">
   <div class="hero">
-    <h1>MHK Building Solutions Ltd</h1>
-    <div class="sub">Portable Appliance Testing (PAT)</div>
+    <div class="heroRow">
+      <div class="logoBox"><img id="heroLogo" alt=""></div>
+      <div>
+        <h1 id="heroName">MHK Building Solutions Ltd</h1>
+        <div class="sub" id="heroService">Portable Appliance Testing (PAT)</div>
+        <div class="meta" id="heroMeta"></div>
+      </div>
+    </div>
   </div>
 
   <section id="jobsView">
@@ -83,7 +94,7 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
       <div class="body grid">
         <div class="grid g2">
           <div><label>Saved Client</label><select id="jobClientPick"></select></div>
-          <div><label>Test Date</label><input id="jobDate" type="date"></div>
+          <div><label>Test Date</label><input id="jobDate" type="date" autocomplete="off"></div>
         </div>
         <div class="grid g2">
           <div><label>Client Name</label><input id="jobClient" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
@@ -95,7 +106,7 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
         </div>
         <div><label>Site Address</label><textarea id="jobAddress" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></div>
         <div class="grid g2">
-          <div><label>Retest Interval (months)</label><input id="jobRetest" value="12"></div>
+          <div><label>Retest Interval (months)</label><input id="jobRetest" value="12" autocomplete="off"></div>
           <div><label>Notes</label><input id="jobNotes" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
         </div>
         <div class="btns"><button id="createJobBtn">Create Job</button></div>
@@ -131,24 +142,27 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
         <div class="grid g3">
           <div><label>Appliance</label><select id="itemAppliance"></select></div>
           <div id="otherWrap" class="hidden"><label>Other Appliance</label><input id="itemOther" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
-          <div><label>Asset Number</label><input id="itemAsset" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Auto"></div>
+          <div><label>Asset Number</label><input id="itemAsset" placeholder="Auto" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
         </div>
         <div class="grid g3">
-          <div><label>Location</label><select id="itemLocation"></select></div><div id="locOtherWrap" class="hidden"><label>Other Location</label><input id="itemLocationOther" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+          <div><label>Location</label><select id="itemLocation"></select></div>
+          <div id="locOtherWrap" class="hidden"><label>Other Location</label><input id="itemLocationOther" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
           <div><label>Class</label><select id="itemClass"><option>Class I</option><option>Class II</option><option>Visual Only</option></select></div>
-          <div><label>Fuse</label><select id="itemFuse"></select></div>
         </div>
         <div class="grid g3">
+          <div><label>Fuse</label><select id="itemFuse"></select></div>
           <div id="fuseOtherWrap" class="hidden"><label>Other Fuse</label><input id="itemFuseOther" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
           <div><label>Visual Inspection</label><select id="itemVisual"><option>PASS</option><option>FAIL</option></select></div>
-          <div><label>Earth Continuity (Ω)</label><input id="itemEarth" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="e.g. 0.12"></div>
         </div>
         <div class="grid g3">
+          <div><label>Earth Continuity (Ω)</label><input id="itemEarth" placeholder="e.g. 0.12" type="text" inputmode="decimal" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
           <div><label>Insulation Resistance</label><select id="itemInsulation"></select></div>
           <div id="insOtherWrap" class="hidden"><label>Manual IR</label><input id="itemInsOther" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
-          <div><label>Overall Result</label><select id="itemResult"><option>PASS</option><option>FAIL</option></select></div>
         </div>
-        <div><label>Notes / Failure Reason</label><input id="itemNotes" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+        <div class="grid g2">
+          <div><label>Overall Result</label><select id="itemResult"><option>PASS</option><option>FAIL</option></select></div>
+          <div><label>Notes / Failure Reason</label><input id="itemNotes" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+        </div>
         <div class="btns">
           <button class="green" id="saveItemBtn">Save Appliance</button>
           <button class="secondary" id="toLabelsBtn">Save + Show Label</button>
@@ -188,14 +202,14 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
       <h2>Company Settings</h2>
       <div class="body grid">
         <div class="grid g2">
-          <div><label>Company Name</label><input id="setName"></div>
-          <div><label>Service Line</label><input id="setService"></div>
+          <div><label>Company Name</label><input id="setName" autocomplete="off"></div>
+          <div><label>Service Line</label><input id="setService" autocomplete="off"></div>
         </div>
         <div class="grid g2">
-          <div><label>Phone</label><input id="setPhone"></div>
-          <div><label>Email</label><input id="setEmail"></div>
+          <div><label>Phone</label><input id="setPhone" autocomplete="off"></div>
+          <div><label>Email</label><input id="setEmail" autocomplete="off"></div>
         </div>
-        <div><label>Address</label><textarea id="setAddress"></textarea></div>
+        <div><label>Address</label><textarea id="setAddress" autocomplete="off"></textarea></div>
         <div><label>Logo</label><input id="setLogo" type="file" accept="image/*"><img id="logoPrev" class="logoPrev"></div>
         <div class="btns"><button id="saveSettingsBtn">Save Settings</button><button class="ghost" id="clearDataBtn">Reset All Data</button></div>
       </div>
@@ -212,18 +226,26 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   <div class="tab" data-view="settingsView">Settings</div>
 </div>
 
+<div class="modalBack" id="mhkModalBack">
+  <div class="modal">
+    <div class="modalHead">MHK says</div>
+    <div class="modalBody" id="mhkModalMsg"></div>
+    <div class="modalFoot"><button class="modalBtn" id="mhkModalOk">OK</button></div>
+  </div>
+</div>
+
 <script>
-const KEY='mhk_pat_full_v4';
+const KEY='mhk_pat_final_v1';
 const APPLIANCES = [
  ['Kettle','KTL'],['Microwave','MCR'],['Toaster','TST'],['Air Fryer','AFR'],['Oven','OVN'],
  ['Fridge','FRG'],['Freezer','FRZ'],['TV','TV'],['Monitor','MON'],['Printer','PRN'],
- ['Router','RTR'],['Extension Lead','EXT'],['Lamp','LMP'],['Charger / PSU','CRG'],
- ['Fan Heater','FHT'],['Vacuum Cleaner','VAC'],['Iron','IRN'],['Hair Straightener','HST'],
- ['Other','OTH']
+ ['Desktop PC','DPC'],['Laptop Charger','LCH'],['Router','RTR'],['Extension Lead','EXT'],
+ ['Lamp','LMP'],['Charger / PSU','CRG'],['Fan Heater','FHT'],['Vacuum Cleaner','VAC'],
+ ['Iron','IRN'],['Hair Straightener','HST'],['Hand Dryer','HDR'],['Other','OTH']
 ];
 const FUSES=['1A','3A','5A','7A','10A','13A','N/A','Other'];
 const IRS=['>200 MΩ','>100 MΩ','>50 MΩ','>20 MΩ','>10 MΩ','>2 MΩ','N/A','Manual'];
-const LOCATIONS=['Office','Reception','Kitchen','Staff Room','Meeting Room','Server Room','Classroom','Workshop','Store','Hallway','Bedroom','Living Room','Other'];
+const LOCATIONS=['Office','Reception','Kitchen','Staff Room','Meeting Room','Server Room','Warehouse','Workshop','Store','Hallway','Bedroom','Living Room','Utility Room','Classroom','Other'];
 const defaults = {
   company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:''},
   clients:[],jobs:[],activeJobId:null,lastLabelItemId:null
@@ -235,11 +257,8 @@ function today(){return new Date().toISOString().slice(0,10)}
 function esc(s){return String(s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 function activeJob(){return state.jobs.find(j=>j.id===state.activeJobId)}
 function nextId(prefix){return prefix + Math.random().toString(36).slice(2,7).toUpperCase()}
+function brandedAlert(msg){ $('mhkModalMsg').textContent = msg; $('mhkModalBack').style.display='flex'; }
 function prefixFor(appliance){const x=APPLIANCES.find(a=>a[0]===appliance); return x?x[1]:'OTH'}
-function brandedAlert(msg){
-  $('mhkModalMsg').textContent = msg;
-  $('mhkModalBack').style.display = 'flex';
-}
 function nextAsset(prefix){
   const job = activeJob();
   const items = job ? job.items : [];
@@ -260,6 +279,14 @@ function switchView(v){
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchView(t.dataset.view));
 
+function refreshHeader(){
+  $('heroName').textContent = state.company.name;
+  $('heroService').textContent = state.company.service;
+  $('heroMeta').innerHTML = `${esc(state.company.address)}<br>${esc(state.company.phone)} · ${esc(state.company.email)}`;
+  const heroLogo = $('heroLogo');
+  if(state.company.logo){ heroLogo.src = state.company.logo; heroLogo.style.display='block'; }
+  else { heroLogo.style.display='none'; }
+}
 function populateLists(){
   $('itemAppliance').innerHTML = APPLIANCES.map(a=>`<option>${a[0]}</option>`).join('');
   $('itemFuse').innerHTML = FUSES.map(x=>`<option>${x}</option>`).join('');
@@ -268,8 +295,9 @@ function populateLists(){
   $('jobClientPick').innerHTML = '<option value="">-- Select saved client --</option>' + state.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
 }
 $('itemAppliance').onchange = ()=>{
-  $('otherWrap').classList.toggle('hidden', $('itemAppliance').value!=='Other');
-  $('itemAsset').value = nextAsset(prefixFor($('itemAppliance').value));
+  const selected = $('itemAppliance').value;
+  $('otherWrap').classList.toggle('hidden', selected!=='Other');
+  $('itemAsset').value = nextAsset(prefixFor(selected));
 };
 $('itemFuse').onchange = ()=> $('fuseOtherWrap').classList.toggle('hidden', $('itemFuse').value!=='Other');
 $('itemInsulation').onchange = ()=> $('insOtherWrap').classList.toggle('hidden', $('itemInsulation').value!=='Manual');
@@ -284,6 +312,7 @@ $('itemClass').onchange = ()=>{
     $('insOtherWrap').classList.add('hidden');
   } else {
     if($('itemEarth').value==='N/A') $('itemEarth').value='';
+    if($('itemInsulation').value==='N/A') $('itemInsulation').value='>200 MΩ';
   }
 };
 $('jobClientPick').onchange = ()=>{
@@ -358,8 +387,8 @@ function renderLabel(){
   const job = activeJob(); if(!job){$('labelArea').innerHTML='<div class="small">No active job.</div>'; return}
   const item = job.items.find(x=>x.id===state.lastLabelItemId) || job.items[0];
   if(!item){$('labelArea').innerHTML='<div class="small">No items to label yet.</div>'; return}
-  $('labelArea').innerHTML = `<div style="background:#fff;color:#111;border:2px solid #133553;border-radius:10px;padding:10px;width:220px">
-    <div style="background:#133553;color:#fff;padding:6px 8px;border-radius:8px;font-weight:bold">MHK Building Solutions Ltd<br>PAT TEST</div>
+  $('labelArea').innerHTML = `<div class="labelCard">
+    <div class="labelHead">${esc(state.company.name)}<br>PAT TEST</div>
     <div style="padding:8px 4px;font-size:13px;line-height:1.35">
       <div><b>Asset:</b> ${esc(item.asset)}</div>
       <div><b>Appliance:</b> ${esc(item.appliance)}</div>
@@ -380,7 +409,7 @@ function renderReport(){
     <div class="report-head">
       <h3>${esc(state.company.name)}</h3>
       <div class="service">${esc(state.company.service)}</div>
-      <div style="margin-top:6px;font-size:.92rem">${esc(state.company.address)}<br>${esc(state.company.phone)} · ${esc(state.company.email)}</div>
+      <div class="contact">${esc(state.company.address)}<br>${esc(state.company.phone)} · ${esc(state.company.email)}</div>
     </div>
     <h3 style="margin:14px 0 8px">PAT Test Report</h3>
     <div><b>Client:</b> ${esc(job.client)}</div>
@@ -400,6 +429,10 @@ function renderReport(){
     <table class="tbl fail"><tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Fuse</th><th>Class</th><th>Earth</th><th>IR</th><th>Visual</th><th>Result</th><th>Notes</th></tr>
       ${fail.map(i=>`<tr><td>${esc(i.asset)}</td><td>${esc(i.appliance)}</td><td>${esc(i.location)}</td><td>${esc(i.fuse)}</td><td>${esc(i.classType)}</td><td>${esc(i.earth)}</td><td>${esc(i.ir)}</td><td>${esc(i.visual)}</td><td>${esc(i.result)}</td><td>${esc(i.notes)}</td></tr>`).join('') || '<tr><td colspan="10">None</td></tr>'}
     </table>
+    <div style="margin-top:16px;display:flex;justify-content:space-between;gap:12px;align-items:flex-end">
+      <div style="flex:1"><b>Engineer Signature</b><div style="border:1px solid #bbb;height:50px;border-radius:8px;margin-top:6px"></div></div>
+      <div style="font-size:.85rem;color:#555">Page 1 of 1</div>
+    </div>
   </div>`;
 }
 $('printReportBtn').onclick = ()=>window.print();
@@ -411,7 +444,7 @@ function loadSettings(){
 $('setLogo').onchange = e => {
   const f=e.target.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=ev=>{$('logoPrev').src=ev.target.result; $('logoPrev').style.display='block'; state.company.logo=ev.target.result; save();}
+  r.onload=ev=>{$('logoPrev').src=ev.target.result; $('logoPrev').style.display='block'; state.company.logo=ev.target.result; save(); refreshHeader();}
   r.readAsDataURL(f);
 };
 $('saveSettingsBtn').onclick = ()=>{
@@ -420,23 +453,16 @@ $('saveSettingsBtn').onclick = ()=>{
   state.company.phone=$('setPhone').value.trim();
   state.company.email=$('setEmail').value.trim();
   state.company.address=$('setAddress').value.trim();
-  save(); brandedAlert('Settings saved');
+  save(); refreshHeader(); brandedAlert('Settings saved');
 };
-$('clearDataBtn').onclick = ()=>{if(confirm('Reset all app data?')){localStorage.removeItem(KEY); location.reload();}};
+$('clearDataBtn').onclick = ()=>{ if(confirm('Reset all app data?')){ localStorage.removeItem(KEY); location.reload(); }};
 
 $('mhkModalOk').onclick = ()=> $('mhkModalBack').style.display='none';
 $('mhkModalBack').onclick = (e)=>{ if(e.target.id==='mhkModalBack') $('mhkModalBack').style.display='none'; };
-renderJobs(); renderClients(); populateLists(); renderItems(); $('itemLocation').value='Office'; $('itemAsset').value='KTL01';
-if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{});}
+
+renderJobs(); renderClients(); populateLists(); renderItems(); refreshHeader();
+$('itemLocation').value='Office'; $('itemAsset').value='KTL01';
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js?final=1').catch(()=>{}); }
 </script>
-
-<div class="modalBack" id="mhkModalBack">
-  <div class="modal">
-    <div class="modalHead">MHK says</div>
-    <div class="modalBody" id="mhkModalMsg"></div>
-    <div class="modalFoot"><button class="modalBtn" id="mhkModalOk">OK</button></div>
-  </div>
-</div>
-
 </body>
 </html>
