@@ -386,8 +386,8 @@ function nextTest(job){
 function fmtDateDMY(v){
   if(!v) return '';
   if(/^\d{4}-\d{2}-\d{2}$/.test(v)){
-    const [y,m,d] = v.split('-');
-    return `${d}/${m}/${y}`;
+    const parts = v.split('-');
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
   }
   const dt = new Date(v);
   return isNaN(dt.getTime()) ? String(v) : dt.toLocaleDateString('en-GB');
@@ -397,9 +397,12 @@ function ensureReportNumber(job){
   if(typeof state.reportCounter !== 'number') state.reportCounter = 0;
   state.reportCounter += 1;
   const year = (job.date && /^\d{4}/.test(job.date)) ? job.date.slice(0,4) : String(new Date().getFullYear());
-  job.reportNo = `MHK-${year}-${String(state.reportCounter).padStart(4,'0')}`;
+  job.reportNo = 'MHK-' + year + '-' + String(state.reportCounter).padStart(4,'0');
   save();
   return job.reportNo;
+}
+function nl2br(s){
+  return esc(s).replace(/\n/g,'<br>');
 }
 function renderLabel(){
   const job = activeJob(); if(!job){$('labelArea').innerHTML='<div class="small">No active job.</div>'; return}
@@ -425,129 +428,114 @@ function renderReport(){
   const fail = job.items.filter(i=>i.result==='FAIL');
   const reportNo = ensureReportNumber(job);
   const logoHtml = state.company.logo
-    ? `<img src="${state.company.logo}" alt="Logo" style="max-width:180px;max-height:100px;display:block">`
-    : `<div style="width:180px;height:90px;border:1px solid #cfd9e6;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#5b6775">Logo</div>`;
+    ? '<img src="' + state.company.logo + '" alt="Logo" style="max-width:180px;max-height:100px;display:block">'
+    : '<div style="width:180px;height:90px;border:1px solid #cfd9e6;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#5b6775">Logo</div>';
 
-  $('reportArea').innerHTML = `<div class="report" id="reportBox" style="background:#fff;color:#111;border-radius:18px;padding:18px">
-    <div style="border:1px solid #cfd9e6;border-radius:16px;overflow:hidden">
-      <div style="background:linear-gradient(135deg,#133553,#2a6798);height:10px"></div>
-      <div style="padding:18px">
-        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">
-          <div style="flex:1">
-            <div style="font-size:1.55rem;font-weight:900;color:#111">${esc(state.company.name)}</div>
-            <div style="margin-top:4px;font-size:1rem;color:#111">${esc(state.company.service)}</div>
-            <div style="margin-top:10px;line-height:1.5;color:#111">
-              ${esc(state.company.address).replace(/
-/g,'<br>')}<br>
-              ${esc(state.company.phone)} · ${esc(state.company.email)}
-            </div>
-          </div>
-          <div style="flex:0 0 auto;text-align:right">${logoHtml}</div>
-        </div>
+  const passRows = pass.length ? pass.map(i =>
+    '<tr>' +
+    '<td style="color:#111">' + esc(i.asset) + '</td>' +
+    '<td style="color:#111">' + esc(i.appliance) + '</td>' +
+    '<td style="color:#111">' + esc(i.location) + '</td>' +
+    '<td style="color:#111">' + esc(i.classType) + '</td>' +
+    '<td style="color:#111">' + esc(i.fuse) + '</td>' +
+    '<td style="color:#111">' + esc(i.earth) + '</td>' +
+    '<td style="color:#111">' + esc(i.ir) + '</td>' +
+    '<td style="color:#111">' + esc(i.visual) + '</td>' +
+    '<td style="color:#14894c;font-weight:bold">' + esc(i.result) + '</td>' +
+    '</tr>'
+  ).join('') : '<tr><td colspan="9" style="color:#111">None</td></tr>';
 
-        <div style="margin-top:18px;text-align:center">
-          <div style="font-size:1.3rem;font-weight:900;color:#111">PORTABLE APPLIANCE TESTING REPORT</div>
-          <div style="margin-top:6px;color:#111"><b>Report Number:</b> ${esc(reportNo)}</div>
-          <div style="margin-top:4px;color:#111"><b>Test Date:</b> ${fmtDateDMY(job.date)} &nbsp; <b>Retest Date:</b> ${nextTest(job)}</div>
-        </div>
+  const failRows = fail.length ? fail.map(i =>
+    '<tr>' +
+    '<td style="color:#111">' + esc(i.asset) + '</td>' +
+    '<td style="color:#111">' + esc(i.appliance) + '</td>' +
+    '<td style="color:#111">' + esc(i.location) + '</td>' +
+    '<td style="color:#111">' + esc(i.classType) + '</td>' +
+    '<td style="color:#111">' + esc(i.fuse) + '</td>' +
+    '<td style="color:#111">' + esc(i.earth) + '</td>' +
+    '<td style="color:#111">' + esc(i.ir) + '</td>' +
+    '<td style="color:#111">' + esc(i.visual) + '</td>' +
+    '<td style="color:#c62828;font-weight:bold">' + esc(i.result) + '</td>' +
+    '<td style="color:#111">' + esc(i.notes) + '</td>' +
+    '</tr>'
+  ).join('') : '<tr><td colspan="10" style="color:#111">None</td></tr>';
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">
-          <div style="border:1px solid #cfd9e6;border-radius:12px;padding:12px">
-            <div style="font-weight:900;color:#111;margin-bottom:8px">Client Details</div>
-            <div style="color:#111"><b>Client:</b> ${esc(job.client)}</div>
-            <div style="color:#111"><b>Contact:</b> ${esc(job.contact)}</div>
-            <div style="color:#111"><b>Email:</b> ${esc(job.email)}</div>
-            <div style="margin-top:8px;color:#111"><b>Site Address:</b><br>${esc(job.address).replace(/
-/g,'<br>')}</div>
-          </div>
-          <div style="border:1px solid #cfd9e6;border-radius:12px;padding:12px">
-            <div style="font-weight:900;color:#111;margin-bottom:8px">Test Details</div>
-            <div style="color:#111"><b>Engineer:</b> ${esc(job.engineer)}</div>
-            <div style="color:#111"><b>Instrument:</b> Seaward Apollo 400+ PAT Tester</div>
-            <div style="color:#111"><b>Serial Number:</b> __________</div>
-            <div style="color:#111"><b>Calibration Due:</b> __________</div>
-          </div>
-        </div>
+  $('reportArea').innerHTML = ''
+    + '<div class="report" id="reportBox" style="background:#fff;color:#111;border-radius:18px;padding:18px">'
+    +   '<div style="border:1px solid #cfd9e6;border-radius:16px;overflow:hidden">'
+    +     '<div style="background:linear-gradient(135deg,#133553,#2a6798);height:10px"></div>'
+    +     '<div style="padding:18px">'
+    +       '<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">'
+    +         '<div style="flex:1">'
+    +           '<div style="font-size:1.55rem;font-weight:900;color:#111">' + esc(state.company.name) + '</div>'
+    +           '<div style="margin-top:4px;font-size:1rem;color:#111">' + esc(state.company.service) + '</div>'
+    +           '<div style="margin-top:10px;line-height:1.5;color:#111">' + nl2br(state.company.address) + '<br>' + esc(state.company.phone) + ' · ' + esc(state.company.email) + '</div>'
+    +         '</div>'
+    +         '<div style="flex:0 0 auto;text-align:right">' + logoHtml + '</div>'
+    +       '</div>'
 
-        <table class="tbl" style="margin-top:16px">
-          <tr><th>Total Tested</th><th>Total Passed</th><th>Total Failed</th><th>Next Test</th></tr>
-          <tr>
-            <td style="color:#111">${job.items.length}</td>
-            <td style="color:#14894c;font-weight:bold">${pass.length}</td>
-            <td style="color:#c62828;font-weight:bold">${fail.length}</td>
-            <td style="color:#111">${nextTest(job)}</td>
-          </tr>
-        </table>
+    +       '<div style="margin-top:18px;text-align:center">'
+    +         '<div style="font-size:1.3rem;font-weight:900;color:#111">PORTABLE APPLIANCE TESTING REPORT</div>'
+    +         '<div style="margin-top:6px;color:#111"><b>Report Number:</b> ' + esc(reportNo) + '</div>'
+    +         '<div style="margin-top:4px;color:#111"><b>Test Date:</b> ' + fmtDateDMY(job.date) + ' &nbsp; <b>Retest Date:</b> ' + nextTest(job) + '</div>'
+    +       '</div>'
 
-        <h4 style="margin:16px 0 8px;color:#111">Passed Items</h4>
-        <table class="tbl">
-          <tr>
-            <th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th>
-          </tr>
-          ${pass.map(i=>`<tr>
-            <td style="color:#111">${esc(i.asset)}</td>
-            <td style="color:#111">${esc(i.appliance)}</td>
-            <td style="color:#111">${esc(i.location)}</td>
-            <td style="color:#111">${esc(i.classType)}</td>
-            <td style="color:#111">${esc(i.fuse)}</td>
-            <td style="color:#111">${esc(i.earth)}</td>
-            <td style="color:#111">${esc(i.ir)}</td>
-            <td style="color:#111">${esc(i.visual)}</td>
-            <td style="color:#14894c;font-weight:bold">${esc(i.result)}</td>
-          </tr>`).join('') || '<tr><td colspan="9" style="color:#111">None</td></tr>'}
-        </table>
+    +       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">'
+    +         '<div style="border:1px solid #cfd9e6;border-radius:12px;padding:12px">'
+    +           '<div style="font-weight:900;color:#111;margin-bottom:8px">Client Details</div>'
+    +           '<div style="color:#111"><b>Client:</b> ' + esc(job.client) + '</div>'
+    +           '<div style="color:#111"><b>Contact:</b> ' + esc(job.contact) + '</div>'
+    +           '<div style="color:#111"><b>Email:</b> ' + esc(job.email) + '</div>'
+    +           '<div style="margin-top:8px;color:#111"><b>Site Address:</b><br>' + nl2br(job.address) + '</div>'
+    +         '</div>'
+    +         '<div style="border:1px solid #cfd9e6;border-radius:12px;padding:12px">'
+    +           '<div style="font-weight:900;color:#111;margin-bottom:8px">Test Details</div>'
+    +           '<div style="color:#111"><b>Engineer:</b> ' + esc(job.engineer) + '</div>'
+    +           '<div style="color:#111"><b>Instrument:</b> Seaward Apollo 400+ PAT Tester</div>'
+    +           '<div style="color:#111"><b>Serial Number:</b> __________</div>'
+    +           '<div style="color:#111"><b>Calibration Due:</b> __________</div>'
+    +         '</div>'
+    +       '</div>'
 
-        <h4 style="margin:16px 0 8px;color:#111">Failed Items</h4>
-        <table class="tbl">
-          <tr>
-            <th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th><th>Notes</th>
-          </tr>
-          ${fail.map(i=>`<tr>
-            <td style="color:#111">${esc(i.asset)}</td>
-            <td style="color:#111">${esc(i.appliance)}</td>
-            <td style="color:#111">${esc(i.location)}</td>
-            <td style="color:#111">${esc(i.classType)}</td>
-            <td style="color:#111">${esc(i.fuse)}</td>
-            <td style="color:#111">${esc(i.earth)}</td>
-            <td style="color:#111">${esc(i.ir)}</td>
-            <td style="color:#111">${esc(i.visual)}</td>
-            <td style="color:#c62828;font-weight:bold">${esc(i.result)}</td>
-            <td style="color:#111">${esc(i.notes)}</td>
-          </tr>`).join('') || '<tr><td colspan="10" style="color:#111">None</td></tr>'}
-        </table>
+    +       '<table class="tbl" style="margin-top:16px">'
+    +         '<tr><th>Total Tested</th><th>Total Passed</th><th>Total Failed</th><th>Next Test</th></tr>'
+    +         '<tr><td style="color:#111">' + job.items.length + '</td><td style="color:#14894c;font-weight:bold">' + pass.length + '</td><td style="color:#c62828;font-weight:bold">' + fail.length + '</td><td style="color:#111">' + nextTest(job) + '</td></tr>'
+    +       '</table>'
 
-        <div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">
-          <div style="font-weight:900">FAILED APPLIANCES MUST BE REMOVED FROM SERVICE</div>
-          <div style="margin-top:6px;line-height:1.45">
-            Failed appliances must not be used until repaired and re-tested. These items present a potential electrical safety risk and should be removed from service immediately in accordance with the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.
-          </div>
-        </div>
+    +       '<h4 style="margin:16px 0 8px;color:#111">Passed Items</h4>'
+    +       '<table class="tbl">'
+    +         '<tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th></tr>'
+    +         passRows
+    +       '</table>'
 
-        <div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">
-          <div style="font-weight:900">Compliance Statement</div>
-          <div style="margin-top:6px;line-height:1.45">
-            Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.
-          </div>
-        </div>
+    +       '<h4 style="margin:16px 0 8px;color:#111">Failed Items</h4>'
+    +       '<table class="tbl">'
+    +         '<tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th><th>Notes</th></tr>'
+    +         failRows
+    +       '</table>'
 
-        <div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px">
-          <div style="font-weight:900;color:#111">Engineer Signature</div>
-          <div style="height:62px;border:1px solid #bbb;border-radius:8px;margin-top:8px;background:#fff"></div>
-          <div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;color:#111;font-size:.92rem">
-            <div><b>Engineer:</b> ${esc(job.engineer)}</div>
-            <div><b>Date:</b> ${fmtDateDMY(job.date)}</div>
-          </div>
-        </div>
+    +       '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">'
+    +         '<div style="font-weight:900">FAILED APPLIANCES MUST BE REMOVED FROM SERVICE</div>'
+    +         '<div style="margin-top:6px;line-height:1.45">Failed appliances must not be used until repaired and re-tested. These items present a potential electrical safety risk and should be removed from service immediately in accordance with the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
+    +       '</div>'
 
-        <div style="margin-top:14px;color:#111;line-height:1.5">
-          Thank you for choosing <b>${esc(state.company.name)}</b>.<br>
-          If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.
-        </div>
+    +       '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px;color:#111">'
+    +         '<div style="font-weight:900">Compliance Statement</div>'
+    +         '<div style="margin-top:6px;line-height:1.45">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
+    +       '</div>'
 
-        <div style="margin-top:14px;display:flex;justify-content:flex-end;color:#555;font-size:.85rem">Page 1 of 1</div>
-      </div>
-    </div>
-  </div>`;
+    +       '<div style="margin-top:14px;border:1px solid #cfd9e6;border-radius:12px;padding:12px">'
+    +         '<div style="font-weight:900;color:#111">Engineer Signature</div>'
+    +         '<div style="height:62px;border:1px solid #bbb;border-radius:8px;margin-top:8px;background:#fff"></div>'
+    +         '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;color:#111;font-size:.92rem"><div><b>Engineer:</b> ' + esc(job.engineer) + '</div><div><b>Date:</b> ' + fmtDateDMY(job.date) + '</div></div>'
+    +       '</div>'
+
+    +       '<div style="margin-top:14px;color:#111;line-height:1.5">Thank you for choosing <b>' + esc(state.company.name) + '</b>.<br>If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.</div>'
+
+    +       '<div style="margin-top:14px;display:flex;justify-content:flex-end;color:#555;font-size:.85rem">Page 1 of 1</div>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
 }
 $('printReportBtn').onclick = ()=>window.print();
 
