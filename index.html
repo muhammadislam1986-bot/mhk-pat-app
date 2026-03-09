@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MHK Building Solutions Ltd PAT</title>
 <meta name="theme-color" content="#133553">
+<link rel="manifest" href="/mhk-pat-app/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MHK PAT Pro">
 <style>
 :root{
   --bg:#08131f; --panel:#102338; --panel2:#17314d; --line:#31597f; --text:#eef5ff; --muted:#bfd1e6;
@@ -88,6 +93,7 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   border:none;
   border-radius:0;
   box-shadow:none;
+  outline:none;
 }
 .reportPage:last-child{page-break-after:auto}
 .reportPageInner{
@@ -97,6 +103,7 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   border:none;
   border-radius:0;
   box-shadow:none;
+  outline:none;
   background:#fff;
 }
 .reportTopLine{height:5px;background:#133553;margin:0 0 10px 0}
@@ -107,7 +114,6 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   margin-top:10px;
   border-radius:0;
   background:#fff;
-  box-shadow:none;
 }
 .reportBoxSq h4,.reportSectionTitle{margin:0 0 8px 0;color:#111;font-size:1rem;font-weight:800}
 .reportTable{width:100%;border-collapse:collapse;margin-top:8px;font-size:.83rem}
@@ -125,79 +131,41 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   font-size:.8rem;
 }
 .reportMuted{color:#4f5e70}
-.reportPhotoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-.reportPhotoCard{border:1px solid #c9d2dc;padding:8px;background:#fff}
-.reportPhotoCard img{width:100%;max-height:185px;object-fit:contain;border:1px solid #d7dfe8;background:#fff}
-.reportSignatureBox{height:44px;border:1px solid #bbb;background:#fff;margin-top:8px;padding:5px}
+.reportPhotoGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.reportPhotoCard{border:1px solid #c9d2dc;padding:7px;background:#fff;break-inside:avoid;page-break-inside:avoid}
+.reportPhotoCard img{width:100%;max-height:110px;object-fit:cover;border:1px solid #d7dfe8;background:#fff}
+.reportPhotoHint{margin-top:8px;color:#4f5e70;font-size:.88rem}
+.reportSignatureBox{height:36px;border:1px solid #bbb;background:#fff;margin-top:7px;padding:4px}
 .lockInput{background:#fff;color:#111;border:1px solid #cfd9e6}
-
-@page{
-  size:A4;
-  margin:10mm;
-}
-
 @media print{
+  @page{size:A4;margin:10mm}
   .keepTogether{page-break-inside:avoid;break-inside:avoid}
   .tabs,.noprint,.hero,.modalBack{display:none!important}
-  body{background:#fff!important}
+  html,body{background:#fff!important;margin:0!important;padding:0!important}
   .wrap{padding:0!important;max-width:none!important}
-
-  /* Report printing */
-  #reportView>.card{
-    border:none!important;
-    border-radius:0!important;
-    box-shadow:none!important;
-    background:#fff!important;
-    overflow:visible!important;
-  }
-  #reportView>.card>h2{display:none!important}
-  #reportView>.card>.body{
-    padding:0!important;
-    border:none!important;
-    background:#fff!important;
-  }
-  #reportArea,#reportBox,.reportPage,.reportPageInner,.report,.report-head{
+  #reportView>.card,.card,#reportView>.card>.body,#reportArea,#reportBox,.reportPage,.reportPageInner,.report,.report-head{
     border:none!important;
     border-radius:0!important;
     box-shadow:none!important;
     outline:none!important;
+    background:#fff!important;
+    overflow:visible!important;
   }
+  #reportView>.card>h2{display:none!important}
+  #reportView>.card>.body{padding:0!important}
+  .reportPage{
+    width:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    page-break-after:always!important;
+  }
+  .reportPage:last-child{page-break-after:auto!important}
+}
 
-  /* Label-only printing */
-  body *{visibility:hidden!important}
-  #labelsView, #labelsView *{visibility:visible!important}
-  #labelsView{
-    display:block!important;
-    position:absolute!important;
-    left:0!important;
-    top:0!important;
-    width:100%!important;
-    background:#fff!important;
-  }
-  #labelsView .card{
-    border:none!important;
-    border-radius:0!important;
-    box-shadow:none!important;
-    background:#fff!important;
-  }
-  #labelsView h2,
-  #labelsView .notice,
-  #labelsView .grid,
-  #labelsView .btns{
-    display:none!important;
-  }
-  #labelArea{
-    margin:0!important;
-    padding:0!important;
-  }
-  #labelArea > .small{
-    display:none!important;
-  }
-  #labelArea .labelCard{
-    margin:0!important;
-    break-inside:avoid!important;
-    page-break-inside:avoid!important;
-  }
+@media print{
+  .tabs,.noprint,.hero,.modalBack{display:none!important}
+  body{background:#fff}
+  .wrap{padding:0;max-width:none}
 }
 </style>
 </head>
@@ -701,12 +669,16 @@ $('printLabelBtn').onclick = ()=>window.print();
 function renderReport(){
   const job = activeJob();
   if(!job){$('reportArea').innerHTML='<div class="small">No active job.</div>'; return}
+
   const pass = job.items.filter(i=>i.result==='PASS');
   const fail = job.items.filter(i=>i.result==='FAIL');
-  const failPhotos = fail.filter(i=>i.photo);
+  const failWithRef = fail.map((i, idx) => ({...i, photoRef: i.photo ? ('FP-' + (idx+1)) : ''}));
+  const failPhotos = failWithRef.filter(i=>i.photo);
+
   const reportNo = ensureReportNumber(job);
-  const logoHtml = state.company.logo ? '<img src="' + state.company.logo + '" alt="Logo" style="max-width:155px;max-height:76px;display:block">' : '';
-  const sigHtml = state.company.signature ? '<img src="' + state.company.signature + '" alt="Signature" style="max-width:220px;max-height:30px;display:block">' : '';
+  const logoHtml = state.company.logo ? '<img src="' + state.company.logo + '" alt="Logo" style="max-width:150px;max-height:68px;display:block">' : '';
+  const sigHtml = state.company.signature ? '<img src="' + state.company.signature + '" alt="Signature" style="max-width:210px;max-height:26px;display:block">' : '';
+
   const testerModel = state.company.testerModel || 'Seaward Apollo 400+ PAT Tester';
   const testerSerial = state.company.testerSerial || '____________';
   const testerCalDue = state.company.testerCalDue ? fmtDateDMY(state.company.testerCalDue) : '____________';
@@ -725,7 +697,7 @@ function renderReport(){
     '</tr>'
   ).join('') : '<tr><td colspan="9">None</td></tr>';
 
-  const failRows = fail.length ? fail.map(i =>
+  const failRows = failWithRef.length ? failWithRef.map(i =>
     '<tr>' +
       '<td>' + esc(i.asset) + '</td>' +
       '<td>' + esc(i.appliance) + '</td>' +
@@ -736,15 +708,15 @@ function renderReport(){
       '<td>' + esc(i.ir) + '</td>' +
       '<td>' + esc(i.visual) + '</td>' +
       '<td style="color:#c62828;font-weight:800">' + esc(i.result) + '</td>' +
-      '<td>' + esc(i.notes) + '</td>' +
+      '<td>' + esc(i.notes || '') + (i.photoRef ? '<div style="margin-top:4px;font-size:.82rem;color:#4f5e70"><b>Photo Ref:</b> ' + esc(i.photoRef) + '</div>' : '') + '</td>' +
     '</tr>'
   ).join('') : '<tr><td colspan="10">None</td></tr>';
 
   const photoBlocks = failPhotos.map(i =>
     '<div class="reportPhotoCard">' +
-      '<div style="font-weight:800;color:#111">' + esc(i.asset) + ' · ' + esc(i.appliance) + '</div>' +
-      '<div class="reportMuted" style="margin-top:4px;font-size:.88rem"><b>Failure reason:</b> ' + esc(i.notes || 'See failed items table') + '</div>' +
-      '<div style="margin-top:8px"><img src="' + i.photo + '" alt="Failure photo"></div>' +
+      '<div style="font-weight:800;color:#111">' + esc(i.photoRef) + ' · ' + esc(i.asset) + ' · ' + esc(i.appliance) + '</div>' +
+      '<div class="reportMuted" style="margin-top:3px;font-size:.84rem"><b>Failure reason:</b> ' + esc(i.notes || 'See failed items table') + '</div>' +
+      '<div style="margin-top:6px"><img src="' + i.photo + '" alt="Failure photo"></div>' +
     '</div>'
   ).join('');
 
@@ -753,29 +725,26 @@ function renderReport(){
     +   '<div class="reportPage">'
     +     '<div class="reportPageInner">'
     +       '<div class="reportTopLine"></div>'
-
-    +       '<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start">'
+    +       '<div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start">'
     +         '<div style="flex:1">'
-    +           '<div style="font-size:1.48rem;font-weight:900;color:#111">' + esc(state.company.name) + '</div>'
+    +           '<div style="font-size:1.42rem;font-weight:900;color:#111">' + esc(state.company.name) + '</div>'
     +           '<div style="margin-top:4px;font-size:1rem;color:#111">' + esc(state.company.service) + '</div>'
-    +           '<div style="margin-top:8px;line-height:1.42;color:#111">' + nl2br(state.company.address) + '<br>' + esc(state.company.phone) + ' · ' + esc(state.company.email) + '</div>'
+    +           '<div style="margin-top:7px;line-height:1.38;color:#111">' + nl2br(state.company.address) + '<br>' + esc(state.company.phone) + ' · ' + esc(state.company.email) + '</div>'
     +         '</div>'
     +         '<div style="flex:0 0 auto;text-align:right">' + logoHtml + '</div>'
     +       '</div>'
-
-    +       '<div style="margin-top:14px;text-align:center">'
-    +         '<div style="font-size:1.18rem;font-weight:900;color:#111;letter-spacing:.25px">PORTABLE APPLIANCE TESTING REPORT</div>'
-    +         '<div style="margin-top:6px;color:#111"><b>Report Number:</b> ' + esc(reportNo) + '</div>'
-    +         '<div style="margin-top:4px;color:#111"><b>Test Date:</b> ' + fmtDateDMY(job.date) + ' &nbsp; <b>Retest Date:</b> ' + nextTest(job) + '</div>'
+    +       '<div style="margin-top:12px;text-align:center">'
+    +         '<div style="font-size:1.14rem;font-weight:900;color:#111;letter-spacing:.22px">PORTABLE APPLIANCE TESTING REPORT</div>'
+    +         '<div style="margin-top:5px;color:#111"><b>Report Number:</b> ' + esc(reportNo) + '</div>'
+    +         '<div style="margin-top:3px;color:#111"><b>Test Date:</b> ' + fmtDateDMY(job.date) + ' &nbsp; <b>Retest Date:</b> ' + nextTest(job) + '</div>'
     +       '</div>'
-
-    +       '<div class="reportSplit" style="margin-top:12px">'
+    +       '<div class="reportSplit" style="margin-top:10px">'
     +         '<div class="reportBoxSq">'
     +           '<div class="reportSectionTitle">Client Details</div>'
     +           '<div><b>Client:</b> ' + esc(job.client) + '</div>'
     +           '<div><b>Contact:</b> ' + esc(job.contact) + '</div>'
     +           '<div><b>Email:</b> ' + esc(job.email) + '</div>'
-    +           '<div style="margin-top:6px"><b>Site Address:</b><br>' + nl2br(job.address) + '</div>'
+    +           '<div style="margin-top:5px"><b>Site Address:</b><br>' + nl2br(job.address) + '</div>'
     +         '</div>'
     +         '<div class="reportBoxSq">'
     +           '<div class="reportSectionTitle">Test Details</div>'
@@ -785,17 +754,10 @@ function renderReport(){
     +           '<div><b>Calibration Due:</b> ' + esc(testerCalDue) + '</div>'
     +         '</div>'
     +       '</div>'
-
-    +       '<table class="reportTable" style="margin-top:12px">'
+    +       '<table class="reportTable" style="margin-top:10px">'
     +         '<tr><th>Total Tested</th><th>Total Passed</th><th>Total Failed</th><th>Next Test</th></tr>'
-    +         '<tr>'
-    +           '<td>' + job.items.length + '</td>'
-    +           '<td style="color:#14894c;font-weight:800">' + pass.length + '</td>'
-    +           '<td style="color:#c62828;font-weight:800">' + fail.length + '</td>'
-    +           '<td>' + nextTest(job) + '</td>'
-    +         '</tr>'
+    +         '<tr><td>' + job.items.length + '</td><td style="color:#14894c;font-weight:800">' + pass.length + '</td><td style="color:#c62828;font-weight:800">' + fail.length + '</td><td>' + nextTest(job) + '</td></tr>'
     +       '</table>'
-
     +       '<div class="reportBoxSq">'
     +         '<div class="reportSectionTitle">Passed Items</div>'
     +         '<table class="reportTable">'
@@ -803,7 +765,6 @@ function renderReport(){
     +           passRows
     +         '</table>'
     +       '</div>'
-
     +       '<div class="reportBoxSq">'
     +         '<div class="reportSectionTitle">Failed Items</div>'
     +         '<table class="reportTable">'
@@ -811,51 +772,37 @@ function renderReport(){
     +           failRows
     +         '</table>'
     +       '</div>'
-
-    +       '<div class="reportFoot">'
-    +         '<div>' + esc(state.company.name) + ' · Report ' + esc(reportNo) + '</div>'
-    +         '<div>Page 1 of 2</div>'
-    +       '</div>'
+    +       '<div class="reportFoot"><div>' + esc(state.company.name) + ' · Report ' + esc(reportNo) + '</div><div>Page 1 of 2</div></div>'
     +     '</div>'
     +   '</div>'
-
     +   '<div class="reportPage">'
     +     '<div class="reportPageInner">'
     +       '<div class="reportTopLine"></div>'
-
     +       '<div class="reportBoxSq keepTogether">'
     +         '<div class="reportSectionTitle">Failed Appliance Safety Notice</div>'
-    +         '<div style="line-height:1.45;color:#111">Appliances that have failed testing must be removed from service immediately and must not be used until they have been repaired and successfully re-tested. These items may present an electrical safety risk and should be clearly identified and isolated from normal use.</div>'
+    +         '<div style="line-height:1.36;color:#111">Appliances that have failed testing must be removed from service immediately and must not be used until they have been repaired and successfully re-tested. These items may present an electrical safety risk and should be clearly identified and isolated from normal use.</div>'
     +       '</div>'
-
     +       '<div class="reportBoxSq keepTogether">'
     +         '<div class="reportSectionTitle">Compliance Statement</div>'
-    +         '<div style="line-height:1.45;color:#111">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
+    +         '<div style="line-height:1.36;color:#111">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
     +       '</div>'
-
     +       '<div class="reportBoxSq">'
     +         '<div class="reportSectionTitle">Failure Photos</div>'
-    +         (failPhotos.length ? '<div class="reportPhotoGrid">' + photoBlocks + '</div>' : '<div style="color:#111">No failure photos attached.</div>')
+    +         (photoBlocks ? '<div class="reportPhotoGrid">' + photoBlocks + '</div>' : '<div style="color:#111">No failure photos attached.</div>')
     +       '</div>'
-
     +       '<div class="reportBoxSq keepTogether">'
     +         '<div class="reportSectionTitle">Engineer Sign-off</div>'
     +         '<div class="reportSignatureBox">' + sigHtml + '</div>'
-    +         '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;color:#111;font-size:.92rem">'
+    +         '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:7px;color:#111;font-size:.9rem">'
     +           '<div><b>Engineer:</b> ' + esc(job.engineer) + '</div>'
     +           '<div><b>Date:</b> ' + fmtDateDMY(job.date) + '</div>'
     +         '</div>'
     +       '</div>'
-
     +       '<div class="reportBoxSq keepTogether">'
     +         '<div class="reportSectionTitle">Thank You</div>'
-    +         '<div style="line-height:1.45;color:#111">Thank you for choosing <b>' + esc(state.company.name) + '</b>. If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details on page 1 of this report.</div>'
+    +         '<div style="line-height:1.36;color:#111">Thank you for choosing <b>' + esc(state.company.name) + '</b>. If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details on page 1 of this report.</div>'
     +       '</div>'
-
-    +       '<div class="reportFoot">'
-    +         '<div>' + esc(state.company.name) + ' · Report ' + esc(reportNo) + '</div>'
-    +         '<div>Page 2 of 2</div>'
-    +       '</div>'
+    +       '<div class="reportFoot"><div>' + esc(state.company.name) + ' · Report ' + esc(reportNo) + '</div><div>Page 2 of 2</div></div>'
     +     '</div>'
     +   '</div>'
     + '</div>';
@@ -1026,7 +973,11 @@ $('mhkModalBack').onclick = (e)=>{ if(e.target.id==='mhkModalBack') $('mhkModalB
 renderJobs(); renderClients(); populateLists(); renderItems(); refreshHeader(); initSignaturePad(); renderSign();
 $('itemLocation').value='Office'; $('itemAsset').value='KTL01'; syncOverallFromVisual();
 checkPinLock();
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js?final=1').catch(()=>{}); }
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/mhk-pat-app/sw.js', { scope:'/mhk-pat-app/' }).catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
