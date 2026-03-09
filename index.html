@@ -77,26 +77,37 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 .reportPage{
   background:#fff;
   color:#111;
-  width:210mm;
-  min-height:297mm;
-  margin:0 auto 14px;
-  padding:12mm;
+  width:190mm;
+  min-height:267mm;
+  margin:0 auto 8mm;
+  padding:0;
   box-sizing:border-box;
-  box-shadow:0 2px 12px rgba(0,0,0,.08);
   display:flex;
   flex-direction:column;
   page-break-after:always;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
 }
 .reportPage:last-child{page-break-after:auto}
-.reportPageInner{display:flex;flex-direction:column;min-height:100%}
-.reportTopLine{height:7px;background:#133553;margin:0 0 12px 0}
+.reportPageInner{
+  display:flex;
+  flex-direction:column;
+  min-height:100%;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  background:#fff;
+}
+.reportTopLine{height:5px;background:#133553;margin:0 0 10px 0}
 .reportSplit{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .reportBoxSq{
   border:1px solid #c9d2dc;
-  padding:10px;
+  padding:9px 10px;
   margin-top:10px;
   border-radius:0;
   background:#fff;
+  box-shadow:none;
 }
 .reportBoxSq h4,.reportSectionTitle{margin:0 0 8px 0;color:#111;font-size:1rem;font-weight:800}
 .reportTable{width:100%;border-collapse:collapse;margin-top:8px;font-size:.83rem}
@@ -105,42 +116,50 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 .reportFoot{
   margin-top:auto;
   border-top:1px solid #c9d2dc;
-  padding-top:8px;
+  padding-top:7px;
   display:flex;
   justify-content:space-between;
   align-items:center;
   gap:12px;
   color:#555;
-  font-size:.82rem;
+  font-size:.8rem;
 }
 .reportMuted{color:#4f5e70}
 .reportPhotoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .reportPhotoCard{border:1px solid #c9d2dc;padding:8px;background:#fff}
 .reportPhotoCard img{width:100%;max-height:185px;object-fit:contain;border:1px solid #d7dfe8;background:#fff}
-.reportSignatureBox{height:54px;border:1px solid #bbb;background:#fff;margin-top:8px;padding:6px}
+.reportSignatureBox{height:44px;border:1px solid #bbb;background:#fff;margin-top:8px;padding:5px}
 .lockInput{background:#fff;color:#111;border:1px solid #cfd9e6}
-@media print{
-  .reportPage{
-    width:auto;
-    min-height:277mm;
-    margin:0;
-    padding:10mm 10mm 8mm;
-    box-shadow:none;
-    break-after:page;
-    page-break-after:always;
-  }
-  .reportPage:last-child{break-after:auto;page-break-after:auto}
-  .reportPhotoGrid{grid-template-columns:1fr 1fr}
+
+@page{
+  size:A4;
+  margin:10mm;
 }
 
 @media print{
   .keepTogether{page-break-inside:avoid;break-inside:avoid}
-}
-
-@media print{
   .tabs,.noprint,.hero,.modalBack{display:none!important}
-  body{background:#fff}
-  .wrap{padding:0;max-width:none}
+  body{background:#fff!important}
+  .wrap{padding:0!important;max-width:none!important}
+  #reportView>.card{
+    border:none!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    background:#fff!important;
+    overflow:visible!important;
+  }
+  #reportView>.card>h2{display:none!important}
+  #reportView>.card>.body{
+    padding:0!important;
+    border:none!important;
+    background:#fff!important;
+  }
+  #reportArea,#reportBox,.reportPage,.reportPageInner,.report,.report-head{
+    border:none!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    outline:none!important;
+  }
 }
 </style>
 </head>
@@ -658,7 +677,7 @@ function renderLabel(){
     </div>
   </div>`;
 }
-$('printLabelBtn').onclick = ()=>{ renderLabel(); setTimeout(()=>window.print(),100); };
+$('printLabelBtn').onclick = ()=>{ renderLabel(); setTimeout(()=>window.print(),80); };
 
 function renderReport(){
   const job = activeJob();
