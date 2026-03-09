@@ -293,6 +293,11 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
           <div><label>Email</label><input id="setEmail" autocomplete="off"></div>
         </div>
         <div><label>Address</label><textarea id="setAddress" autocomplete="off"></textarea></div>
+        <div class="grid g3">
+          <div><label>PAT Tester / Instrument</label><input id="setPatTester" autocomplete="off"></div>
+          <div><label>Tester Serial Number</label><input id="setTesterSerial" autocomplete="off"></div>
+          <div><label>Calibration Due</label><input id="setCalibrationDue" type="date" autocomplete="off"></div>
+        </div>
         <div><label>Logo</label><input id="setLogo" type="file" accept="image/*"><img id="logoPrev" class="logoPrev"></div>
         <div class="grid g2">
           <div><label>App PIN (optional)</label><input id="setPin" type="password" placeholder="4-8 digits" autocomplete="new-password"></div>
@@ -361,7 +366,7 @@ const FUSES=['1A','3A','5A','7A','10A','13A','N/A','Other'];
 const IRS=['>200 MΩ','>100 MΩ','>50 MΩ','>20 MΩ','>10 MΩ','>2 MΩ','N/A','Manual'];
 const LOCATIONS=['Office','Reception','Kitchen','Staff Room','Meeting Room','Server Room','Warehouse','Workshop','Store','Hallway','Bedroom','Living Room','Utility Room','Classroom','Other'];
 const defaults = {
-  company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:'',signature:'',pin:''},
+  company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:'',signature:'',pin:'',patTester:'Apollo 400+',testerSerial:'010182',calibrationDue:''},
   clients:[],jobs:[],activeJobId:null,lastLabelItemId:null,reportCounter:0
 };
 let state = JSON.parse(localStorage.getItem(KEY) || JSON.stringify(defaults));
@@ -891,7 +896,15 @@ function clearSignature(){
   renderSign();
 }
 function loadSettings(){
-  $('setName').value = state.company.name; $('setService').value = state.company.service; $('setPhone').value = state.company.phone; $('setEmail').value = state.company.email; $('setAddress').value = state.company.address; $('setPin').value = state.company.pin || '';
+  $('setName').value = state.company.name;
+  $('setService').value = state.company.service;
+  $('setPhone').value = state.company.phone;
+  $('setEmail').value = state.company.email;
+  $('setAddress').value = state.company.address;
+  $('setPatTester').value = state.company.patTester || '';
+  $('setTesterSerial').value = state.company.testerSerial || '';
+  $('setCalibrationDue').value = state.company.calibrationDue || '';
+  $('setPin').value = state.company.pin || '';
   if(state.company.logo){$('logoPrev').src=state.company.logo; $('logoPrev').style.display='block'}
 }
 $('setLogo').onchange = e => {
@@ -906,6 +919,9 @@ $('saveSettingsBtn').onclick = ()=>{
   state.company.phone=$('setPhone').value.trim();
   state.company.email=$('setEmail').value.trim();
   state.company.address=$('setAddress').value.trim();
+  state.company.patTester=$('setPatTester').value.trim();
+  state.company.testerSerial=$('setTesterSerial').value.trim();
+  state.company.calibrationDue=$('setCalibrationDue').value.trim();
   state.company.pin=$('setPin').value.trim();
   save(); refreshHeader(); brandedAlert('Settings saved');
 };
@@ -971,7 +987,7 @@ $('mhkModalOk').onclick = ()=> $('mhkModalBack').style.display='none';
 $('mhkModalBack').onclick = (e)=>{ if(e.target.id==='mhkModalBack') $('mhkModalBack').style.display='none'; };
 
 renderJobs(); renderClients(); populateLists(); renderItems(); refreshHeader(); initSignaturePad(); renderSign();
-$('itemLocation').value='Office'; $('itemAsset').value='KTL01'; syncOverallFromVisual();
+$('itemLocation').value='Office'; $('itemAsset').value='KTL001'; syncOverallFromVisual();
 checkPinLock();
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js?final=1').catch(()=>{}); }
 </script>
