@@ -658,7 +658,7 @@ function renderLabel(){
     </div>
   </div>`;
 }
-$('printLabelBtn').onclick = ()=>window.print();
+$('printLabelBtn').onclick = ()=>{ renderLabel(); setTimeout(()=>window.print(),100); };
 
 function renderReport(){
   const job = activeJob();
@@ -742,9 +742,9 @@ function renderReport(){
     +         '<div class="reportBoxSq">'
     +           '<div class="reportSectionTitle">Test Details</div>'
     +           '<div><b>Engineer:</b> ' + esc(job.engineer) + '</div>'
-    +           '<div><b>Instrument:</b> Seaward Apollo 400+ PAT Tester</div>'
-    +           '<div><b>Serial Number:</b> __________</div>'
-    +           '<div><b>Calibration Due:</b> __________</div>'
+    +           '<div><b>Instrument:</b> ' + esc(state.company.patTester || '-') + '</div>'
+    +           '<div><b>Serial Number:</b> ' + esc(state.company.testerSerial || '-') + '</div>'
+    +           '<div><b>Calibration Due:</b> ' + esc(fmtDateDMY(state.company.calibrationDue) || '-') + '</div>'
     +         '</div>'
     +       '</div>'
 
