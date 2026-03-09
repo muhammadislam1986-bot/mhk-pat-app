@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MHK Building Solutions Ltd PAT</title>
 <meta name="theme-color" content="#133553">
+<link rel="manifest" href="/mhk-pat-app/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MHK PAT Pro">
 <style>
 :root{
   --bg:#08131f; --panel:#102338; --panel2:#17314d; --line:#31597f; --text:#eef5ff; --muted:#bfd1e6;
@@ -39,7 +44,7 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 .btns{display:flex;gap:10px;flex-wrap:wrap}
 .small{font-size:.82rem;color:var(--muted)}
 .hidden{display:none!important}
-.tabs{position:fixed;left:0;right:0;bottom:0;background:#091522;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:10px 10px 14px}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:#091522;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:10px 10px 14px}
 .tab{padding:10px 6px;text-align:center;border-radius:14px;color:var(--muted);font-weight:bold}
 .tab.active{background:#16314d;color:#fff;border:1px solid #49739d}
 .item,.client,.job{background:var(--panel2);border:1px solid var(--line);padding:12px;border-radius:16px;margin-top:10px}
@@ -60,43 +65,107 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 .tbl.fail th{background:#c62828}
 .notice{background:rgba(77,136,191,.12);border:1px solid rgba(77,136,191,.3);border-radius:14px;padding:12px}
 .logoPrev{max-width:240px;max-height:100px;display:none;background:rgba(255,255,255,.05);padding:8px;border-radius:12px}
-.labelCard{background:#fff;color:#111;border:2px solid #133553;border-radius:12px;padding:0;width:260px;overflow:hidden}
-.labelCard.passLabel{border-color:#14894c}
-.labelCard.failLabel{border-color:#c62828}
-.labelHead{color:#fff;padding:8px 10px;font-weight:bold}
-.labelCard.passLabel .labelHead{background:#14894c}
-.labelCard.failLabel .labelHead{background:#c62828}
-.labelBody{padding:8px 10px;font-size:13px;line-height:1.35}
-.labelRow{display:flex;justify-content:space-between;gap:10px;align-items:flex-end}
-.labelWarn{margin-top:6px;font-weight:800;color:#c62828}
-.labelMeta{font-size:11px;color:#334}
-.labelCode{border:1px solid #999;border-radius:6px;padding:4px 6px;font:700 11px/1 monospace;min-width:74px;text-align:center;color:#111;background:#fafafa}
-.labelResult{font-weight:800}
-.labelResult.pass{color:#14894c;background:none;padding:0}
-.labelResult.fail{color:#c62828;background:none;padding:0}
+.labelCard{background:#fff;color:#111;border:2px solid #133553;border-radius:12px;padding:10px;width:260px}
+.labelHead{background:#133553;color:#fff;padding:8px 10px;border-radius:8px;font-weight:bold}
 .modalBack{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:18px}
 .modal{width:min(92vw,420px);background:#fff;color:#111;border-radius:22px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,.45)}
 .modalHead{background:linear-gradient(135deg,#133553,#2a6798);color:#fff;padding:14px 16px;font-weight:bold}
 .modalBody{padding:18px 16px 8px;font-size:1rem;line-height:1.4}
 .modalFoot{padding:14px 16px 18px;display:flex;justify-content:flex-end}
 .modalBtn{min-width:92px}
+
+.sigCanvasWrap{background:#081827;border:1px solid #466a8e;border-radius:14px;padding:8px}
+.sigCanvas{width:100%;height:180px;background:#fff;border-radius:10px;display:block;touch-action:none}
+.itemActions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+
+.photoThumb{max-width:120px;max-height:90px;border:1px solid #466a8e;border-radius:8px;display:block;margin-top:8px}
+.reportPage{
+  background:#fff;
+  color:#111;
+  width:190mm;
+  min-height:267mm;
+  margin:0 auto 8mm;
+  padding:0;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  page-break-after:always;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  outline:none;
+}
+.reportPage:last-child{page-break-after:auto}
+.reportPageInner{
+  display:flex;
+  flex-direction:column;
+  min-height:100%;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  outline:none;
+  background:#fff;
+}
+.reportTopLine{height:5px;background:#133553;margin:0 0 10px 0}
+.reportSplit{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.reportBoxSq{
+  border:1px solid #c9d2dc;
+  padding:9px 10px;
+  margin-top:10px;
+  border-radius:0;
+  background:#fff;
+}
+.reportBoxSq h4,.reportSectionTitle{margin:0 0 8px 0;color:#111;font-size:1rem;font-weight:800}
+.reportTable{width:100%;border-collapse:collapse;margin-top:8px;font-size:.83rem}
+.reportTable th,.reportTable td{border:1px solid #c9d2dc;padding:6px;text-align:left;vertical-align:top;color:#111}
+.reportTable th{background:#133553;color:#fff;font-weight:700}
+.reportFoot{
+  margin-top:auto;
+  border-top:1px solid #c9d2dc;
+  padding-top:7px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  color:#555;
+  font-size:.8rem;
+}
+.reportMuted{color:#4f5e70}
+.reportPhotoGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.reportPhotoCard{border:1px solid #c9d2dc;padding:7px;background:#fff;break-inside:avoid;page-break-inside:avoid}
+.reportPhotoCard img{width:100%;max-height:110px;object-fit:cover;border:1px solid #d7dfe8;background:#fff}
+.reportPhotoHint{margin-top:8px;color:#4f5e70;font-size:.88rem}
+.reportSignatureBox{height:36px;border:1px solid #bbb;background:#fff;margin-top:7px;padding:4px}
+.lockInput{background:#fff;color:#111;border:1px solid #cfd9e6}
+@media print{
+  @page{size:A4;margin:10mm}
+  .keepTogether{page-break-inside:avoid;break-inside:avoid}
+  .tabs,.noprint,.hero,.modalBack{display:none!important}
+  html,body{background:#fff!important;margin:0!important;padding:0!important}
+  .wrap{padding:0!important;max-width:none!important}
+  #reportView>.card,.card,#reportView>.card>.body,#reportArea,#reportBox,.reportPage,.reportPageInner,.report,.report-head{
+    border:none!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    outline:none!important;
+    background:#fff!important;
+    overflow:visible!important;
+  }
+  #reportView>.card>h2{display:none!important}
+  #reportView>.card>.body{padding:0!important}
+  .reportPage{
+    width:auto!important;
+    min-height:0!important;
+    margin:0!important;
+    page-break-after:always!important;
+  }
+  .reportPage:last-child{page-break-after:auto!important}
+}
+
 @media print{
   .tabs,.noprint,.hero,.modalBack{display:none!important}
   body{background:#fff}
   .wrap{padding:0;max-width:none}
-}
-
-@media print{
-  body.label-printing *{visibility:hidden!important}
-  body.label-printing #labelsView,body.label-printing #labelsView *{visibility:visible!important}
-  body.label-printing .tabs,body.label-printing .noprint,body.label-printing .card h2{display:none!important}
-  body.label-printing #labelsView{display:block!important;position:static!important}
-  body.label-printing #labelsView .card{margin:0!important;border:none!important;box-shadow:none!important;background:#fff!important}
-  body.label-printing #labelsView .body{padding:0!important}
-  body.label-printing #labelArea{margin:0!important;padding:0!important}
-  body.label-printing #labelArea .labelCard{position:absolute;left:0;top:0;margin:0!important;border-radius:0!important;box-shadow:none!important}
-  body.label-printing .wrap{padding:0!important;max-width:none!important}
-  body.label-printing{background:#fff!important}
 }
 </style>
 </head>
@@ -212,9 +281,23 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
     </div>
   </section>
 
+  <section id="signView" class="hidden">
+    <div class="card">
+      <h2>Engineer Signature</h2>
+      <div class="body">
+        <div class="notice">Sign below once, then it will appear on reports until you clear or replace it.</div>
+        <div class="sigCanvasWrap" style="margin-top:10px"><canvas id="sigCanvas" class="sigCanvas"></canvas></div>
+        <div class="btns" style="margin-top:10px">
+          <button id="saveSigBtn">Save Signature</button>
+          <button class="secondary" id="clearSigBtn">Clear Signature</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="reportView" class="hidden">
     <div class="card">
-      <h2>Professional Report</h2>
+      <h2 class="noprint">Report Preview</h2>
       <div class="body">
         <div class="btns noprint"><button id="printReportBtn">Print / Save PDF</button></div>
         <div id="reportArea" style="margin-top:12px"></div>
@@ -236,10 +319,45 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
         </div>
         <div><label>Address</label><textarea id="setAddress" autocomplete="off"></textarea></div>
         <div><label>Logo</label><input id="setLogo" type="file" accept="image/*"><img id="logoPrev" class="logoPrev"></div>
+        <div class="grid g3">
+          <div><label>PAT Tester / Instrument</label><input id="setTesterModel" autocomplete="off"></div>
+          <div><label>Tester Serial Number</label><input id="setTesterSerial" autocomplete="off"></div>
+          <div><label>Calibration Due</label><input id="setTesterCalDue" type="date" autocomplete="off"></div>
+        </div>
+        <div class="grid g2">
+          <div><label>App PIN (optional)</label><input id="setPin" type="password" placeholder="4-8 digits" autocomplete="new-password"></div>
+          <div><label>Backup</label><div class="btns"><button type="button" id="exportDataBtn">Export Data</button><button type="button" class="secondary" id="importDataBtn">Import Data</button></div></div>
+        </div>
         <div class="btns"><button id="saveSettingsBtn">Save Settings</button><button class="ghost" id="clearDataBtn">Reset All Data</button></div>
       </div>
     </div>
   </section>
+
+<input id="itemPhotoInput" type="file" accept="image/*" capture="environment" class="hidden">
+<input id="importFileInput" type="file" accept=".json,application/json" class="hidden">
+
+<div class="modalBack" id="imgModalBack">
+  <div class="modal" style="width:min(94vw,720px)">
+    <div class="modalHead">Photo Evidence</div>
+    <div class="modalBody" style="padding-bottom:16px">
+      <img id="imgModalPic" alt="Photo" style="width:100%;height:auto;display:block;border-radius:10px">
+    </div>
+    <div class="modalFoot"><button class="modalBtn" id="imgModalOk">Close</button></div>
+  </div>
+</div>
+
+<div class="modalBack" id="pinModalBack">
+  <div class="modal">
+    <div class="modalHead">MHK Secure Access</div>
+    <div class="modalBody">
+      <div style="margin-bottom:10px">Enter your PIN to open the app.</div>
+      <input id="pinUnlockInput" class="lockInput" type="password" inputmode="numeric" autocomplete="off">
+      <div id="pinMsg" style="margin-top:10px;color:#c62828;display:none">Incorrect PIN</div>
+    </div>
+    <div class="modalFoot"><button class="modalBtn" id="pinUnlockBtn">Unlock</button></div>
+  </div>
+</div>
+
 </div>
 
 <div class="tabs">
@@ -247,6 +365,7 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   <div class="tab" data-view="clientsView">Clients</div>
   <div class="tab" data-view="itemsView">Items</div>
   <div class="tab" data-view="labelsView">Labels</div>
+  <div class="tab" data-view="signView">Sign</div>
   <div class="tab" data-view="reportView">Report</div>
   <div class="tab" data-view="settingsView">Settings</div>
 </div>
@@ -272,8 +391,8 @@ const FUSES=['1A','3A','5A','7A','10A','13A','N/A','Other'];
 const IRS=['>200 MΩ','>100 MΩ','>50 MΩ','>20 MΩ','>10 MΩ','>2 MΩ','N/A','Manual'];
 const LOCATIONS=['Office','Reception','Kitchen','Staff Room','Meeting Room','Server Room','Warehouse','Workshop','Store','Hallway','Bedroom','Living Room','Utility Room','Classroom','Other'];
 const defaults = {
-  company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:''},
-  clients:[],jobs:[],activeJobId:null,lastLabelItemId:null
+  company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:'',signature:'',pin:'',testerModel:'Seaward Apollo 400+ PAT Tester',testerSerial:'',testerCalDue:''},
+  clients:[],jobs:[],activeJobId:null,lastLabelItemId:null,reportCounter:0
 };
 let state = JSON.parse(localStorage.getItem(KEY) || JSON.stringify(defaults));
 function save(){localStorage.setItem(KEY, JSON.stringify(state))}
@@ -283,6 +402,23 @@ function esc(s){return String(s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&l
 function activeJob(){return state.jobs.find(j=>j.id===state.activeJobId)}
 function nextId(prefix){return prefix + Math.random().toString(36).slice(2,7).toUpperCase()}
 function brandedAlert(msg){ $('mhkModalMsg').textContent = msg; $('mhkModalBack').style.display='flex'; }
+
+function nl2br(s){
+  return esc(s).replace(/\n/g,'<br>');
+}
+function mergeState(incoming){
+  const merged = JSON.parse(JSON.stringify(defaults));
+  merged.company = Object.assign({}, merged.company, incoming.company||{});
+  merged.clients = Array.isArray(incoming.clients) ? incoming.clients : [];
+  merged.jobs = Array.isArray(incoming.jobs) ? incoming.jobs : [];
+  merged.activeJobId = incoming.activeJobId || null;
+  merged.lastLabelItemId = incoming.lastLabelItemId || null;
+  merged.reportCounter = typeof incoming.reportCounter==='number' ? incoming.reportCounter : 0;
+  return merged;
+}
+function askConfirm(msg){
+  return window.confirm(msg);
+}
 function prefixFor(appliance){const x=APPLIANCES.find(a=>a[0]===appliance); return x?x[1]:'OTH'}
 function nextAsset(prefix){
   const job = activeJob();
@@ -299,6 +435,7 @@ function switchView(v){
   if(v==='clientsView') renderClients();
   if(v==='itemsView') renderItems();
   if(v==='labelsView') renderLabel();
+  if(v==='signView') renderSign();
   if(v==='reportView') renderReport();
   if(v==='settingsView') loadSettings();
 }
@@ -340,6 +477,16 @@ $('itemClass').onchange = ()=>{
     if($('itemInsulation').value==='N/A') $('itemInsulation').value='>200 MΩ';
   }
 };
+function syncOverallFromVisual(){
+  const visualFail = $('itemVisual').value==='FAIL';
+  if(visualFail){
+    $('itemResult').value='FAIL';
+    $('itemResult').disabled=true;
+  } else {
+    $('itemResult').disabled=false;
+  }
+}
+$('itemVisual').onchange = syncOverallFromVisual;
 $('jobClientPick').onchange = ()=>{
   const c = state.clients.find(x=>x.id==$('jobClientPick').value); if(!c) return;
   $('jobClient').value=c.name; $('jobContact').value=c.contact; $('jobEmail').value=c.email; $('jobAddress').value=c.address;
@@ -368,6 +515,69 @@ function renderJobs(){
 }
 window.openJob = id => {state.activeJobId=id; save(); switchView('itemsView');};
 window.delJob = id => {state.jobs = state.jobs.filter(j=>j.id!==id); if(state.activeJobId===id) state.activeJobId=null; save(); renderJobs(); renderItems();};
+window.delItem = id => {
+  const job = activeJob(); if(!job) return;
+  job.items = job.items.filter(i=>i.id!==id);
+  if(state.lastLabelItemId===id) state.lastLabelItemId = job.items[0] ? job.items[0].id : null;
+  save(); renderItems(); renderLabel();
+};
+window.selectLabelItem = id => {
+  state.lastLabelItemId = id;
+  save();
+  switchView('labelsView');
+};
+
+let pendingPhotoItemId = null;
+function getItemById(id){
+  const job = activeJob();
+  if(!job) return null;
+  return job.items.find(i=>i.id===id) || null;
+}
+function compressImageDataUrl(dataUrl, maxSide=1400, quality=.78){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      const scale = Math.min(1, maxSide / Math.max(w,h));
+      w = Math.round(w * scale); h = Math.round(h * scale);
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+window.addItemPhoto = id => { pendingPhotoItemId = id; $('itemPhotoInput').click(); };
+window.viewItemPhoto = id => {
+  const item = getItemById(id);
+  if(!item || !item.photo) return;
+  $('imgModalPic').src = item.photo;
+  $('imgModalBack').style.display='flex';
+};
+window.removeItemPhoto = id => {
+  const item = getItemById(id);
+  if(!item || !item.photo) return;
+  if(!askConfirm('Remove this photo?')) return;
+  item.photo = '';
+  save(); renderItems(); renderReport();
+};
+$('itemPhotoInput').onchange = async e => {
+  const f = e.target.files && e.target.files[0];
+  if(!f || !pendingPhotoItemId) return;
+  const reader = new FileReader();
+  reader.onload = async ev => {
+    const item = getItemById(pendingPhotoItemId);
+    if(!item) return;
+    item.photo = await compressImageDataUrl(ev.target.result);
+    save(); renderItems(); renderReport();
+    brandedAlert('Photo saved');
+    pendingPhotoItemId = null;
+    $('itemPhotoInput').value='';
+  };
+  reader.readAsDataURL(f);
+};
 
 $('saveItemBtn').onclick = ()=>saveItem(false);
 $('toLabelsBtn').onclick = ()=>saveItem(true);
@@ -386,8 +596,9 @@ function saveItem(showLabel){
     visual:$('itemVisual').value,
     earth:$('itemClass').value==='Visual Only' ? 'N/A' : $('itemEarth').value.trim(),
     ir:$('itemClass').value==='Visual Only' ? 'N/A' : ($('itemInsulation').value==='Manual' ? $('itemInsOther').value.trim() : $('itemInsulation').value),
-    result:$('itemResult').value,
-    notes:$('itemNotes').value.trim()
+    result:$('itemVisual').value==='FAIL' ? 'FAIL' : $('itemResult').value,
+    notes:$('itemNotes').value.trim(),
+    photo:''
   };
   job.items.unshift(item);
   state.lastLabelItemId = item.id;
@@ -397,87 +608,287 @@ function saveItem(showLabel){
   $('otherWrap').classList.add('hidden'); $('locOtherWrap').classList.add('hidden'); $('fuseOtherWrap').classList.add('hidden'); $('insOtherWrap').classList.add('hidden');
   $('itemEarth').disabled = false; $('itemInsulation').disabled = false;
   $('itemAsset').value = nextAsset('KTL');
+  syncOverallFromVisual();
   renderItems();
   if(showLabel){switchView('labelsView')}
 }
 function renderItems(){
   const job = activeJob();
   $('jobSummary').innerHTML = job ? `<div class="title">${esc(job.client)}</div><div class="small">${esc(job.address)}</div><div class="small">Engineer: ${esc(job.engineer)} · Test date: ${esc(job.date)} · Retest: ${esc(job.retest)} months</div>` : '<div class="small">No active job.</div>';
-  $('itemsList').innerHTML = job && job.items.length ? job.items.map(i=>`<div class="item"><div class="top"><div><div class="title">${esc(i.asset)} · ${esc(i.appliance)}</div><div class="small">${esc(i.location)} · ${esc(i.classType)} · Fuse ${esc(i.fuse)}</div><div class="small">Visual ${esc(i.visual)} · Earth ${esc(i.earth)} · IR ${esc(i.ir)}</div></div><span class="tag ${i.result==='PASS'?'pass':'fail'}">${esc(i.result)}</span></div></div>`).join('') : '<div class="small">No appliances saved yet.</div>';
+  $('itemsList').innerHTML = job && job.items.length ? job.items.map(i=>{
+    const photoBtns = i.photo
+      ? `<button class="secondary" onclick="viewItemPhoto('${i.id}')">View Photo</button><button class="secondary" onclick="addItemPhoto('${i.id}')">Change Photo</button><button class="ghost" onclick="removeItemPhoto('${i.id}')">Remove Photo</button>`
+      : `<button class="secondary" onclick="addItemPhoto('${i.id}')">${i.result==='FAIL' ? 'Add Failure Photo' : 'Add Photo'}</button>`;
+    const thumb = i.photo ? `<img class="photoThumb" src="${i.photo}" alt="Photo evidence">` : '';
+    return `<div class="item"><div class="top"><div><div class="title">${esc(i.asset)} · ${esc(i.appliance)}</div><div class="small">${esc(i.location)} · ${esc(i.classType)} · Fuse ${esc(i.fuse)}</div><div class="small">Visual ${esc(i.visual)} · Earth ${esc(i.earth)} · IR ${esc(i.ir)}</div>${thumb}</div><span class="tag ${i.result==='PASS'?'pass':'fail'}">${esc(i.result)}</span></div><div class="itemActions"><button class="secondary" onclick="selectLabelItem('${i.id}')">Print Label</button>${photoBtns}<button class="red" onclick="delItem('${i.id}')">Delete</button></div></div>`;
+  }).join('') : '<div class="small">No appliances saved yet.</div>';
 }
 function nextTest(job){
-  const d = new Date(job.date); d.setMonth(d.getMonth()+parseInt(job.retest||12,10)); return d.toLocaleDateString('en-GB');
+  const d = new Date(job.date);
+  d.setMonth(d.getMonth()+parseInt(job.retest||12,10));
+  return d.toLocaleDateString('en-GB');
+}
+function fmtDateDMY(v){
+  if(!v) return '';
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v)){
+    const parts = v.split('-');
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
+  }
+  const dt = new Date(v);
+  return isNaN(dt.getTime()) ? String(v) : dt.toLocaleDateString('en-GB');
+}
+function ensureReportNumber(job){
+  if(job.reportNo) return job.reportNo;
+  if(typeof state.reportCounter !== 'number') state.reportCounter = 0;
+  state.reportCounter += 1;
+  const year = (job.date && /^\d{4}/.test(job.date)) ? job.date.slice(0,4) : String(new Date().getFullYear());
+  job.reportNo = 'MHK-' + year + '-' + String(state.reportCounter).padStart(4,'0');
+  save();
+  return job.reportNo;
+}
+function nl2br(s){
+  return esc(s).replace(/\n/g,'<br>');
 }
 function renderLabel(){
   const job = activeJob(); if(!job){$('labelArea').innerHTML='<div class="small">No active job.</div>'; return}
   const item = job.items.find(x=>x.id===state.lastLabelItemId) || job.items[0];
   if(!item){$('labelArea').innerHTML='<div class="small">No items to label yet.</div>'; return}
-  const companyName = (state.company.name || 'PAT TEST').trim();
-  const resultClass = item.result==='PASS' ? 'passLabel' : 'failLabel';
-  const resultText = item.result==='PASS' ? 'PASS' : 'FAIL';
-  const retestText = item.result==='PASS' ? nextTest(job) : 'DO NOT USE';
-  const codeText = 'MHKPAT:' + String(item.asset || '').trim();
-  $('labelArea').innerHTML = `<div class="small noprint">Selected appliance: ${esc(item.asset)} · ${esc(item.appliance)}</div><div class="labelCard ${resultClass}" style="margin-top:10px">
-    <div class="labelHead">${esc(companyName)}<br><span style="font-size:12px;letter-spacing:.4px">PAT TEST</span></div>
-    <div class="labelBody">
+  $('labelArea').innerHTML = `<div class="small noprint">Selected appliance: ${esc(item.asset)} · ${esc(item.appliance)}</div><div class="labelCard" style="margin-top:10px">
+    <div class="labelHead">${esc(state.company.name)}<br>PAT TEST</div>
+    <div style="padding:8px 4px;font-size:13px;line-height:1.35">
       <div><b>Asset:</b> ${esc(item.asset)}</div>
       <div><b>Appliance:</b> ${esc(item.appliance)}</div>
-      <div><b>Result:</b> <span class="labelResult ${item.result==='PASS'?'pass':'fail'}">${esc(resultText)}</span></div>
+      <div><b>Result:</b> <span style="color:${item.result==='PASS'?'#14894c':'#c62828'};font-weight:bold">${esc(item.result)}</span></div>
       <div><b>Tested:</b> ${fmtDateDMY(job.date)}</div>
-      <div><b>${item.result==='PASS'?'Retest':'Status'}:</b> ${esc(retestText)}</div>
-      ${item.result==='FAIL' ? '<div class="labelWarn">REMOVE FROM SERVICE</div>' : ''}
-      <div class="labelRow" style="margin-top:8px">
-        <div class="labelMeta">Scan code (future QR)<br>${esc(codeText)}</div>
-        <div class="labelCode">${esc(codeText)}</div>
-      </div>
+      <div><b>Retest:</b> ${esc(nextTest(job))}</div>
     </div>
   </div>`;
 }
-$('printLabelBtn').onclick = ()=>{
-  document.body.classList.add('label-printing');
-  setTimeout(()=>window.print(),80);
-};
-window.addEventListener('afterprint', ()=>document.body.classList.remove('label-printing'));
+$('printLabelBtn').onclick = ()=>window.print();
 
 function renderReport(){
   const job = activeJob();
   if(!job){$('reportArea').innerHTML='<div class="small">No active job.</div>'; return}
+
   const pass = job.items.filter(i=>i.result==='PASS');
   const fail = job.items.filter(i=>i.result==='FAIL');
-  $('reportArea').innerHTML = `<div class="report" id="reportBox">
-    <div class="report-head">
-      <h3>${esc(state.company.name)}</h3>
-      <div class="service">${esc(state.company.service)}</div>
-      <div class="contact">${esc(state.company.address)}<br>${esc(state.company.phone)} · ${esc(state.company.email)}</div>
-    </div>
-    <h3 style="margin:14px 0 8px">PAT Test Report</h3>
-    <div><b>Client:</b> ${esc(job.client)}</div>
-    <div><b>Contact:</b> ${esc(job.contact)}</div>
-    <div><b>Address:</b> ${esc(job.address)}</div>
-    <div><b>Engineer:</b> ${esc(job.engineer)}</div>
-    <div><b>Test Date:</b> ${esc(job.date)} &nbsp; <b>Retest:</b> ${esc(job.retest)} months</div>
-    <table class="tbl" style="margin-top:12px">
-      <tr><th>Total Tested</th><th>Passed</th><th>Failed</th><th>Next Test</th></tr>
-      <tr><td>${job.items.length}</td><td style="color:#14894c;font-weight:bold">${pass.length}</td><td style="color:#c62828;font-weight:bold">${fail.length}</td><td>${esc(nextTest(job))}</td></tr>
-    </table>
-    <h4 style="color:#14894c;margin:14px 0 8px">Passed Items</h4>
-    <table class="tbl pass"><tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Fuse</th><th>Class</th><th>Earth</th><th>IR</th><th>Visual</th><th>Result</th></tr>
-      ${pass.map(i=>`<tr><td>${esc(i.asset)}</td><td>${esc(i.appliance)}</td><td>${esc(i.location)}</td><td>${esc(i.fuse)}</td><td>${esc(i.classType)}</td><td>${esc(i.earth)}</td><td>${esc(i.ir)}</td><td>${esc(i.visual)}</td><td>${esc(i.result)}</td></tr>`).join('') || '<tr><td colspan="9">None</td></tr>'}
-    </table>
-    <h4 style="color:#c62828;margin:14px 0 8px">Failed Items</h4>
-    <table class="tbl fail"><tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Fuse</th><th>Class</th><th>Earth</th><th>IR</th><th>Visual</th><th>Result</th><th>Notes</th></tr>
-      ${fail.map(i=>`<tr><td>${esc(i.asset)}</td><td>${esc(i.appliance)}</td><td>${esc(i.location)}</td><td>${esc(i.fuse)}</td><td>${esc(i.classType)}</td><td>${esc(i.earth)}</td><td>${esc(i.ir)}</td><td>${esc(i.visual)}</td><td>${esc(i.result)}</td><td>${esc(i.notes)}</td></tr>`).join('') || '<tr><td colspan="10">None</td></tr>'}
-    </table>
-    <div style="margin-top:16px;display:flex;justify-content:space-between;gap:12px;align-items:flex-end">
-      <div style="flex:1"><b>Engineer Signature</b><div style="border:1px solid #bbb;height:50px;border-radius:8px;margin-top:6px"></div></div>
-      <div style="font-size:.85rem;color:#555">Page 1 of 1</div>
-    </div>
-  </div>`;
+  const failWithRef = fail.map((i, idx) => ({...i, photoRef: i.photo ? ('FP-' + (idx+1)) : ''}));
+  const failPhotos = failWithRef.filter(i=>i.photo);
+
+  const reportNo = ensureReportNumber(job);
+  const logoHtml = state.company.logo ? '<img src="' + state.company.logo + '" alt="Logo" style="max-width:150px;max-height:68px;display:block">' : '';
+  const sigHtml = state.company.signature ? '<img src="' + state.company.signature + '" alt="Signature" style="max-width:210px;max-height:26px;display:block">' : '';
+
+  const testerModel = state.company.testerModel || 'Seaward Apollo 400+ PAT Tester';
+  const testerSerial = state.company.testerSerial || '____________';
+  const testerCalDue = state.company.testerCalDue ? fmtDateDMY(state.company.testerCalDue) : '____________';
+
+  const passRows = pass.length ? pass.map(i =>
+    '<tr>' +
+      '<td>' + esc(i.asset) + '</td>' +
+      '<td>' + esc(i.appliance) + '</td>' +
+      '<td>' + esc(i.location) + '</td>' +
+      '<td>' + esc(i.classType) + '</td>' +
+      '<td>' + esc(i.fuse) + '</td>' +
+      '<td>' + esc(i.earth) + '</td>' +
+      '<td>' + esc(i.ir) + '</td>' +
+      '<td>' + esc(i.visual) + '</td>' +
+      '<td style="color:#14894c;font-weight:800">' + esc(i.result) + '</td>' +
+    '</tr>'
+  ).join('') : '<tr><td colspan="9">None</td></tr>';
+
+  const failRows = failWithRef.length ? failWithRef.map(i =>
+    '<tr>' +
+      '<td>' + esc(i.asset) + '</td>' +
+      '<td>' + esc(i.appliance) + '</td>' +
+      '<td>' + esc(i.location) + '</td>' +
+      '<td>' + esc(i.classType) + '</td>' +
+      '<td>' + esc(i.fuse) + '</td>' +
+      '<td>' + esc(i.earth) + '</td>' +
+      '<td>' + esc(i.ir) + '</td>' +
+      '<td>' + esc(i.visual) + '</td>' +
+      '<td style="color:#c62828;font-weight:800">' + esc(i.result) + '</td>' +
+      '<td>' + esc(i.notes || '') + (i.photoRef ? '<div style="margin-top:4px;font-size:.82rem;color:#4f5e70"><b>Photo Ref:</b> ' + esc(i.photoRef) + '</div>' : '') + '</td>' +
+    '</tr>'
+  ).join('') : '<tr><td colspan="10">None</td></tr>';
+
+  const photoBlocks = failPhotos.map(i =>
+    '<div class="reportPhotoCard">' +
+      '<div style="font-weight:800;color:#111">' + esc(i.photoRef) + ' · ' + esc(i.asset) + ' · ' + esc(i.appliance) + '</div>' +
+      '<div class="reportMuted" style="margin-top:3px;font-size:.84rem"><b>Failure reason:</b> ' + esc(i.notes || 'See failed items table') + '</div>' +
+      '<div style="margin-top:6px"><img src="' + i.photo + '" alt="Failure photo"></div>' +
+    '</div>'
+  ).join('');
+
+  $('reportArea').innerHTML = ''
+    + '<div id="reportBox">'
+    +   '<div class="reportPage">'
+    +     '<div class="reportPageInner">'
+    +       '<div class="reportTopLine"></div>'
+    +       '<div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start">'
+    +         '<div style="flex:1">'
+    +           '<div style="font-size:1.42rem;font-weight:900;color:#111">' + esc(state.company.name) + '</div>'
+    +           '<div style="margin-top:4px;font-size:1rem;color:#111">' + esc(state.company.service) + '</div>'
+    +           '<div style="margin-top:7px;line-height:1.38;color:#111">' + nl2br(state.company.address) + '<br>' + esc(state.company.phone) + ' · ' + esc(state.company.email) + '</div>'
+    +         '</div>'
+    +         '<div style="flex:0 0 auto;text-align:right">' + logoHtml + '</div>'
+    +       '</div>'
+    +       '<div style="margin-top:12px;text-align:center">'
+    +         '<div style="font-size:1.14rem;font-weight:900;color:#111;letter-spacing:.22px">PORTABLE APPLIANCE TESTING REPORT</div>'
+    +         '<div style="margin-top:5px;color:#111"><b>Report Number:</b> ' + esc(reportNo) + '</div>'
+    +         '<div style="margin-top:3px;color:#111"><b>Test Date:</b> ' + fmtDateDMY(job.date) + ' &nbsp; <b>Retest Date:</b> ' + nextTest(job) + '</div>'
+    +       '</div>'
+    +       '<div class="reportSplit" style="margin-top:10px">'
+    +         '<div class="reportBoxSq">'
+    +           '<div class="reportSectionTitle">Client Details</div>'
+    +           '<div><b>Client:</b> ' + esc(job.client) + '</div>'
+    +           '<div><b>Contact:</b> ' + esc(job.contact) + '</div>'
+    +           '<div><b>Email:</b> ' + esc(job.email) + '</div>'
+    +           '<div style="margin-top:5px"><b>Site Address:</b><br>' + nl2br(job.address) + '</div>'
+    +         '</div>'
+    +         '<div class="reportBoxSq">'
+    +           '<div class="reportSectionTitle">Test Details</div>'
+    +           '<div><b>Engineer:</b> ' + esc(job.engineer) + '</div>'
+    +           '<div><b>Instrument:</b> ' + esc(testerModel) + '</div>'
+    +           '<div><b>Serial Number:</b> ' + esc(testerSerial) + '</div>'
+    +           '<div><b>Calibration Due:</b> ' + esc(testerCalDue) + '</div>'
+    +         '</div>'
+    +       '</div>'
+    +       '<table class="reportTable" style="margin-top:10px">'
+    +         '<tr><th>Total Tested</th><th>Total Passed</th><th>Total Failed</th><th>Next Test</th></tr>'
+    +         '<tr><td>' + job.items.length + '</td><td style="color:#14894c;font-weight:800">' + pass.length + '</td><td style="color:#c62828;font-weight:800">' + fail.length + '</td><td>' + nextTest(job) + '</td></tr>'
+    +       '</table>'
+    +       '<div class="reportBoxSq">'
+    +         '<div class="reportSectionTitle">Passed Items</div>'
+    +         '<table class="reportTable">'
+    +           '<tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th></tr>'
+    +           passRows
+    +         '</table>'
+    +       '</div>'
+    +       '<div class="reportBoxSq">'
+    +         '<div class="reportSectionTitle">Failed Items</div>'
+    +         '<table class="reportTable">'
+    +           '<tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th><th>Notes</th></tr>'
+    +           failRows
+    +         '</table>'
+    +       '</div>'
+    +       '<div class="reportFoot"><div>' + esc(state.company.name) + ' · Report ' + esc(reportNo) + '</div><div>Page 1 of 2</div></div>'
+    +     '</div>'
+    +   '</div>'
+    +   '<div class="reportPage">'
+    +     '<div class="reportPageInner">'
+    +       '<div class="reportTopLine"></div>'
+    +       '<div class="reportBoxSq keepTogether">'
+    +         '<div class="reportSectionTitle">Failed Appliance Safety Notice</div>'
+    +         '<div style="line-height:1.36;color:#111">Appliances that have failed testing must be removed from service immediately and must not be used until they have been repaired and successfully re-tested. These items may present an electrical safety risk and should be clearly identified and isolated from normal use.</div>'
+    +       '</div>'
+    +       '<div class="reportBoxSq keepTogether">'
+    +         '<div class="reportSectionTitle">Compliance Statement</div>'
+    +         '<div style="line-height:1.36;color:#111">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
+    +       '</div>'
+    +       '<div class="reportBoxSq">'
+    +         '<div class="reportSectionTitle">Failure Photos</div>'
+    +         (photoBlocks ? '<div class="reportPhotoGrid">' + photoBlocks + '</div>' : '<div style="color:#111">No failure photos attached.</div>')
+    +       '</div>'
+    +       '<div class="reportBoxSq keepTogether">'
+    +         '<div class="reportSectionTitle">Engineer Sign-off</div>'
+    +         '<div class="reportSignatureBox">' + sigHtml + '</div>'
+    +         '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:7px;color:#111;font-size:.9rem">'
+    +           '<div><b>Engineer:</b> ' + esc(job.engineer) + '</div>'
+    +           '<div><b>Date:</b> ' + fmtDateDMY(job.date) + '</div>'
+    +         '</div>'
+    +       '</div>'
+    +       '<div class="reportBoxSq keepTogether">'
+    +         '<div class="reportSectionTitle">Thank You</div>'
+    +         '<div style="line-height:1.36;color:#111">Thank you for choosing <b>' + esc(state.company.name) + '</b>. If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details on page 1 of this report.</div>'
+    +       '</div>'
+    +       '<div class="reportFoot"><div>' + esc(state.company.name) + ' · Report ' + esc(reportNo) + '</div><div>Page 2 of 2</div></div>'
+    +     '</div>'
+    +   '</div>'
+    + '</div>';
 }
 $('printReportBtn').onclick = ()=>window.print();
 
+function renderSign(){
+  const c = $('sigCanvas');
+  if(!c) return;
+  const wrap = c.parentElement;
+  const ratio = Math.max(window.devicePixelRatio || 1, 1);
+  const w = Math.max(280, Math.floor(wrap.clientWidth - 16));
+  const h = 180;
+  const prev = state.company.signature || '';
+  c.width = Math.floor(w * ratio);
+  c.height = Math.floor(h * ratio);
+  c.style.width = w + 'px';
+  c.style.height = h + 'px';
+  const ctx = c.getContext('2d');
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,w,h);
+  if(prev){
+    const img = new Image();
+    img.onload = ()=>{ ctx.drawImage(img, 0, 0, w, h); };
+    img.src = prev;
+  }
+}
+function initSignaturePad(){
+  const c = $('sigCanvas');
+  if(!c || c.dataset.ready==='1') return;
+  c.dataset.ready='1';
+  const getPos = e => {
+    const rect = c.getBoundingClientRect();
+    const p = e.touches ? e.touches[0] : e;
+    return {x:p.clientX - rect.left, y:p.clientY - rect.top};
+  };
+  let drawing = false;
+  const start = e => {
+    drawing = true;
+    const p = getPos(e);
+    const ctx = c.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(p.x,p.y);
+    e.preventDefault();
+  };
+  const move = e => {
+    if(!drawing) return;
+    const p = getPos(e);
+    const ctx = c.getContext('2d');
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#0b3560';
+    ctx.lineTo(p.x,p.y);
+    ctx.stroke();
+    e.preventDefault();
+  };
+  const end = e => { drawing = false; if(e) e.preventDefault(); };
+  c.addEventListener('mousedown', start);
+  c.addEventListener('mousemove', move);
+  window.addEventListener('mouseup', end);
+  c.addEventListener('touchstart', start, {passive:false});
+  c.addEventListener('touchmove', move, {passive:false});
+  c.addEventListener('touchend', end, {passive:false});
+}
+function saveSignature(){
+  const c = $('sigCanvas');
+  state.company.signature = c.toDataURL('image/png');
+  save();
+  brandedAlert('Signature saved');
+}
+function clearSignature(){
+  state.company.signature = '';
+  save();
+  renderSign();
+}
 function loadSettings(){
-  $('setName').value = state.company.name; $('setService').value = state.company.service; $('setPhone').value = state.company.phone; $('setEmail').value = state.company.email; $('setAddress').value = state.company.address;
+  $('setName').value = state.company.name;
+  $('setService').value = state.company.service;
+  $('setPhone').value = state.company.phone;
+  $('setEmail').value = state.company.email;
+  $('setAddress').value = state.company.address;
+  $('setPin').value = state.company.pin || '';
+  $('setTesterModel').value = state.company.testerModel || '';
+  $('setTesterSerial').value = state.company.testerSerial || '';
+  $('setTesterCalDue').value = state.company.testerCalDue || '';
   if(state.company.logo){$('logoPrev').src=state.company.logo; $('logoPrev').style.display='block'}
 }
 $('setLogo').onchange = e => {
@@ -492,16 +903,81 @@ $('saveSettingsBtn').onclick = ()=>{
   state.company.phone=$('setPhone').value.trim();
   state.company.email=$('setEmail').value.trim();
   state.company.address=$('setAddress').value.trim();
+  state.company.pin=$('setPin').value.trim();
+  state.company.testerModel=$('setTesterModel').value.trim();
+  state.company.testerSerial=$('setTesterSerial').value.trim();
+  state.company.testerCalDue=$('setTesterCalDue').value.trim();
   save(); refreshHeader(); brandedAlert('Settings saved');
 };
 $('clearDataBtn').onclick = ()=>{ if(confirm('Reset all app data?')){ localStorage.removeItem(KEY); location.reload(); }};
 
+
+$('exportDataBtn').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mhk-pat-backup-' + stamp + '.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+};
+$('importDataBtn').onclick = ()=> $('importFileInput').click();
+$('importFileInput').onchange = e => {
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try{
+      const incoming = JSON.parse(ev.target.result);
+      if(!askConfirm('Import backup and replace current app data?')) return;
+      state = mergeState(incoming);
+      save();
+      location.reload();
+    }catch(err){
+      brandedAlert('Import failed. Please choose a valid backup file.');
+    }finally{
+      $('importFileInput').value='';
+    }
+  };
+  reader.readAsText(f);
+};
+$('imgModalOk').onclick = ()=> $('imgModalBack').style.display='none';
+$('imgModalBack').onclick = e => { if(e.target.id==='imgModalBack') $('imgModalBack').style.display='none'; };
+
+function checkPinLock(){
+  if(!state.company.pin){
+    $('pinModalBack').style.display='none';
+    return;
+  }
+  $('pinUnlockInput').value='';
+  $('pinMsg').style.display='none';
+  $('pinModalBack').style.display='flex';
+}
+$('pinUnlockBtn').onclick = ()=>{
+  if(($('pinUnlockInput').value||'').trim() === (state.company.pin||'')){
+    $('pinModalBack').style.display='none';
+  } else {
+    $('pinMsg').style.display='block';
+    $('pinUnlockInput').value='';
+  }
+};
+$('pinUnlockInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('pinUnlockBtn').click(); });
+
+$('saveSigBtn').onclick = ()=>saveSignature();
+$('clearSigBtn').onclick = ()=>clearSignature();
+window.addEventListener('resize', ()=>{ if(!$('signView').classList.contains('hidden')) renderSign(); });
 $('mhkModalOk').onclick = ()=> $('mhkModalBack').style.display='none';
 $('mhkModalBack').onclick = (e)=>{ if(e.target.id==='mhkModalBack') $('mhkModalBack').style.display='none'; };
 
-renderJobs(); renderClients(); populateLists(); renderItems(); refreshHeader();
-$('itemLocation').value='Office'; $('itemAsset').value='KTL01';
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js?final=1').catch(()=>{}); }
+renderJobs(); renderClients(); populateLists(); renderItems(); refreshHeader(); initSignaturePad(); renderSign();
+$('itemLocation').value='Office'; $('itemAsset').value='KTL01'; syncOverallFromVisual();
+checkPinLock();
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/mhk-pat-app/sw.js', { scope:'/mhk-pat-app/' }).catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
