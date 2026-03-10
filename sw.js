@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mhk-pat-app-v7';
+const CACHE_NAME = 'mhk-pat-app-v8';
 const APP_ROOT = '/mhk-pat-app';
 const APP_SHELL = [
   `${APP_ROOT}/`,
@@ -30,7 +30,6 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (!url.pathname.startsWith(APP_ROOT)) return;
 
-  // Always prefer network for page loads so index updates cleanly.
   if (req.mode === 'navigate' || url.pathname === `${APP_ROOT}/` || url.pathname === `${APP_ROOT}/index.html`) {
     event.respondWith(
       fetch(req)
@@ -44,16 +43,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for static files, with network fallback and cache update.
   event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req).then((response) => {
-        if (!response || response.status !== 200 || response.type === 'opaque') return response;
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+    fetch(req)
+      .then((response) => {
+        if (response && response.status === 200 && response.type !== 'opaque') {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+        }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(req))
   );
 });
