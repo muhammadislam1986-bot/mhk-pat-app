@@ -1,1 +1,60 @@
+/* ==== Backup & Recovery Notice Improvements ==== */
 
+.backup-notice-success {
+    background:#1f7a4c;
+    color:#ffffff;
+    font-size:20px;
+    font-weight:800;
+    padding:18px;
+    border-radius:10px;
+    margin-top:12px;
+    text-align:center;
+}
+
+.backup-notice-info {
+    background:#1f4c7a;
+    color:#ffffff;
+    font-size:20px;
+    font-weight:800;
+    padding:18px;
+    border-radius:10px;
+    margin-top:12px;
+    text-align:center;
+}
+
+.backup-notice-warning {
+    background:#8a2c2c;
+    color:#ffffff;
+    font-size:20px;
+    font-weight:800;
+    padding:18px;
+    border-radius:10px;
+    margin-top:12px;
+    text-align:center;
+}
+
+/* Confirmation dialog buttons */
+.modal-buttons {
+    display:flex;
+    justify-content:center;
+    gap:14px;
+    margin-top:15px;
+}
+
+.modal-buttons button {
+    font-size:17px;
+    font-weight:700;
+    padding:12px 22px;
+    border-radius:8px;
+    border:none;
+}
+
+.modal-buttons .btn-confirm {
+    background:#2d6cdf;
+    color:white;
+}
+
+.modal-buttons .btn-cancel {
+    background:#cccccc;
+    color:#333;
+}
