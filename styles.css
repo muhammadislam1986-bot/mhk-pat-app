@@ -303,3 +303,16 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   margin-bottom: 8px;
   color: #fff;
 }
+/* Settings warning card fix */
+#settingsView .backupWarningText,
+#settingsView .backupWarning,
+#settingsView .warningText {
+  background: rgba(198, 40, 40, 0.22) !important;
+  border: 1px solid rgba(198, 40, 40, 0.65) !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+  font-weight: 800 !important;
+  color: #fff !important;
+  line-height: 1.5 !important;
+  display: block !important;
+}
