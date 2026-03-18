@@ -567,7 +567,6 @@ function renderReport(){
 
     +       '<div class="reportMetaBar">'
     +         '<div><b>Report Number:</b> <span class="reportNoInline">' + esc(reportNo) + '</span></div>'
-    +         '<div><b>Test Date:</b> ' + fmtDateDMY(job.date) + '</div>'
     +         '<div><b>Retest Date:</b> ' + nextTest(job) + '</div>'
     +       '</div>'
 
