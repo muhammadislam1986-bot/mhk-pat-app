@@ -195,3 +195,52 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 #scanUploadBtn,#scanLiveBtn{min-width:140px;text-align:center}
 
 /* STEP A PATCH LOADED */
+/* ===== STEP A FIXED (MATCHED TO YOUR UI) ===== */
+
+/* LOGO FIX */
+.logoBox {
+  background: #ffffff !important;
+  padding: 10px !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25) !important;
+}
+
+.logoBox img {
+  object-fit: contain !important;
+}
+
+/* BACKUP STATUS FULL BOX */
+.notice {
+  padding: 16px !important;
+  border-radius: 16px !important;
+  font-weight: 600;
+}
+
+/* GREEN */
+.notice.safe {
+  background: rgba(20,137,76,0.25) !important;
+  border: 1px solid rgba(20,137,76,0.6) !important;
+}
+
+/* ORANGE */
+.notice.overdue {
+  background: rgba(255,165,0,0.25) !important;
+  border: 1px solid rgba(255,165,0,0.6) !important;
+}
+
+/* RED */
+.notice.danger {
+  background: rgba(198,40,40,0.25) !important;
+  border: 1px solid rgba(198,40,40,0.6) !important;
+}
+
+/* WARNING BOX (THIS IS THE ONE YOU WANTED STRONGER) */
+.card .body p {
+  background: rgba(198,40,40,0.25);
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(198,40,40,0.6);
+  font-weight: bold;
+  color: #fff;
+}
