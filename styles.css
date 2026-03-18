@@ -244,52 +244,62 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   font-weight: bold;
   color: #fff;
 }
-/* ===== NEON WARNING + STATUS FINAL ===== */
+/* ===== SETTINGS-ONLY BACKUP POLISH ===== */
 
-/* GREEN (safe) */
-.notice.safe {
-  background: rgba(0, 255, 140, 0.25) !important;
-  border: 1px solid rgba(0, 255, 140, 0.9) !important;
-  box-shadow: 0 0 12px rgba(0,255,140,0.6);
+/* Only the backup status card inside Settings */
+#settingsView .notice.safe {
+  background: rgba(20, 137, 76, 0.22) !important;
+  border: 1px solid rgba(20, 137, 76, 0.65) !important;
+  box-shadow: none !important;
 }
 
-/* RED (danger) */
-.notice.danger {
-  background: rgba(255, 50, 80, 0.25) !important;
-  border: 1px solid rgba(255, 80, 100, 1) !important;
-  box-shadow: 0 0 14px rgba(255,50,80,0.7);
+#settingsView .notice.danger {
+  background: rgba(198, 40, 40, 0.22) !important;
+  border: 1px solid rgba(198, 40, 40, 0.65) !important;
+  box-shadow: none !important;
 }
 
-/* ORANGE (warning) */
-.notice.overdue {
-  background: rgba(255, 180, 0, 0.25) !important;
-  border: 1px solid rgba(255, 180, 0, 1) !important;
-  box-shadow: 0 0 12px rgba(255,180,0,0.6);
+#settingsView .notice.overdue {
+  background: rgba(255, 165, 0, 0.20) !important;
+  border: 1px solid rgba(255, 165, 0, 0.55) !important;
+  box-shadow: none !important;
 }
 
-/* EXPORT SUCCESS MESSAGE */
-.card .body div {
-  background: rgba(0, 255, 140, 0.2);
-  border: 1px solid rgba(0,255,140,0.8);
-  padding: 14px;
-  border-radius: 12px;
-  font-weight: bold;
-}
-
-/* 🔴 CRITICAL WARNING (THIS IS THE IMPORTANT ONE) */
-.card .body p {
-  background: rgba(255, 0, 50, 0.35) !important;
-  border: 2px solid rgba(255, 80, 100, 1) !important;
+#settingsView .notice {
+  border-radius: 16px !important;
   padding: 16px !important;
-  border-radius: 14px !important;
+}
+
+#settingsView .notice #backupStatusTitle {
+  font-size: 1.05rem !important;
   font-weight: 900 !important;
   color: #fff !important;
-  box-shadow: 0 0 18px rgba(255,0,50,0.8);
 }
 
-.card .body p::before {
-  content: "⚠ WARNING: CLEARING BROWSER DATA WILL DELETE ALL JOBS ⚠";
+#settingsView .notice #backupStatusText {
+  margin-top: 8px !important;
+  font-size: 1rem !important;
+  line-height: 1.45 !important;
+  color: #eef6ff !important;
+}
+
+/* Only the clear-browser-data warning inside Settings */
+#settingsView .card .body p {
+  background: rgba(198, 40, 40, 0.22) !important;
+  border: 1px solid rgba(198, 40, 40, 0.65) !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+  font-weight: 800 !important;
+  color: #fff !important;
+  line-height: 1.5 !important;
+  box-shadow: none !important;
+}
+
+#settingsView .card .body p::before {
+  content: "Important — clearing browser or site data can erase PAT jobs and the internal backup.";
   display: block;
-  font-size: 1.05rem;
+  font-size: 1rem;
+  font-weight: 900;
   margin-bottom: 8px;
+  color: #fff;
 }
