@@ -12,257 +12,73 @@ const FUSES=['1A','3A','5A','7A','10A','13A','N/A','Other'];
 const IRS=['>200 MΩ','>100 MΩ','>50 MΩ','>20 MΩ','>10 MΩ','>2 MΩ','N/A','Manual'];
 const LOCATIONS=['Office','Reception','Kitchen','Staff Room','Meeting Room','Server Room','Warehouse','Workshop','Store','Hallway','Bedroom','Living Room','Utility Room','Classroom','Other'];
 const defaults = {
-  company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:'',signature:'',pin:'',patTester:'Apollo 400+',testerSerial:'010182',calibrationDue:''},
-  clients:[],jobs:[],activeJobId:null,lastLabelItemId:null,reportCounter:0
+  company:{name:'MHK Building Solutions Ltd',service:'PAT Testing Services',phone:'',email:'',address:'',logo:'',pin:'',patTester:'',testerSerial:'',calibrationDue:'',signature:''},
+  jobs:[], currentJobId:null, reportCounter:1
 };
-let state = JSON.parse(localStorage.getItem(KEY) || JSON.stringify(defaults));
-function save(){localStorage.setItem(KEY, JSON.stringify(state)); const meta=getBackupMeta(); if(shouldRunInternalBackup(meta)) takeInternalBackup('scheduled');}
-function $(id){return document.getElementById(id)}
-function today(){return new Date().toISOString().slice(0,10)}
-function esc(s){return String(s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
-function activeJob(){return state.jobs.find(j=>j.id===state.activeJobId)}
-function nextId(prefix){return prefix + Math.random().toString(36).slice(2,7).toUpperCase()}
-let appModalResolver = null;
-window.pendingScannedRetest = null;
+let state = load();
 
-function assetExistsInJob(job, asset, excludeId=null){
-  if(!job || !asset) return false;
-  const want = String(asset).trim().toUpperCase();
-  return (job.items || []).some(i => String(i.asset || '').trim().toUpperCase() === want && i.id !== excludeId);
-}
+function load(){ try{return {...defaults, ...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{return structuredClone(defaults)} }
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+function structuredClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+const $ = id => document.getElementById(id);
+function esc(s){ return (s??'').toString().replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
+function todayISO(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function fmtDateDMY(v){ if(!v) return ''; const d=new Date(v+'T00:00:00'); return d.toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+function addYear(v){ if(!v) return ''; const d=new Date(v+'T00:00:00'); d.setFullYear(d.getFullYear()+1); return d.toISOString().slice(0,10); }
+function nextTest(job){ return fmtDateDMY(addYear(job.date)); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
 
-function prefillPendingRetestItem(){
-  const data = window.pendingScannedRetest;
-  if(!data) return;
-
-  const applianceKnown = APPLIANCES.some(a => a[0] === data.appliance);
-  $('itemAppliance').value = applianceKnown ? data.appliance : 'Other';
-  $('otherWrap').classList.toggle('hidden', applianceKnown);
-  $('itemOther').value = applianceKnown ? '' : (data.appliance || '');
-
-  const locationKnown = LOCATIONS.includes(data.location || '');
-  $('itemLocation').value = locationKnown ? data.location : (locationKnown ? data.location : 'Other');
-  $('locOtherWrap').classList.toggle('hidden', locationKnown);
-  $('itemLocationOther').value = locationKnown ? '' : (data.location || '');
-
-  $('itemAsset').value = data.asset || '';
-  $('itemClass').value = data.classType || 'Class I';
-
-  const fuseKnown = FUSES.includes(data.fuse || '');
-  $('itemFuse').value = fuseKnown ? data.fuse : 'Other';
-  $('fuseOtherWrap').classList.toggle('hidden', fuseKnown);
-  $('itemFuseOther').value = fuseKnown ? '' : (data.fuse || '');
-
-  $('itemVisual').value = 'PASS';
-  $('itemResult').value = 'PASS';
-  $('itemNotes').value = '';
-  $('itemEarth').disabled = false;
-  $('itemInsulation').disabled = false;
-
-  if((data.classType || '') === 'Visual Only'){
-    $('itemClass').value = 'Visual Only';
-    $('itemEarth').value = 'N/A';
-    $('itemInsulation').value = 'N/A';
-    $('itemEarth').disabled = true;
-    $('itemInsulation').disabled = true;
-    $('insOtherWrap').classList.add('hidden');
-  }else{
-    $('itemEarth').value = data.earth || '';
-    if(IRS.includes(data.ir || '')){
-      $('itemInsulation').value = data.ir;
-      $('insOtherWrap').classList.add('hidden');
-      $('itemInsOther').value = '';
-    }else{
-      $('itemInsulation').value = 'Manual';
-      $('insOtherWrap').classList.remove('hidden');
-      $('itemInsOther').value = data.ir || '';
-    }
-  }
-
-  syncOverallFromVisual();
-  window.pendingScannedRetest = null;
-}
-
-function showAppModal(msg, opts={}){
-  $('mhkModalTitle').textContent = opts.title || 'Notice';
-  $('mhkModalMsg').textContent = msg;
-  $('mhkModalCancel').style.display = opts.confirm ? 'inline-block' : 'none';
-  $('mhkModalBack').style.display='flex';
-  return new Promise(resolve => { appModalResolver = resolve; });
-}
 function brandedAlert(msg){
-  return showAppModal(msg, {title:'Notice', confirm:false});
-}
-
-function getBackupMeta(){
-  const defaultsMeta = {frequency:'weekly', lastExportAt:'', lastInternalBackupAt:'', lastReminderAt:''};
-  try{
-    return Object.assign({}, defaultsMeta, JSON.parse(localStorage.getItem(BACKUP_META_KEY) || '{}'));
-  }catch(e){
-    return defaultsMeta;
-  }
-}
-function setBackupMeta(meta){
-  localStorage.setItem(BACKUP_META_KEY, JSON.stringify(meta));
-}
-function fmtDateTime(v){
-  if(!v) return 'Never';
-  const d = new Date(v);
-  return isNaN(d.getTime()) ? 'Never' : d.toLocaleString('en-GB');
-}
-function diffDays(iso){
-  if(!iso) return Infinity;
-  const then = new Date(iso).getTime();
-  if(!then) return Infinity;
-  return (Date.now() - then) / 86400000;
-}
-function backupThresholdDays(freq){
-  if(freq === 'daily') return 1;
-  if(freq === 'weekly') return 7;
-  if(freq === 'monthly') return 30;
-  return Infinity;
-}
-function shouldRunInternalBackup(meta){
-  if(!meta || meta.frequency === 'off') return false;
-  return diffDays(meta.lastInternalBackupAt) >= backupThresholdDays(meta.frequency);
-}
-function takeInternalBackup(reason='auto'){
-  try{
-    localStorage.setItem(INTERNAL_BACKUP_KEY, JSON.stringify({
-      savedAt: new Date().toISOString(),
-      reason,
-      data: state
-    }));
-    const meta = getBackupMeta();
-    meta.lastInternalBackupAt = new Date().toISOString();
-    setBackupMeta(meta);
-    refreshBackupUI();
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-function restoreInternalBackupNow(){
-  const raw = localStorage.getItem(INTERNAL_BACKUP_KEY);
-  if(!raw){
-    brandedAlert('No internal backup found yet.');
-    return;
-  }
-  try{
-    const parsed = JSON.parse(raw);
-    if(!parsed || !parsed.data) throw new Error('Invalid backup');
-    state = mergeState(parsed.data);
-    save();
-    brandedAlert('Internal backup restored. Reloading now.');
-    setTimeout(()=>location.reload(), 300);
-  }catch(e){
-    brandedAlert('Internal backup could not be restored.');
-  }
-}
-function exportBackupNow(){
-  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'MHK_PAT_Backup_Latest.json';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 400);
-  const meta = getBackupMeta();
-  meta.lastExportAt = new Date().toISOString();
-  setBackupMeta(meta);
-  refreshBackupUI();
-  localStorage.setItem('MHK_BACKUP_FLASH','exported');
-  showBackupInline('success', 'Backup exported successfully. File saved to your Downloads folder.');
-}
-function getBackupStatus(meta){
-  if(!meta.lastExportAt) return {cls:'danger', title:'Backup needed', text:'No export backup has been created yet. Export a backup before clearing browser history or changing phone.'};
-  if(meta.frequency === 'off') return {cls:'safe', title:'Backup protection active', text:'Automatic internal backup is off, but you have an export backup saved.'};
-  if(diffDays(meta.lastExportAt) > backupThresholdDays(meta.frequency)) return {cls:'overdue', title:'Backup overdue', text:'Your export backup is older than your chosen backup schedule. Export a fresh backup now.'};
-  return {cls:'safe', title:'Backup protection active', text:'Your backup status looks good.'};
-}
-function showBackupInline(type, message){
-  const banner = $('backupBanner');
-  if(!banner) return;
-  const existing = $('backupInlineMsg');
-  if(existing) existing.remove();
-  const box = document.createElement('div');
-  box.id = 'backupInlineMsg';
-  box.className = 'backupInline ' + type;
-  box.textContent = message;
-  banner.insertAdjacentElement('afterend', box);
-}
-function consumeBackupFlash(){
-  const flash = localStorage.getItem('MHK_BACKUP_FLASH');
-  if(!flash) return;
-  localStorage.removeItem('MHK_BACKUP_FLASH');
-  if(flash === 'exported'){
-    showBackupInline('success', 'Backup exported successfully. File saved to your Downloads folder.');
-  }else if(flash === 'imported'){
-    showBackupInline('info', 'Backup imported successfully. App data has been restored.');
-  }
-}
-function refreshBackupUI(){
-  const banner = $('backupBanner');
-  if(!banner) return;
-  const meta = getBackupMeta();
-  const status = getBackupStatus(meta);
-  banner.className = 'notice backupWarn ' + status.cls;
-  $('backupStatusTitle').textContent = status.title;
-  $('backupStatusText').textContent = status.text;
-  $('lastExportText').textContent = fmtDateTime(meta.lastExportAt);
-  $('lastInternalText').textContent = fmtDateTime(meta.lastInternalBackupAt);
-  if($('backupFrequency')) $('backupFrequency').value = meta.frequency || 'weekly';
-}
-function maybeShowBackupReminder(){
-  const meta = getBackupMeta();
-  const status = getBackupStatus(meta);
-  if(status.cls === 'safe') return;
-  if(diffDays(meta.lastReminderAt) < 1) return;
-  meta.lastReminderAt = new Date().toISOString();
-  setBackupMeta(meta);
-  brandedAlert(status.title + ': ' + status.text);
-}
-
-
-function nl2br(s){
-  return esc(s).replace(/\n/g,'<br>');
-}
-function mergeState(incoming){
-  const merged = JSON.parse(JSON.stringify(defaults));
-  merged.company = Object.assign({}, merged.company, incoming.company||{});
-  merged.clients = Array.isArray(incoming.clients) ? incoming.clients : [];
-  merged.jobs = Array.isArray(incoming.jobs) ? incoming.jobs : [];
-  merged.activeJobId = incoming.activeJobId || null;
-  merged.lastLabelItemId = incoming.lastLabelItemId || null;
-  merged.reportCounter = typeof incoming.reportCounter==='number' ? incoming.reportCounter : 0;
-  return merged;
+  const el = $('brandAlert');
+  if(!el) return alert(msg);
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 1800);
 }
 function askConfirm(msg){
-  return showAppModal(msg, {title:'Confirmation', confirm:true});
+  return new Promise(resolve=>{
+    const m=$('confirmModal'), t=$('confirmText'), y=$('confirmYes'), n=$('confirmNo');
+    t.textContent=msg; m.style.display='flex';
+    const close=v=>{ m.style.display='none'; y.onclick=n.onclick=null; resolve(v); };
+    y.onclick=()=>close(true); n.onclick=()=>close(false);
+  });
 }
-function prefixFor(appliance){const x=APPLIANCES.find(a=>a[0]===appliance); return x?x[1]:'OTH'}
-function nextAsset(prefix){
-  const job = activeJob();
-  const items = job ? job.items : [];
-  const nums = items
-    .filter(i => typeof i.asset === 'string' && i.asset.startsWith(prefix))
-    .map(i => parseInt(i.asset.replace(prefix,''),10))
-    .filter(n => !isNaN(n) && n > 0)
-    .sort((a,b) => a - b);
 
-  let next = 1;
-  for(const n of nums){
-    if(n === next){ next++; }
-    else if(n > next){ break; }
-  }
-
-  return prefix + String(next).padStart(3,'0');
+function activeJob(){ return state.jobs.find(j=>j.id===state.currentJobId) || null; }
+function getJob(id){ return state.jobs.find(j=>j.id===id) || null; }
+function getItemById(id){
+  for(const j of state.jobs){ const item=(j.items||[]).find(x=>x.id===id); if(item) return item; }
+  return null;
 }
+
+function compressImageDataUrl(dataUrl, maxW=1400, quality=0.82){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let {width, height} = img;
+      if(width > maxW){ height = Math.round(height * (maxW/width)); width = maxW; }
+      const c = document.createElement('canvas');
+      c.width = width; c.height = height;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img,0,0,width,height);
+      resolve(c.toDataURL('image/jpeg', quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
+function refreshHeader(){
+  $('heroName').textContent = state.company.name;
+  $('heroService').textContent = state.company.service;
+  $('heroMeta').innerHTML = `${esc(state.company.address)}<br>${esc(state.company.phone)} · ${esc(state.company.email)}`;
+  if(state.company.logo){ $('heroLogo').src=state.company.logo; $('heroLogo').style.display='block'; $('heroLogoFallback').style.display='none'; }
+  else { $('heroLogo').style.display='none'; $('heroLogoFallback').style.display='grid'; }
+}
+
 function switchView(v){
-  document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
-  $(v).classList.remove('hidden');
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelector(`.tab[data-view="${v}"]`).classList.add('active');
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  $(v).classList.add('active');
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active', x.dataset.view===v));
   if(v==='clientsView') renderClients();
   if(v==='itemsView') renderItems();
   if(v==='labelsView') renderLabel();
@@ -272,125 +88,93 @@ function switchView(v){
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchView(t.dataset.view));
 
-function refreshHeader(){
-  $('heroName').textContent = state.company.name;
-  $('heroService').textContent = state.company.service;
-  $('heroMeta').innerHTML = `${esc(state.company.address)}<br>${esc(state.company.phone)} · ${esc(state.company.email)}`;
-  const heroLogo = $('heroLogo');
-  if(state.company.logo){ heroLogo.src = state.company.logo; heroLogo.style.display='block'; }
-  else { heroLogo.style.display='none'; }
-}
-function populateLists(){
-  $('itemAppliance').innerHTML = APPLIANCES.map(a=>`<option>${a[0]}</option>`).join('');
-  $('itemFuse').innerHTML = FUSES.map(x=>`<option>${x}</option>`).join('');
-  $('itemInsulation').innerHTML = IRS.map(x=>`<option>${x}</option>`).join('');
-  $('itemLocation').innerHTML = LOCATIONS.map(x=>`<option>${x}</option>`).join('');
-  $('jobClientPick').innerHTML = '<option value="">-- Select saved client --</option>' + state.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
-}
-$('itemAppliance').onchange = ()=>{
-  const selected = $('itemAppliance').value;
-  $('otherWrap').classList.toggle('hidden', selected!=='Other');
-  $('itemAsset').value = nextAsset(prefixFor(selected));
-};
-$('itemFuse').onchange = ()=> $('fuseOtherWrap').classList.toggle('hidden', $('itemFuse').value!=='Other');
-$('itemInsulation').onchange = ()=> $('insOtherWrap').classList.toggle('hidden', $('itemInsulation').value!=='Manual');
-$('itemLocation').onchange = ()=> $('locOtherWrap').classList.toggle('hidden', $('itemLocation').value!=='Other');
-$('itemClass').onchange = ()=>{
-  const visualOnly = $('itemClass').value==='Visual Only';
-  $('itemEarth').disabled = visualOnly;
-  $('itemInsulation').disabled = visualOnly;
-  if(visualOnly){
-    $('itemEarth').value='N/A';
-    $('itemInsulation').value='N/A';
-    $('insOtherWrap').classList.add('hidden');
-  } else {
-    if($('itemEarth').value==='N/A') $('itemEarth').value='';
-    if($('itemInsulation').value==='N/A') $('itemInsulation').value='>200 MΩ';
-  }
-};
-function syncOverallFromVisual(){
-  const visualFail = $('itemVisual').value==='FAIL';
-  if(visualFail){
-    $('itemResult').value='FAIL';
-    $('itemResult').disabled=true;
-  } else {
-    $('itemResult').disabled=false;
-  }
-}
-$('itemVisual').onchange = syncOverallFromVisual;
-$('jobClientPick').onchange = ()=>{
-  const c = state.clients.find(x=>x.id==$('jobClientPick').value); if(!c) return;
-  $('jobClient').value=c.name; $('jobContact').value=c.contact; $('jobEmail').value=c.email; $('jobAddress').value=c.address;
-};
-$('jobDate').value = today();
-
-$('saveClientBtn').onclick = ()=>{
-  const name = $('clientName').value.trim(); if(!name) return brandedAlert('Enter client name');
-  state.clients.unshift({id:nextId('CLI'),name,contact:$('clientContact').value.trim(),email:$('clientEmail').value.trim(),phone:$('clientPhone').value.trim(),address:$('clientAddress').value.trim()});
-  save(); populateLists(); renderClients();
-  ['clientName','clientContact','clientEmail','clientPhone','clientAddress'].forEach(id=>$(id).value='');
-};
 function renderClients(){
-  $('clientsList').innerHTML = state.clients.length ? state.clients.map(c=>`<div class="client"><div class="top"><div><div class="title">${esc(c.name)}</div><div class="small">${esc(c.address)}</div><div class="small">${esc(c.contact)} ${c.email?'· '+esc(c.email):''}</div></div><button class="red" onclick="delClient('${c.id}')">Delete</button></div></div>`).join('') : '<div class="small">No saved clients yet.</div>';
+  const wrap = $('jobList');
+  if(!state.jobs.length){ wrap.innerHTML='<div class="small">No jobs yet.</div>'; return; }
+  wrap.innerHTML = state.jobs.map(j=>`
+    <div class="jobCard ${state.currentJobId===j.id?'active':''}">
+      <div>
+        <div><b>${esc(j.client||'Untitled Job')}</b></div>
+        <div class="small">${fmtDateDMY(j.date)} · ${esc(j.address||'')}</div>
+      </div>
+      <div class="jobBtns">
+        <button class="smallBtn" onclick="openJob('${j.id}')">Open</button>
+        <button class="smallBtn danger" onclick="deleteJob('${j.id}')">Delete</button>
+      </div>
+    </div>
+  `).join('');
 }
-window.delClient = id => {state.clients = state.clients.filter(c=>c.id!==id); save(); populateLists(); renderClients();};
-
-$('createJobBtn').onclick = ()=>{
-  const client = $('jobClient').value.trim(), addr = $('jobAddress').value.trim();
-  if(!client || !addr) return brandedAlert('Enter client name and site address');
-  const job = {id:nextId('JOB'),client,contact:$('jobContact').value.trim(),email:$('jobEmail').value.trim(),engineer:$('jobEngineer').value.trim(),address:addr,date:$('jobDate').value || today(),retest:$('jobRetest').value.trim()||'12',notes:$('jobNotes').value.trim(),items:[]};
-  state.jobs.unshift(job); state.activeJobId=job.id; save(); renderJobs(); switchView('itemsView');
-  if(window.pendingScannedRetest){
-    prefillPendingRetestItem();
-    brandedAlert('New job created and appliance test form prefilled.');
-  }
-};
-function renderJobs(){
-  $('jobsList').innerHTML = state.jobs.length ? state.jobs.map(j=>`<div class="job"><div class="top"><div><div class="title">${esc(j.client)}</div><div class="small">${esc(j.address)}</div><div class="small">${esc(j.date)} · ${j.items.length} item(s)</div></div><div class="btns"><button onclick="openJob('${j.id}')">Open</button><button class="red" onclick="delJob('${j.id}')">Delete</button></div></div></div>`).join('') : '<div class="small">No jobs created yet.</div>';
-}
-window.openJob = id => {state.activeJobId=id; save(); switchView('itemsView');};
-window.delJob = id => {state.jobs = state.jobs.filter(j=>j.id!==id); if(state.activeJobId===id) state.activeJobId=null; save(); renderJobs(); renderItems();};
-window.delItem = id => {
-  const job = activeJob(); if(!job) return;
-  job.items = job.items.filter(i=>i.id!==id);
-  if(state.lastLabelItemId===id) state.lastLabelItemId = job.items[0] ? job.items[0].id : null;
-  save(); renderItems(); renderLabel();
-};
-window.selectLabelItem = id => {
-  state.lastLabelItemId = id;
-  save();
-  switchView('labelsView');
+window.openJob = id => { state.currentJobId=id; save(); renderClients(); renderItems(); renderLabel(); renderReport(); brandedAlert('Job opened'); };
+window.deleteJob = async id => {
+  if(!(await askConfirm('Delete this job?'))) return;
+  state.jobs = state.jobs.filter(j=>j.id!==id);
+  if(state.currentJobId===id) state.currentJobId = state.jobs[0]?.id || null;
+  save(); renderClients(); renderItems(); renderLabel(); renderReport();
 };
 
-let pendingPhotoItemId = null;
-function getItemById(id){
+$('newJobBtn').onclick = ()=>{
+  const client = $('clientName').value.trim();
+  const contact = $('clientContact').value.trim();
+  const email = $('clientEmail').value.trim();
+  const address = $('clientAddress').value.trim();
+  const date = $('testDate').value || todayISO();
+  const engineer = $('engineerName').value.trim();
+  if(!client) return brandedAlert('Enter client name');
+  const job = {id:uid(), client, contact, email, address, date, engineer, items:[], reportNo:''};
+  state.jobs.unshift(job);
+  state.currentJobId = job.id;
+  save(); renderClients(); renderItems(); renderLabel(); renderReport();
+  brandedAlert('Job created');
+};
+
+function buildLocationOptions(selected=''){
+  return LOCATIONS.map(x=>`<option ${x===selected?'selected':''}>${esc(x)}</option>`).join('');
+}
+function buildApplianceOptions(selected=''){
+  return APPLIANCES.map(([n])=>`<option ${n===selected?'selected':''}>${esc(n)}</option>`).join('');
+}
+function suggestAsset(job, appliance){
+  const pair = APPLIANCES.find(([n])=>n===appliance); const code = pair?pair[1]:'ITM';
+  const n = ((job.items||[]).filter(i=>i.appliance===appliance).length + 1).toString().padStart(3,'0');
+  return `${code}-${n}`;
+}
+function clearItemForm(){
+  $('itemId').value='';
+  $('itemAppliance').value='Kettle';
+  $('itemAsset').value='';
+  $('itemLocation').value='Office';
+  $('itemClass').value='Class I';
+  $('itemFuse').value='13A';
+  $('itemEarth').value='0.10';
+  $('itemIR').value='>200 MΩ';
+  $('itemVisual').value='Pass';
+  $('itemResult').value='PASS';
+  $('itemNotes').value='';
+  $('itemPhotoPreview').style.display='none';
+  $('saveItemBtn').textContent='Save Item';
+}
+function renderItems(){
   const job = activeJob();
-  if(!job) return null;
-  return job.items.find(i=>i.id===id) || null;
+  $('currentJobTag').textContent = job ? `Active job: ${job.client}` : 'No active job';
+  if(!job){ $('itemList').innerHTML='<div class="small">Create or open a job first.</div>'; return; }
+  if(!$('itemAsset').value) $('itemAsset').value = suggestAsset(job, $('itemAppliance').value || 'Kettle');
+  const rows = job.items.map(i=>`
+    <div class="itemRow">
+      <div>
+        <div><b>${esc(i.asset)}</b> · ${esc(i.appliance)} · ${esc(i.location)}</div>
+        <div class="small">${esc(i.classType)} · Fuse ${esc(i.fuse)} · Earth ${esc(i.earth)}Ω · IR ${esc(i.ir)} · Visual ${esc(i.visual)} · <b>${esc(i.result)}</b>${i.notes?` · ${esc(i.notes)}`:''}</div>
+      </div>
+      <div class="itemBtns">
+        <button class="smallBtn" onclick="editItem('${i.id}')">Edit</button>
+        <button class="smallBtn" onclick="addPhotoToItem('${i.id}')">Photo</button>
+        <button class="smallBtn danger" onclick="deleteItem('${i.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+  $('itemList').innerHTML = rows || '<div class="small">No items yet.</div>';
 }
-function compressImageDataUrl(dataUrl, maxSide=1400, quality=.78){
-  return new Promise(resolve=>{
-    const img = new Image();
-    img.onload = ()=>{
-      let w = img.width, h = img.height;
-      const scale = Math.min(1, maxSide / Math.max(w,h));
-      w = Math.round(w * scale); h = Math.round(h * scale);
-      const c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      const ctx = c.getContext('2d');
-      ctx.drawImage(img,0,0,w,h);
-      resolve(c.toDataURL('image/jpeg', quality));
-    };
-    img.src = dataUrl;
-  });
-}
-window.addItemPhoto = id => { pendingPhotoItemId = id; $('itemPhotoInput').click(); };
-window.viewItemPhoto = id => {
-  const item = getItemById(id);
-  if(!item || !item.photo) return;
-  $('imgModalPic').src = item.photo;
-  $('imgModalBack').style.display='flex';
-};
+$('itemAppliance').onchange = ()=>{ const job=activeJob(); if(job && !$('itemId').value) $('itemAsset').value=suggestAsset(job,$('itemAppliance').value); };
+let pendingPhotoItemId = null;
+window.addPhotoToItem = id => { pendingPhotoItemId = id; $('itemPhotoInput').click(); };
 window.removeItemPhoto = async id => {
   const item = getItemById(id);
   if(!item || !item.photo) return;
@@ -419,74 +203,95 @@ $('toLabelsBtn').onclick = ()=>saveItem(true);
 
 function saveItem(showLabel){
   const job = activeJob(); if(!job) return brandedAlert('Create or open a job first');
-  let appliance = $('itemAppliance').value==='Other' ? ($('itemOther').value.trim() || 'Other') : $('itemAppliance').value;
-  const prefix = prefixFor($('itemAppliance').value);
-  const assetValue = ($('itemAsset').value.trim() || nextAsset(prefix)).toUpperCase();
-  if(assetExistsInJob(job, assetValue)){
-    return brandedAlert(`Asset ${assetValue} already exists in this job. Please use a different asset number.`);
+  let appliance = $('itemAppliance').value;
+  let asset = $('itemAsset').value.trim();
+  let location = $('itemLocation').value.trim();
+  const classType = $('itemClass').value;
+  let fuse = $('itemFuse').value;
+  const earth = $('itemEarth').value.trim();
+  let ir = $('itemIR').value;
+  const visual = $('itemVisual').value;
+  const result = $('itemResult').value;
+  const notes = $('itemNotes').value.trim();
+
+  if(appliance==='Other') appliance = prompt('Enter appliance type:') || 'Other';
+  if(location==='Other') location = prompt('Enter location:') || 'Other';
+  if(fuse==='Other') fuse = prompt('Enter fuse value:') || 'Other';
+  if(ir==='Manual') ir = prompt('Enter IR reading:') || 'Manual';
+
+  if(!asset) asset = suggestAsset(job, appliance);
+  const id = $('itemId').value;
+  const payload = {id:id||uid(), appliance, asset, location, classType, fuse, earth, ir, visual, result, notes, photo:getItemById(id)?.photo || ''};
+
+  if(id){
+    const idx = job.items.findIndex(x=>x.id===id);
+    job.items[idx] = payload;
+  } else {
+    job.items.push(payload);
   }
-  const item = {
-    id:nextId('ITM'),
-    appliance,
-    asset:assetValue,
-    location:$('itemLocation').value==='Other' ? $('itemLocationOther').value.trim() : $('itemLocation').value,
-    classType:$('itemClass').value,
-    fuse:$('itemFuse').value==='Other' ? $('itemFuseOther').value.trim() : $('itemFuse').value,
-    visual:$('itemVisual').value,
-    earth:$('itemClass').value==='Visual Only' ? 'N/A' : $('itemEarth').value.trim(),
-    ir:$('itemClass').value==='Visual Only' ? 'N/A' : ($('itemInsulation').value==='Manual' ? $('itemInsOther').value.trim() : $('itemInsulation').value),
-    result:$('itemVisual').value==='FAIL' ? 'FAIL' : $('itemResult').value,
-    notes:$('itemNotes').value.trim(),
-    photo:''
-  };
-  job.items.unshift(item);
-  state.lastLabelItemId = item.id;
-  save();
-  ['itemAsset','itemLocationOther','itemOther','itemFuseOther','itemEarth','itemInsOther','itemNotes'].forEach(id=>{ if($(id)) $(id).value=''; });
-  $('itemAppliance').value='Kettle'; $('itemLocation').value='Office'; $('itemFuse').value='1A'; $('itemInsulation').value='>200 MΩ'; $('itemVisual').value='PASS'; $('itemResult').value='PASS'; $('itemClass').value='Class I';
-  $('otherWrap').classList.add('hidden'); $('locOtherWrap').classList.add('hidden'); $('fuseOtherWrap').classList.add('hidden'); $('insOtherWrap').classList.add('hidden');
-  $('itemEarth').disabled = false; $('itemInsulation').disabled = false;
-  $('itemAsset').value = nextAsset('KTL');
-  syncOverallFromVisual();
-  renderItems();
-  if(showLabel){switchView('labelsView')}
+  save(); renderItems(); renderLabel(); renderReport(); clearItemForm();
+  brandedAlert('Item saved');
+  if(showLabel) switchView('labelsView');
 }
-function renderItems(){
+window.editItem = id => {
+  const item = getItemById(id); if(!item) return;
+  $('itemId').value=item.id;
+  $('itemAppliance').value=APPLIANCES.some(([n])=>n===item.appliance)?item.appliance:'Other';
+  $('itemAsset').value=item.asset;
+  $('itemLocation').value=LOCATIONS.includes(item.location)?item.location:'Other';
+  $('itemClass').value=item.classType;
+  $('itemFuse').value=FUSES.includes(item.fuse)?item.fuse:'Other';
+  $('itemEarth').value=item.earth;
+  $('itemIR').value=IRS.includes(item.ir)?item.ir:'Manual';
+  $('itemVisual').value=item.visual;
+  $('itemResult').value=item.result;
+  $('itemNotes').value=item.notes || '';
+  if(item.photo){ $('itemPhotoPreview').src=item.photo; $('itemPhotoPreview').style.display='block'; }
+  else $('itemPhotoPreview').style.display='none';
+  $('saveItemBtn').textContent='Update Item';
+  switchView('itemsView');
+};
+window.deleteItem = async id => {
+  const job = activeJob(); if(!job) return;
+  if(!(await askConfirm('Delete this item?'))) return;
+  job.items = job.items.filter(i=>i.id!==id);
+  save(); renderItems(); renderLabel(); renderReport(); brandedAlert('Item deleted');
+};
+
+function renderLabel(){
   const job = activeJob();
-  $('jobSummary').innerHTML = job ? `<div class="title">${esc(job.client)}</div><div class="small">${esc(job.address)}</div><div class="small">Engineer: ${esc(job.engineer)} · Test date: ${esc(job.date)} · Retest: ${esc(job.retest)} months</div>` : '<div class="small">No active job.</div>';
-  $('itemsList').innerHTML = job && job.items.length ? job.items.map(i=>{
-    const photoBtns = i.photo
-      ? `<button class="secondary" onclick="viewItemPhoto('${i.id}')">View Photo</button><button class="secondary" onclick="addItemPhoto('${i.id}')">Change Photo</button><button class="ghost" onclick="removeItemPhoto('${i.id}')">Remove Photo</button>`
-      : `<button class="secondary" onclick="addItemPhoto('${i.id}')">${i.result==='FAIL' ? 'Add Failure Photo' : 'Add Photo'}</button>`;
-    const thumb = i.photo ? `<img class="photoThumb" src="${i.photo}" alt="Photo evidence">` : '';
-    return `<div class="item"><div class="top"><div><div class="title">${esc(i.asset)} · ${esc(i.appliance)}</div><div class="small">${esc(i.location)} · ${esc(i.classType)} · Fuse ${esc(i.fuse)}</div><div class="small">Visual ${esc(i.visual)} · Earth ${esc(i.earth)} · IR ${esc(i.ir)}</div>${thumb}</div><span class="tag ${i.result==='PASS'?'pass':'fail'}">${esc(i.result)}</span></div><div class="itemActions"><button class="secondary" onclick="selectLabelItem('${i.id}')">Print Label</button>${photoBtns}<button class="red" onclick="delItem('${i.id}')">Delete</button></div></div>`;
-  }).join('') : '<div class="small">No appliances saved yet.</div>';
+  if(!job){ $('labelArea').innerHTML='<div class="small">No active job.</div>'; return; }
+  const itemId = $('labelSelect').value;
+  $('labelSelect').innerHTML = job.items.map(i=>`<option value="${i.id}">${esc(i.asset)} · ${esc(i.appliance)}</option>`).join('');
+  if(itemId) $('labelSelect').value = itemId;
+  const item = getItemById($('labelSelect').value) || job.items[0];
+  if(!item){ $('labelArea').innerHTML='<div class="small">Add an item first.</div>'; return; }
+  $('labelArea').innerHTML = `
+    <div id="labelCard">
+      <div class="labelTop">${esc(state.company.name)}</div>
+      <div class="labelMid ${item.result==='PASS'?'pass':'fail'}">${esc(item.result)}</div>
+      <div class="labelBody">
+        <div><b>Asset:</b> ${esc(item.asset)}</div>
+        <div><b>Appliance:</b> ${esc(item.appliance)}</div>
+        <div><b>Date:</b> ${fmtDateDMY(job.date)}</div>
+        <div><b>Retest:</b> ${nextTest(job)}</div>
+      </div>
+    </div>`;
 }
-function nextTest(job){
-  const d = new Date(job.date);
-  d.setMonth(d.getMonth()+parseInt(job.retest||12,10));
-  return d.toLocaleDateString('en-GB');
-}
-function fmtDateDMY(v){
-  if(!v) return '';
-  if(/^\d{4}-\d{2}-\d{2}$/.test(v)){
-    const parts = v.split('-');
-    return parts[2] + '/' + parts[1] + '/' + parts[0];
-  }
-  const dt = new Date(v);
-  return isNaN(dt.getTime()) ? String(v) : dt.toLocaleDateString('en-GB');
-}
+$('labelSelect').onchange = renderLabel;
+$('printLabelBtn').onclick = ()=>window.print();
+
 function ensureReportNumber(job){
   if(job.reportNo) return job.reportNo;
-  if(typeof state.reportCounter !== 'number') state.reportCounter = 0;
-  state.reportCounter += 1;
-  const year = (job.date && /^\d{4}/.test(job.date)) ? job.date.slice(0,4) : String(new Date().getFullYear());
+  const year = new Date(job.date||todayISO()).getFullYear();
   job.reportNo = 'MHK-' + year + '-' + String(state.reportCounter).padStart(4,'0');
+  state.reportCounter += 1;
   save();
   return job.reportNo;
 }
 function nl2br(s){
-  return esc(s).replace(/\n/g,'<br>');
+  return esc(s).replace(/
+/g,'<br>');
 }
 
 function renderReport(){
@@ -587,14 +392,7 @@ function renderReport(){
     +         '</div>'
     +       '</div>'
 
-    +       '<div class="reportSplit premium" style="margin-top:14px">'
-    +         '<div class="reportBoxSq premium">'
-    +           '<div class="reportSectionTitle">Client Details</div>'
-    +           '<div><b>Client:</b> ' + esc(job.client) + '</div>'
-    +           '<div><b>Contact:</b> ' + esc(job.contact) + '</div>'
-    +           '<div><b>Email:</b> ' + esc(job.email) + '</div>'
-    +           '<div style="margin-top:8px"><b>Site Address:</b><br>' + nl2br(job.address) + '</div>'
-    +         '</div>'
+    +       '<div class="reportSplit premium reportSingleBox" style="margin-top:14px">'
     +         '<div class="reportBoxSq premium">'
     +           '<div class="reportSectionTitle">Test Details</div>'
     +           '<div><b>Engineer:</b> ' + esc(job.engineer) + '</div>'
@@ -777,81 +575,128 @@ $('saveSettingsBtn').onclick = ()=>{
   save(); refreshHeader(); refreshBackupUI(); brandedAlert('Settings saved');
 };
 $('clearDataBtn').onclick = async ()=>{
-  if(!(await askConfirm('Reset all app data? This will erase PAT jobs stored in the app. Export a backup first if you need to keep them.'))) return;
+  if(!(await askConfirm('Reset all app data? This will erase PAT jobs stored in the app. Export a backup first if you need it.'))) return;
   localStorage.removeItem(KEY);
   localStorage.removeItem(INTERNAL_BACKUP_KEY);
   localStorage.removeItem(BACKUP_META_KEY);
-  location.reload();
+  state = structuredClone(defaults);
+  $('clientName').value=''; $('clientContact').value=''; $('clientEmail').value=''; $('clientAddress').value=''; $('testDate').value=todayISO(); $('engineerName').value='';
+  clearItemForm(); refreshHeader(); renderClients(); renderItems(); renderLabel(); renderReport(); loadSettings();
+  brandedAlert('All data cleared');
 };
 
-$('exportDataBtn').onclick = ()=> exportBackupNow();
-$('settingsExportBtn').onclick = ()=> exportBackupNow();
-$('settingsRestoreBtn').onclick = ()=> restoreInternalBackupNow();
-$('restoreInternalBtn').onclick = async ()=>{
-  if(!(await askConfirm('Restore the internal backup? Current app data will be replaced.'))) return;
-  restoreInternalBackupNow();
+function exportBackupObject(){
+  return {
+    app:'MHK PAT',
+    version:1,
+    exportedAt:new Date().toISOString(),
+    data: state
+  };
+}
+function getBackupMeta(){
+  try{return JSON.parse(localStorage.getItem(BACKUP_META_KEY)||'{}')||{}}catch{return {}}
+}
+function setBackupMeta(meta){
+  localStorage.setItem(BACKUP_META_KEY, JSON.stringify(meta||{}));
+}
+function makeBackupFilename(kind='backup'){
+  const d=new Date();
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,'0');
+  const day=String(d.getDate()).padStart(2,'0');
+  const hh=String(d.getHours()).padStart(2,'0');
+  const mm=String(d.getMinutes()).padStart(2,'0');
+  return `mhk-pat-${kind}-${y}${m}${day}-${hh}${mm}.json`;
+}
+function downloadJson(filename,obj){
+  const blob = new Blob([JSON.stringify(obj,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 500);
+}
+function updateBackupStatus(){
+  const meta = getBackupMeta();
+  const auto = $('autoBackupStatus');
+  const last = meta.lastInternalBackupAt ? new Date(meta.lastInternalBackupAt) : null;
+  auto.textContent = last
+    ? `Internal backup saved: ${last.toLocaleString('en-GB')}`
+    : 'No internal backup saved yet';
+}
+function saveInternalBackup(reason='manual'){
+  const payload = exportBackupObject();
+  localStorage.setItem(INTERNAL_BACKUP_KEY, JSON.stringify(payload));
+  const meta = getBackupMeta();
+  meta.lastInternalBackupAt = new Date().toISOString();
+  meta.lastInternalBackupReason = reason;
+  setBackupMeta(meta);
+  updateBackupStatus();
+}
+function maybeScheduledInternalBackup(){
+  const meta = getBackupMeta();
+  const freq = meta.frequency || 'weekly';
+  if(freq==='off') return;
+  const last = meta.lastInternalBackupAt ? new Date(meta.lastInternalBackupAt) : null;
+  const now = new Date();
+  let dueMs = 7*24*60*60*1000;
+  if(freq==='daily') dueMs = 24*60*60*1000;
+  if(freq==='monthly') dueMs = 30*24*60*60*1000;
+  if(!last || (now - last) >= dueMs){
+    saveInternalBackup('scheduled');
+  }
+}
+function refreshBackupUI(){
+  const meta = getBackupMeta();
+  if($('backupFrequency')) $('backupFrequency').value = meta.frequency || 'weekly';
+  updateBackupStatus();
+}
+$('downloadBackupBtn').onclick = ()=>{
+  downloadJson(makeBackupFilename('backup'), exportBackupObject());
+  brandedAlert('Backup downloaded');
 };
-$('importDataBtn').onclick = ()=> $('importFileInput').click();
-$('importFileInput').onchange = e => {
+$('saveInternalBackupBtn').onclick = ()=>{
+  saveInternalBackup('manual');
+  brandedAlert('Internal backup saved');
+};
+$('restoreInternalBackupBtn').onclick = async ()=>{
+  const raw = localStorage.getItem(INTERNAL_BACKUP_KEY);
+  if(!raw) return brandedAlert('No internal backup found');
+  if(!(await askConfirm('Restore the latest internal backup? This replaces current app data.'))) return;
+  try{
+    const parsed = JSON.parse(raw);
+    if(!parsed || !parsed.data) throw new Error('Invalid backup');
+    state = {...structuredClone(defaults), ...parsed.data};
+    save();
+    refreshHeader(); renderClients(); renderItems(); renderLabel(); renderReport(); loadSettings();
+    brandedAlert('Internal backup restored');
+  }catch(e){ brandedAlert('Failed to restore backup'); }
+};
+$('restoreBackupInput').onchange = e => {
   const f = e.target.files && e.target.files[0];
   if(!f) return;
   const reader = new FileReader();
   reader.onload = async ev => {
     try{
-      const incoming = JSON.parse(ev.target.result);
-      if(!(await askConfirm('Import backup and replace current app data?'))) return;
-      state = mergeState(incoming);
+      const parsed = JSON.parse(ev.target.result);
+      if(!parsed || !parsed.data) throw new Error('Invalid backup');
+      if(!(await askConfirm('Restore this backup file? This replaces current app data.'))) return;
+      state = {...structuredClone(defaults), ...parsed.data};
       save();
-      takeInternalBackup('post-import');
-      const meta = getBackupMeta();
-      meta.lastExportAt = meta.lastExportAt || new Date().toISOString();
-      setBackupMeta(meta);
-      localStorage.setItem('MHK_BACKUP_FLASH','imported');
-      location.reload();
-    }catch(err){
-      brandedAlert('Import failed. Please choose a valid backup file.');
-    }finally{
-      $('importFileInput').value='';
-    }
+      refreshHeader(); renderClients(); renderItems(); renderLabel(); renderReport(); loadSettings();
+      brandedAlert('Backup restored');
+    }catch(err){ brandedAlert('Backup file invalid'); }
+    $('restoreBackupInput').value='';
   };
   reader.readAsText(f);
 };
-$('imgModalOk').onclick = ()=> $('imgModalBack').style.display='none';
-$('imgModalBack').onclick = e => { if(e.target.id==='imgModalBack') $('imgModalBack').style.display='none'; };
 
-function checkPinLock(){
-  if(!state.company.pin){
-    $('pinModalBack').style.display='none';
-    return;
-  }
-  $('pinUnlockInput').value='';
-  $('pinMsg').style.display='none';
-  $('pinModalBack').style.display='flex';
-}
-$('pinUnlockBtn').onclick = ()=>{
-  if(($('pinUnlockInput').value||'').trim() === (state.company.pin||'')){
-    $('pinModalBack').style.display='none';
-  } else {
-    $('pinMsg').style.display='block';
-    $('pinUnlockInput').value='';
-  }
-};
-$('pinUnlockInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('pinUnlockBtn').click(); });
+window.addEventListener('beforeunload', ()=>{ try{ saveInternalBackup('autosave'); }catch{} });
 
-$('saveSigBtn').onclick = ()=>saveSignature();
-$('clearSigBtn').onclick = ()=>clearSignature();
-window.addEventListener('resize', ()=>{ if(!$('signView').classList.contains('hidden')) renderSign(); });
-$('mhkModalOk').onclick = ()=>{ $('mhkModalBack').style.display='none'; if(appModalResolver){ const r=appModalResolver; appModalResolver=null; r(true);} };
-$('mhkModalCancel').onclick = ()=>{ $('mhkModalBack').style.display='none'; if(appModalResolver){ const r=appModalResolver; appModalResolver=null; r(false);} };
-$('mhkModalBack').onclick = (e)=>{ if(e.target.id==='mhkModalBack'){ $('mhkModalBack').style.display='none'; if(appModalResolver){ const r=appModalResolver; appModalResolver=null; r(false);} } };
-
-renderJobs(); renderClients(); populateLists(); renderItems(); refreshHeader(); initSignaturePad(); renderSign();
-if(!localStorage.getItem(INTERNAL_BACKUP_KEY)){
-  takeInternalBackup('initial');
-}
-refreshBackupUI();
-consumeBackupFlash();
-maybeShowBackupReminder();
-$('itemLocation').value='Office'; $('itemAsset').value='KTL001'; syncOverallFromVisual();
-checkPinLock();
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js?v=15').catch(()=>{}); }
+$('testDate').value = todayISO();
+refreshHeader();
+renderClients();
+renderItems();
+renderLabel();
+renderReport();
+initSignaturePad();
+maybeScheduledInternalBackup();
+updateBackupStatus();
