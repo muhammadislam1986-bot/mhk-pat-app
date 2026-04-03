@@ -635,7 +635,7 @@ function renderReport(){
     +         '</div>'
     +       '</div>'
 
-    +       '<div class="reportSplit premium" style="margin-top:12px">'
+    +       '<div class="reportSplit premium reportLastPage" style="margin-top:12px">'
     +         '<div class="reportBoxSq premium keepTogether">'
     +           '<div class="reportSectionTitle">Compliance Statement</div>'
     +           '<div style="line-height:1.6;color:#111">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
