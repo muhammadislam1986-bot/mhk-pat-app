@@ -624,11 +624,7 @@ function renderReport(){
     +     '<div class="reportPageInner premium">'
     +       '<div class="reportPageTitle">ADDITIONAL SAFETY INFORMATION & EVIDENCE</div>'
 
-    +       '<div class="reportSplit premium">'
-    +         '<div class="reportBoxSq premium">'
-    +           '<div class="reportSectionTitle">Important Safety Notice</div>'
-    +           '<div style="line-height:1.6;color:#111">Appliances that have failed testing must be removed from service immediately and must not be used until they have been repaired and successfully re-tested. These items may present an electrical safety risk and should be clearly identified and isolated from normal use.</div>'
-    +         '</div>'
+  
     +         '<div class="reportBoxSq premium keepTogether">'
     +           '<div class="reportSectionTitle">Failure Photos</div>'
     +           (failPhotos.length ? '<div class="reportPhotoGrid premium">' + photoBlocks + '</div>' : '<div style="color:#111">No failure photos attached.</div>')
@@ -636,6 +632,10 @@ function renderReport(){
     +       '</div>'
 
     +       '<div class="reportSplit premium reportLastPage" style="margin-top:12px">'
+    +         '<div class="reportBoxSq premium keepTogether">'
+    +           '<div class="reportSectionTitle">Important Safety Notice</div>'
+    +           '<div style="line-height:1.6;color:#111">Appliances that have failed testing must be removed from service immediately and must not be used until they have been repaired and successfully re-tested. These items may present an electrical safety risk and should be clearly identified and isolated from normal use.</div>'
+    +         '</div>'
     +         '<div class="reportBoxSq premium keepTogether">'
     +           '<div class="reportSectionTitle">Compliance Statement</div>'
     +           '<div style="line-height:1.6;color:#111">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
