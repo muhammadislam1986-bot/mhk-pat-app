@@ -290,7 +290,8 @@ function ensureReportNumber(job){
   return job.reportNo;
 }
 function nl2br(s){
-  return esc(s).replace(/\n/g,'<br>');
+  return esc(s).replace(/
+/g,'<br>');
 }
 
 function renderReport(){
