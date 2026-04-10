@@ -81,6 +81,9 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   border-radius:0;
   box-shadow:none;
 }
+.reportPageCover {
+  background:#f8fafc;
+}
 .reportPage:last-child{page-break-after:auto}
 .reportPageInner{
   display:flex;
