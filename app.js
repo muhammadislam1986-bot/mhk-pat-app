@@ -546,6 +546,10 @@ function renderReport(){
     + '<div id="reportBox">'
 
     +   '<div class="reportPage reportPageCover">'
+    +   '<div class="reportHeaderBar">'
+    +     '<div class="reportHeaderLeft">' + esc(state.company.name) + '</div>'
+    +     '<div class="reportHeaderRight">Portable Appliance Testing Report</div>'
+    +   '</div>'
     +     '<div class="reportPageInner premium">'
     +       '<div class="reportHero">'
     +         '<div class="reportHeroLeft">'
