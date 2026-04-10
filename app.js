@@ -544,6 +544,7 @@ function renderReport(){
 
   $('reportArea').innerHTML = ''
     + '<div id="reportBox">'
+
     +   '<div class="reportPage">'
     +     '<div class="reportPageInner premium">'
     +       '<div class="reportHero">'
@@ -596,7 +597,11 @@ function renderReport(){
     +           '<div><b>Calibration Due:</b> ' + esc(fmtDateDMY(state.company.calibrationDue) || '-') + '</div>'
     +         '</div>'
     +       '</div>'
+    +     '</div>'
+    +   '</div>'
 
+    +   '<div class="reportPage">'
+    +     '<div class="reportPageInner premium">'
     +       '<div class="reportBoxSq premium">'
     +         '<div class="reportTableTitle pass">Passed Items</div>'
     +         '<table class="reportTable premium">'
@@ -604,7 +609,11 @@ function renderReport(){
     +           passRows
     +         '</table>'
     +       '</div>'
+    +     '</div>'
+    +   '</div>'
 
+    +   '<div class="reportPage">'
+    +     '<div class="reportPageInner premium">'
     +       '<div class="reportBoxSq premium">'
     +         '<div class="reportTableTitle fail">Failed Items</div>'
     +         '<table class="reportTable premium">'
@@ -612,18 +621,12 @@ function renderReport(){
     +           failRows
     +         '</table>'
     +       '</div>'
-
-    +       '<div class="reportFoot premium">'
-    +         '<div>' + esc(state.company.name) + ' · ' + esc(state.company.service || 'Portable Appliance Testing (PAT)') + '</div>'
-    +         '<div>Page 1 of 2</div>'
-    +       '</div>'
     +     '</div>'
     +   '</div>'
 
     +   '<div class="reportPage">'
     +     '<div class="reportPageInner premium">'
     +       '<div class="reportPageTitle">ADDITIONAL SAFETY INFORMATION & EVIDENCE</div>'
-
     +       '<div class="reportBoxSq premium keepTogether">'
     +         '<div class="reportSectionTitle">Failure Photos</div>'
     +         (failPhotos.length ? '<div class="reportPhotoGrid premium">' + photoBlocks + '</div>' : '<div style="color:#111">No failure photos attached.</div>')
@@ -656,12 +659,9 @@ function renderReport(){
     +         '<div class="reportSectionTitle">Thank You</div>'
     +         '<div style="line-height:1.6;color:#111">Thank you for choosing <b>' + esc(state.company.name) + '</b>. If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details on page 1 of this report.</div>'
     +       '</div>'
-    +       '<div class="reportFoot premium">'
-    +         '<div>' + esc(state.company.name) + ' · ' + esc(state.company.service || 'Portable Appliance Testing (PAT)') + '</div>'
-    +         '<div>Page 2 of 2</div>'
-    +       '</div>'
     +     '</div>'
     +   '</div>'
+
     + '</div>';
 }
 $('printReportBtn').onclick = ()=>window.print();
