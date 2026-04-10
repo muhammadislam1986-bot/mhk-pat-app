@@ -545,7 +545,7 @@ function renderReport(){
   $('reportArea').innerHTML = ''
     + '<div id="reportBox">'
 
-    +   '<div class="reportPage">'
+    +   '<div class="reportPage reportPageCover">'
     +     '<div class="reportPageInner premium">'
     +       '<div class="reportHero">'
     +         '<div class="reportHeroLeft">'
