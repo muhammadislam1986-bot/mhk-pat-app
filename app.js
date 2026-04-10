@@ -563,7 +563,6 @@ function renderReport(){
     +         '</div>'
     +       '</div>'
 
-    +       '<div class="reportRibbon">PORTABLE APPLIANCE TESTING REPORT</div>'
 
     +       '<div class="reportMetaBar">'
     +         '<div><b>Report Number:</b> <span class="reportNoInline">' + esc(reportNo) + '</span></div>'
@@ -576,7 +575,6 @@ function renderReport(){
     +           '<div class="reportStat total"><div class="num">' + job.items.length + '</div><div class="lbl">Total Tested</div></div>'
     +           '<div class="reportStat pass"><div class="num">' + pass.length + '</div><div class="lbl">Passed</div></div>'
     +           '<div class="reportStat fail"><div class="num">' + fail.length + '</div><div class="lbl">Failed</div></div>'
-    +           '<div class="reportStat neutral"><div class="num date">' + nextTest(job) + '</div><div class="lbl">Next Test</div></div>'
     +         '</div>'
     +       '</div>'
 
