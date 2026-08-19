@@ -461,3 +461,368 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 .reportLastPage{
   page-break-before:always;
 }
+
+/* ===== Premium page 1 cover redesign ===== */
+.reportPageCover{
+  background:#fff;
+}
+
+.reportPageCover .reportHeaderBar{
+  min-height:42px;
+  padding:0 18px;
+  background:#082846;
+  color:#fff;
+  border-radius:0;
+  letter-spacing:.1px;
+}
+
+.reportPageCover .reportHeaderLeft{
+  font-size:.82rem;
+  font-weight:800;
+}
+
+.reportPageCover .reportHeaderRight{
+  font-size:.78rem;
+  font-weight:800;
+  opacity:1;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
+
+.reportHeaderAccent{
+  height:3px;
+  background:#f28c28;
+}
+
+.reportPageCover .reportCoverInner{
+  padding:8mm 7mm 6mm;
+}
+
+.reportPageCover .reportHero{
+  align-items:center;
+  gap:20px;
+  padding:2mm 2mm 4mm;
+  border-bottom:1px solid #d9e3ed;
+}
+
+.reportPageCover .reportHeroLeft{
+  align-items:center;
+}
+
+.reportPageCover .reportBrandIconWrap{
+  width:90px;
+  min-width:90px;
+  height:90px;
+  border:1px solid #e2e9f0;
+  border-radius:16px;
+  background:#f8fafc;
+}
+
+.reportPageCover .reportCompanyName{
+  font-size:1.72rem;
+  color:#082846;
+  letter-spacing:-.25px;
+}
+
+.reportPageCover .reportServiceLine{
+  color:#36485d;
+  font-size:1rem;
+}
+
+.reportPageCover .reportCompanyMeta{
+  margin-top:9px;
+  color:#34465a;
+  font-size:.9rem;
+  line-height:1.45;
+}
+
+.reportPageCover .reportHeroRight{
+  flex:0 0 172px;
+}
+
+.reportPageCover .reportNextCard{
+  background:linear-gradient(135deg,#0d4f83,#2498dc);
+  border-radius:12px;
+  padding:13px 15px;
+  box-shadow:none;
+  border:1px solid rgba(8,40,70,.08);
+}
+
+.reportPageCover .reportNextLabel{
+  font-size:.74rem;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+}
+
+.reportPageCover .reportNextDate{
+  font-size:1.28rem;
+  letter-spacing:.1px;
+}
+
+.reportMetaBarCover{
+  margin-top:14px;
+  grid-template-columns:1.1fr 1fr 1.1fr;
+  border:1px solid #d9e3ed;
+  border-radius:10px;
+  overflow:hidden;
+  background:#f8fafc;
+}
+
+.reportMetaBarCover>div{
+  padding:10px 13px;
+  min-height:58px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.reportMetaLabel{
+  display:block;
+  color:#6a7888;
+  font-size:.7rem;
+  line-height:1;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.55px;
+  margin-bottom:5px;
+}
+
+.reportMetaValue{
+  display:block;
+  color:#102f50;
+  font-size:.98rem;
+  line-height:1.15;
+  font-weight:900;
+}
+
+.reportPageCover .reportSummaryCard.reportSummaryCover{
+  display:block;
+  margin-top:14px;
+  padding:0;
+  border:1px solid #d9e3ed;
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.reportSummaryHeading{
+  padding:9px 14px;
+  background:#eef4f9;
+  border-bottom:1px solid #d9e3ed;
+  color:#0b3155;
+  font-size:.78rem;
+  font-weight:900;
+  letter-spacing:.55px;
+}
+
+.reportPageCover .reportStatGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  padding:12px;
+}
+
+.reportPageCover .reportStat{
+  width:auto;
+  height:auto;
+  min-height:88px;
+  margin:0;
+  border-radius:10px;
+  align-items:flex-start;
+  padding:15px 17px;
+  text-align:left;
+  justify-content:center;
+  box-shadow:none;
+  border:1px solid #d9e3ed;
+  color:#102f50;
+  background:#fff;
+}
+
+.reportPageCover .reportStat.total{
+  border-left:5px solid #17608f;
+  background:linear-gradient(135deg,#f7fbff,#eef6fb);
+}
+
+.reportPageCover .reportStat.pass{
+  border-left:5px solid #229653;
+  background:linear-gradient(135deg,#fbfffc,#edf9f2);
+}
+
+.reportPageCover .reportStat.fail{
+  border-left:5px solid #d33838;
+  background:linear-gradient(135deg,#fffdfd,#fff1f1);
+}
+
+.reportPageCover .reportStat .num{
+  color:#0a3155;
+  font-size:1.95rem;
+  line-height:1;
+}
+
+.reportPageCover .reportStat.pass .num{color:#23874d}
+.reportPageCover .reportStat.fail .num{color:#c82f2f}
+
+.reportPageCover .reportStat .lbl{
+  margin-top:7px;
+  color:#46576a;
+  font-size:.78rem;
+  line-height:1;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.35px;
+}
+
+.reportDetailGrid{
+  margin-top:14px !important;
+  gap:12px !important;
+}
+
+.reportPageCover .reportDetailCard{
+  padding:0;
+  margin-top:0;
+  overflow:hidden;
+  border-radius:12px;
+  border-color:#d9e3ed;
+}
+
+.reportDetailHeader{
+  padding:9px 13px;
+  background:#082846;
+  color:#fff;
+  font-size:.9rem;
+  font-weight:900;
+}
+
+.reportDetailBody{
+  padding:5px 13px 8px;
+}
+
+.reportDetailRow{
+  display:grid;
+  grid-template-columns:108px 1fr;
+  gap:10px;
+  align-items:start;
+  padding:7px 0;
+  border-bottom:1px solid #edf1f5;
+  color:#111;
+  font-size:.84rem;
+}
+
+.reportDetailRow:last-child{
+  border-bottom:none;
+}
+
+.reportDetailRow span{
+  color:#68778a;
+  font-size:.75rem;
+  font-weight:800;
+}
+
+.reportDetailRow b{
+  color:#172c43;
+  font-weight:800;
+  overflow-wrap:anywhere;
+}
+
+.reportDetailAddress b{
+  line-height:1.3;
+}
+
+.reportStatusPanel{
+  margin-top:14px;
+  border-radius:12px;
+  padding:13px 15px;
+  border:1px solid #d9e3ed;
+  background:#f8fafc;
+}
+
+.reportStatusPanel.hasFailures{
+  border-left:5px solid #f28c28;
+  background:linear-gradient(135deg,#fffdf8,#fff8ec);
+}
+
+.reportStatusPanel.allPassed{
+  border-left:5px solid #229653;
+  background:linear-gradient(135deg,#fbfffc,#edf9f2);
+}
+
+.reportStatusKicker{
+  color:#6a7888;
+  font-size:.68rem;
+  font-weight:900;
+  letter-spacing:.6px;
+}
+
+.reportStatusTitle{
+  margin-top:4px;
+  color:#0c3155;
+  font-size:.98rem;
+  line-height:1.25;
+  font-weight:900;
+}
+
+.reportStatusText{
+  margin-top:5px;
+  color:#425367;
+  font-size:.78rem;
+  line-height:1.45;
+}
+
+.reportCoverFooter{
+  margin-top:14px;
+  min-height:48px;
+  padding:10px 14px;
+  background:#082846;
+  color:#fff;
+  border-top:3px solid #f28c28;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+}
+
+.reportCoverFooter>div:first-child{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+
+.reportCoverFooter b{
+  font-size:.76rem;
+}
+
+.reportCoverFooter span{
+  color:#d7e3ee;
+  font-size:.68rem;
+  overflow-wrap:anywhere;
+}
+
+.reportCoverFooterTag{
+  flex:0 0 auto;
+  color:#d7e3ee;
+  font-size:.67rem;
+  font-weight:900;
+  letter-spacing:.7px;
+}
+
+@media print{
+  .reportPageCover .reportCoverInner{
+    padding:7mm 7mm 5mm !important;
+  }
+  .reportPageCover .reportHeaderBar{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+  .reportPageCover .reportNextCard,
+  .reportPageCover .reportSummaryCard,
+  .reportPageCover .reportStat,
+  .reportDetailHeader,
+  .reportStatusPanel,
+  .reportCoverFooter,
+  .reportHeaderAccent{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+}
+
