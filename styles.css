@@ -1398,3 +1398,150 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
     print-color-adjust:exact !important;
   }
 }
+
+
+/* ===== PAGE 1 FINAL VISUAL POLISH — pagination-safe ===== */
+
+/* Keep the successful 5-page print geometry untouched.
+   These rules only refine content inside the existing cover bounds. */
+.reportPageCover .reportCoverInner{
+  display:flex !important;
+  flex-direction:column !important;
+}
+
+/* Give the identity area a little more of the premium reference's breathing room. */
+.reportPageCover .reportHero{
+  padding-top:4mm !important;
+  padding-bottom:5mm !important;
+}
+
+.reportPageCover .reportCompanyName{
+  font-size:1.68rem !important;
+  line-height:1.08 !important;
+  letter-spacing:-.2px !important;
+}
+
+.reportPageCover .reportServiceLine{
+  margin-top:3px !important;
+  font-size:.86rem !important;
+}
+
+.reportPageCover .reportCompanyMeta{
+  margin-top:8px !important;
+  font-size:.76rem !important;
+  line-height:1.5 !important;
+}
+
+/* Slightly richer cards, still compact enough to stay safely inside page 1. */
+.reportMetaBarCover{
+  margin-top:11px !important;
+}
+
+.reportPageCover .reportSummaryCard.reportSummaryCover{
+  margin-top:11px !important;
+}
+
+.reportDetailGrid{
+  margin-top:11px !important;
+}
+
+.reportAssurancePanel{
+  margin-top:11px !important;
+  min-height:82px !important;
+  background:linear-gradient(135deg,#f9fbfd,#eef5fa) !important;
+  border:1px solid #d7e2eb !important;
+}
+
+/* Proper failed-items warning strip. The HTML was already correct; this
+   prevents the icon, heading and message from running into one another. */
+.reportFailureAlert{
+  margin-top:auto !important;
+  margin-bottom:9px !important;
+  min-height:48px !important;
+  display:grid !important;
+  grid-template-columns:34px 78px minmax(0,1fr) !important;
+  gap:9px !important;
+  align-items:center !important;
+  padding:8px 12px !important;
+  border:1px solid #f0c58f !important;
+  border-left:4px solid #f28c28 !important;
+  border-radius:9px !important;
+  background:linear-gradient(135deg,#fffaf2,#fff4e5) !important;
+  color:#24384d !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  break-inside:avoid !important;
+  page-break-inside:avoid !important;
+}
+
+.reportFailureIcon{
+  width:28px !important;
+  height:28px !important;
+  border-radius:50% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#f28c28 !important;
+  color:#fff !important;
+  font-size:1rem !important;
+  line-height:1 !important;
+  font-weight:900 !important;
+}
+
+.reportFailureAlert>b{
+  display:block !important;
+  color:#172f49 !important;
+  font-size:.76rem !important;
+  line-height:1.1 !important;
+  white-space:nowrap !important;
+}
+
+.reportFailureAlert>span:last-child{
+  display:block !important;
+  min-width:0 !important;
+  color:#42566c !important;
+  font-size:.62rem !important;
+  line-height:1.35 !important;
+}
+
+.reportFailureAlert.reportAllPassedAlert{
+  border-color:#b9dfc6 !important;
+  border-left-color:#2da455 !important;
+  background:linear-gradient(135deg,#f9fff9,#edf9f1) !important;
+}
+.reportFailureAlert.reportAllPassedAlert .reportFailureIcon{
+  background:#2da455 !important;
+}
+
+/* Make the bottom band read more like the approved reference without
+   altering its proven pagination geometry. */
+.reportCoverFooter{
+  background:linear-gradient(90deg,#062747,#07365d) !important;
+  border-top:3px solid #f28c28 !important;
+}
+.reportCoverFooterMain b{
+  font-size:.7rem !important;
+  letter-spacing:.05px !important;
+}
+.reportCoverFooterMain span{
+  font-size:.55rem !important;
+  line-height:1.35 !important;
+}
+.reportCoverFooterContact b{
+  font-size:.7rem !important;
+}
+.reportCoverFooterContact span{
+  font-size:.54rem !important;
+}
+.reportPlugMark{
+  font-size:2rem !important;
+  opacity:.42 !important;
+}
+
+/* Print keeps the already-successful dimensions and page boundaries. */
+@media print{
+  .reportFailureAlert{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+}
