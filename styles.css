@@ -1261,3 +1261,127 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 .reportSimpleFooter{margin-top:auto;padding-top:7px;border-top:1px solid #d8e1ea;display:flex;justify-content:space-between;color:#6a7888;font-size:.6rem}.safetyInfoBox{margin-top:10px!important}.reportSafetyText{color:#24384d;font-size:.8rem;line-height:1.55}.reportPhotoGrid.premium{grid-template-columns:1fr 1fr;gap:9px}.reportPhotoCard.premium{padding:8px}.reportPhotoCard.premium img{height:175px;max-height:175px;object-fit:contain;margin-top:7px}.reportPhotoAsset{font-size:.78rem}.reportPhotoReason{font-size:.66rem;color:#4b5d70;margin-top:3px}.reportFinalSignature{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center}.reportFinalSignature>div:last-child{display:flex;flex-direction:column;gap:5px;color:#24384d;font-size:.8rem}
 .reportLastPage{page-break-before:auto!important}
 @media print{.reportPage{height:267mm!important;min-height:267mm!important;max-height:267mm!important;margin:0!important;page-break-after:always!important;break-after:page!important}.reportPage:last-child{page-break-after:auto!important;break-after:auto!important}.reportPageCover .reportCoverInner{height:calc(267mm - 56px)!important;min-height:0!important}.continuationPage{height:267mm!important}.reportContinuationHead,.reportHeaderDue,.reportPageCover .reportHeaderBar,.reportCoverFooter{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+
+/* ===== FINAL PRINT PAGINATION + COVER FOOTER FIX ===== */
+.reportPageCover{
+  position:relative;
+  overflow:hidden;
+}
+
+.reportPageCover .reportCoverInner{
+  padding-bottom:72px !important;
+}
+
+.reportFailureAlert{
+  margin-top:10px;
+  min-height:46px;
+  display:grid;
+  grid-template-columns:34px auto 1fr;
+  align-items:center;
+  gap:10px;
+  padding:8px 12px;
+  border:1px solid #f3c89f;
+  border-radius:9px;
+  background:#fffaf4;
+  color:#26394d;
+  font-size:.69rem;
+  line-height:1.35;
+}
+.reportFailureAlert b{font-size:.9rem;color:#182d45;white-space:nowrap}
+.reportFailureIcon{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:#f28c28;color:#fff;font-weight:900;font-size:1rem;
+}
+.reportAllPassedAlert{border-color:#b9dfc6;background:#f6fcf8}
+.reportAllPassedAlert .reportFailureIcon{background:#2da455}
+
+.reportCoverFooter{
+  position:absolute !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  margin:0 !important;
+  min-height:58px !important;
+  height:58px !important;
+  padding:9px 18px !important;
+  display:grid !important;
+  grid-template-columns:1.45fr .8fr 42px !important;
+  gap:12px !important;
+  align-items:center !important;
+  background:#062747 !important;
+  border-top:3px solid #f28c28 !important;
+  color:#fff !important;
+  z-index:2;
+}
+.reportCoverFooterMain b,.reportCoverFooterMain span,
+.reportCoverFooterContact b,.reportCoverFooterContact span,
+.reportCoverFooterContact small{display:block}
+.reportCoverFooterMain b{font-size:.68rem}
+.reportCoverFooterMain span{font-size:.54rem;line-height:1.3;margin-top:2px;opacity:.92}
+.reportCoverFooterContact{text-align:right;min-width:0}
+.reportCoverFooterContact b{font-size:.66rem}
+.reportCoverFooterContact span{font-size:.52rem;overflow-wrap:anywhere;margin-top:2px;opacity:.9}
+.reportCoverFooterContact small{font-size:.48rem;margin-top:2px;opacity:.7}
+.reportPlugMark{font-size:1.8rem;line-height:1;color:#1b79b5;text-align:center}
+
+.reportSimpleFooter{
+  margin-top:auto;
+  display:grid !important;
+  grid-template-columns:1fr 1fr 1fr;
+  align-items:center;
+  gap:8px;
+  border-top:1px solid #d9e3ed;
+  padding-top:7px;
+  font-size:.62rem;
+  color:#6a7888;
+}
+.reportSimpleFooter span:nth-child(2){text-align:center}
+.reportSimpleFooter span:last-child{text-align:right}
+
+@media print{
+  @page{size:A4;margin:10mm}
+
+  .reportPage{
+    width:190mm !important;
+    height:276mm !important;
+    min-height:276mm !important;
+    max-height:276mm !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:hidden !important;
+    break-inside:avoid-page !important;
+    page-break-inside:avoid !important;
+    break-after:page !important;
+    page-break-after:always !important;
+  }
+  .reportPage:last-child{
+    break-after:auto !important;
+    page-break-after:auto !important;
+  }
+  .reportPageInner{
+    height:100% !important;
+    min-height:0 !important;
+    max-height:100% !important;
+  }
+  .reportPageCover .reportCoverInner{
+    height:calc(276mm - 56px) !important;
+    min-height:0 !important;
+    max-height:calc(276mm - 56px) !important;
+    padding-bottom:72px !important;
+    overflow:hidden !important;
+  }
+  .continuationPage{
+    height:100% !important;
+    min-height:0 !important;
+    max-height:100% !important;
+    padding:7mm !important;
+    overflow:hidden !important;
+  }
+  .reportCoverFooter,
+  .reportFailureAlert,
+  .reportContinuationHead,
+  .reportSimpleFooter{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+}

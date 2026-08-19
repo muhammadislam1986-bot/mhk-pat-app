@@ -516,15 +516,17 @@ function renderReport(){
       '<div class="reportContinuationTitle">'+title+'</div>' +
     '</div>';
 
-  const pageFooter = (pageLabel) =>
-    '<div class="reportSimpleFooter"><span>'+esc(state.company.name)+'</span><span>'+pageLabel+'</span></div>';
-
   const passRow = i => '<tr><td>'+esc(i.asset)+'</td><td>'+esc(i.appliance)+'</td><td>'+esc(i.location)+'</td><td>'+esc(i.classType)+'</td><td>'+esc(i.fuse)+'</td><td>'+esc(i.earth)+'</td><td>'+esc(i.ir)+'</td><td>'+esc(i.visual)+'</td><td class="reportResultPass">'+esc(i.result)+'</td></tr>';
   const failRow = i => '<tr><td>'+esc(i.asset)+'</td><td>'+esc(i.appliance)+'</td><td>'+esc(i.location)+'</td><td>'+esc(i.classType)+'</td><td>'+esc(i.fuse)+'</td><td>'+esc(i.earth)+'</td><td>'+esc(i.ir)+'</td><td>'+esc(i.visual)+'</td><td class="reportResultFail">'+esc(i.result)+'</td><td>'+esc(i.notes||'-')+'</td></tr>';
 
   const passPages = chunk(pass, 18);
   const failPages = chunk(fail, 14);
   const photoPages = chunk(failPhotos, 4);
+  const totalPages = 1 + passPages.length + failPages.length + (photoPages.length ? photoPages.length : 1) + 1;
+  let currentPage = 1;
+
+  const pageFooter = (pageLabel, pageNo) =>
+    '<div class="reportSimpleFooter"><span>'+esc(state.company.name)+'</span><span>'+pageLabel+'</span><span>Page '+pageNo+' of '+totalPages+'</span></div>';
 
   let pages = '';
 
@@ -558,52 +560,58 @@ function renderReport(){
     +     '</div></div>'
     +   '</div>'
     +   '<div class="reportAssurancePanel"><div class="reportAssuranceIcon">✓</div><div class="reportAssuranceCopy"><div class="reportAssuranceKicker">TESTED FOR YOUR SAFETY &amp; COMPLIANCE</div><div class="reportAssuranceText">All portable appliances listed in this report have been inspected and tested in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div></div><div class="reportCoverSignature"><b>ENGINEER SIGNATURE</b>'+sigHtml+'<span>DATE: '+fmtDateDMY(job.date)+'</span></div></div>'
-    +   '<div class="reportCoverFooter"><div class="reportCoverFooterMain"><b>Thank you for choosing '+esc(state.company.name)+'.</b><span>If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.</span></div><div class="reportPlugMark">⌁</div></div>'
+    +   (fail.length ? '<div class="reportFailureAlert"><span class="reportFailureIcon">!</span><b>'+fail.length+' FAILED</b><span>'+fail.length+' failed item'+(fail.length===1?' is':'s are')+' recorded in this report. Failed equipment must remain out of service until remedial action and successful re-test.</span></div>' : '<div class="reportFailureAlert reportAllPassedAlert"><span class="reportFailureIcon">✓</span><b>ALL PASSED</b><span>All recorded appliances passed the inspection and test results shown in this report.</span></div>')
+    +   '<div class="reportCoverFooter"><div class="reportCoverFooterMain"><b>Thank you for choosing '+esc(state.company.name)+'.</b><span>If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.</span></div><div class="reportCoverFooterContact"><b>'+esc(state.company.phone)+'</b><span>'+esc(state.company.email)+'</span><small>Page 1 of '+totalPages+'</small></div><div class="reportPlugMark">⌁</div></div>'
     + '</div></div>';
 
   // Passed appliances. Only create this section when there are passed items.
   passPages.forEach((items, idx)=>{
+    currentPage += 1;
     pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'
       + pageHeader('PASSED APPLIANCES','green')
       + '<div class="reportBoxSq premium continuationBox"><div class="reportTableTitle pass">Passed Items'+(passPages.length>1?' · '+(idx+1)+' of '+passPages.length:'')+'</div>'
       + '<table class="reportTable premium"><thead><tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th></tr></thead><tbody>'
       + items.map(passRow).join('') + '</tbody></table></div>'
-      + pageFooter('Passed appliances') + '</div></div>';
+      + pageFooter('Passed appliances', currentPage) + '</div></div>';
   });
 
   // Failed appliances follow immediately after all passed pages.
   failPages.forEach((items, idx)=>{
+    currentPage += 1;
     pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'
       + pageHeader('FAILED APPLIANCES','red')
       + '<div class="reportBoxSq premium continuationBox"><div class="reportTableTitle fail">Failed Items'+(failPages.length>1?' · '+(idx+1)+' of '+failPages.length:'')+'</div>'
       + '<table class="reportTable premium failTable"><thead><tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th><th>Failure / Notes</th></tr></thead><tbody>'
       + items.map(failRow).join('') + '</tbody></table></div>'
-      + pageFooter('Failed appliances') + '</div></div>';
+      + pageFooter('Failed appliances', currentPage) + '</div></div>';
   });
 
   // Additional safety information and photographic evidence.
   const safetyIntro = '<div class="reportBoxSq premium safetyInfoBox"><div class="reportSectionTitle">Additional Safety Information</div><div class="reportSafetyText">'+(job.notes ? nl2br(job.notes) : 'No additional job-specific safety information was recorded.')+'</div></div>';
   if(photoPages.length){
     photoPages.forEach((items, idx)=>{
+      currentPage += 1;
       pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'
         + pageHeader('ADDITIONAL SAFETY INFORMATION &amp; EVIDENCE','orange')
         + (idx===0 ? safetyIntro : '')
         + '<div class="reportBoxSq premium"><div class="reportSectionTitle">Failure Photographs'+(photoPages.length>1?' · '+(idx+1)+' of '+photoPages.length:'')+'</div><div class="reportPhotoGrid premium">'
         + items.map(i=>'<div class="reportPhotoCard premium"><div class="reportPhotoAsset">'+esc(i.asset)+' · '+esc(i.appliance)+'</div><div class="reportPhotoReason"><b>Failure reason:</b> '+esc(i.notes||'See failed items table')+'</div><img src="'+i.photo+'" alt="Failure photo"></div>').join('')
-        + '</div></div>'+pageFooter('Safety information & evidence')+'</div></div>';
+        + '</div></div>'+pageFooter('Safety information & evidence', currentPage)+'</div></div>';
     });
   }else{
-    pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'+pageHeader('ADDITIONAL SAFETY INFORMATION','orange')+safetyIntro+'<div class="reportBoxSq premium"><div class="reportSectionTitle">Failure Photographs</div><div class="reportSafetyText">No failure photographs attached.</div></div>'+pageFooter('Additional safety information')+'</div></div>';
+    currentPage += 1;
+    pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'+pageHeader('ADDITIONAL SAFETY INFORMATION','orange')+safetyIntro+'<div class="reportBoxSq premium"><div class="reportSectionTitle">Failure Photographs</div><div class="reportSafetyText">No failure photographs attached.</div></div>'+pageFooter('Additional safety information', currentPage)+'</div></div>';
   }
 
   // Final safety/compliance page.
+  currentPage += 1;
   pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage finalSafetyPage">'
     + pageHeader('SAFETY &amp; COMPLIANCE INFORMATION','blue')
     + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Important Safety Notice</div><div class="reportSafetyText">Appliances that have failed testing must be removed from service immediately and must not be used until repaired and successfully re-tested. Failed equipment should be clearly identified and isolated from normal use.</div></div>'
     + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Compliance Statement</div><div class="reportSafetyText">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div></div>'
     + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Engineer Declaration</div><div class="reportFinalSignature"><div class="reportSignatureBox premium">'+sigHtml+'</div><div><b>'+esc(job.engineer||'-')+'</b><span>Test date: '+fmtDateDMY(job.date)+'</span><span>Report: '+esc(reportNo)+'</span></div></div></div>'
     + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Report Information</div><div class="reportSafetyText">This report records the condition and test results of the appliances listed at the time of inspection. It should be retained with the duty holder’s electrical safety records. Any failed appliance must remain out of service until suitable remedial action has been completed.</div></div>'
-    + pageFooter('Safety & compliance') + '</div></div>';
+    + pageFooter('Safety & compliance', currentPage) + '</div></div>';
 
   $('reportArea').innerHTML = '<div id="reportBox">'+pages+'</div>';
 }
