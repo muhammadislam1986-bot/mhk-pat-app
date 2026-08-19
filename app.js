@@ -561,8 +561,9 @@ function renderReport(){
     +   '</div>'
     +   '<div class="reportAssurancePanel"><div class="reportAssuranceIcon">✓</div><div class="reportAssuranceCopy"><div class="reportAssuranceKicker">TESTED FOR YOUR SAFETY &amp; COMPLIANCE</div><div class="reportAssuranceText">All portable appliances listed in this report have been inspected and tested in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div></div><div class="reportCoverSignature"><b>ENGINEER SIGNATURE</b>'+sigHtml+'<span>DATE: '+fmtDateDMY(job.date)+'</span></div></div>'
     +   (fail.length ? '<div class="reportFailureAlert"><span class="reportFailureIcon">!</span><b>'+fail.length+' FAILED</b><span>'+fail.length+' failed item'+(fail.length===1?' is':'s are')+' recorded in this report. Failed equipment must remain out of service until remedial action and successful re-test.</span></div>' : '<div class="reportFailureAlert reportAllPassedAlert"><span class="reportFailureIcon">✓</span><b>ALL PASSED</b><span>All recorded appliances passed the inspection and test results shown in this report.</span></div>')
-    +   '<div class="reportCoverFooter"><div class="reportCoverFooterMain"><b>Thank you for choosing '+esc(state.company.name)+'.</b><span>If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.</span></div><div class="reportCoverFooterContact"><b>'+esc(state.company.phone)+'</b><span>'+esc(state.company.email)+'</span><small>Page 1 of '+totalPages+'</small></div><div class="reportPlugMark">⌁</div></div>'
-    + '</div></div>';
+    + '</div>'
+    + '<div class="reportCoverFooter"><div class="reportCoverFooterMain"><b>Thank you for choosing '+esc(state.company.name)+'.</b><span>If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.</span></div><div class="reportCoverFooterContact"><b>'+esc(state.company.phone)+'</b><span>'+esc(state.company.email)+'</span><small>Page 1 of '+totalPages+'</small></div><div class="reportPlugMark">⌁</div></div>'
+    + '</div>';
 
   // Passed appliances. Only create this section when there are passed items.
   passPages.forEach((items, idx)=>{

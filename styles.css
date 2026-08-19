@@ -1262,47 +1262,25 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 .reportLastPage{page-break-before:auto!important}
 @media print{.reportPage{height:267mm!important;min-height:267mm!important;max-height:267mm!important;margin:0!important;page-break-after:always!important;break-after:page!important}.reportPage:last-child{page-break-after:auto!important;break-after:auto!important}.reportPageCover .reportCoverInner{height:calc(267mm - 56px)!important;min-height:0!important}.continuationPage{height:267mm!important}.reportContinuationHead,.reportHeaderDue,.reportPageCover .reportHeaderBar,.reportCoverFooter{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
 
-/* ===== FINAL PRINT PAGINATION + COVER FOOTER FIX ===== */
+
+/* ===== AUTHORITATIVE PRINT LAYOUT — FINAL ===== */
 .reportPageCover{
   position:relative;
   overflow:hidden;
 }
 
 .reportPageCover .reportCoverInner{
-  padding-bottom:72px !important;
+  padding-bottom:66px !important;
 }
-
-.reportFailureAlert{
-  margin-top:10px;
-  min-height:46px;
-  display:grid;
-  grid-template-columns:34px auto 1fr;
-  align-items:center;
-  gap:10px;
-  padding:8px 12px;
-  border:1px solid #f3c89f;
-  border-radius:9px;
-  background:#fffaf4;
-  color:#26394d;
-  font-size:.69rem;
-  line-height:1.35;
-}
-.reportFailureAlert b{font-size:.9rem;color:#182d45;white-space:nowrap}
-.reportFailureIcon{
-  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  background:#f28c28;color:#fff;font-weight:900;font-size:1rem;
-}
-.reportAllPassedAlert{border-color:#b9dfc6;background:#f6fcf8}
-.reportAllPassedAlert .reportFailureIcon{background:#2da455}
 
 .reportCoverFooter{
   position:absolute !important;
   left:0 !important;
   right:0 !important;
   bottom:0 !important;
-  margin:0 !important;
-  min-height:58px !important;
   height:58px !important;
+  min-height:58px !important;
+  margin:0 !important;
   padding:9px 18px !important;
   display:grid !important;
   grid-template-columns:1.45fr .8fr 42px !important;
@@ -1311,7 +1289,9 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
   background:#062747 !important;
   border-top:3px solid #f28c28 !important;
   color:#fff !important;
-  z-index:2;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  z-index:3;
 }
 .reportCoverFooterMain b,.reportCoverFooterMain span,
 .reportCoverFooterContact b,.reportCoverFooterContact span,
@@ -1341,15 +1321,18 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
 @media print{
   @page{size:A4;margin:10mm}
 
+  html,body{margin:0!important;padding:0!important}
+
   .reportPage{
     width:190mm !important;
-    height:276mm !important;
-    min-height:276mm !important;
-    max-height:276mm !important;
+    height:267mm !important;
+    min-height:267mm !important;
+    max-height:267mm !important;
     margin:0 !important;
     padding:0 !important;
+    box-sizing:border-box !important;
     overflow:hidden !important;
-    break-inside:avoid-page !important;
+    break-inside:avoid !important;
     page-break-inside:avoid !important;
     break-after:page !important;
     page-break-after:always !important;
@@ -1358,84 +1341,60 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
     break-after:auto !important;
     page-break-after:auto !important;
   }
+
   .reportPageInner{
     height:100% !important;
     min-height:0 !important;
     max-height:100% !important;
+    box-sizing:border-box !important;
   }
-  .reportPageCover .reportCoverInner{
-    height:calc(276mm - 56px) !important;
-    min-height:0 !important;
-    max-height:calc(276mm - 56px) !important;
-    padding-bottom:72px !important;
-    overflow:hidden !important;
-  }
-  .continuationPage{
-    height:100% !important;
-    min-height:0 !important;
-    max-height:100% !important;
-    padding:7mm !important;
-    overflow:hidden !important;
-  }
-  .reportCoverFooter,
-  .reportFailureAlert,
-  .reportContinuationHead,
-  .reportSimpleFooter{
-    -webkit-print-color-adjust:exact !important;
-    print-color-adjust:exact !important;
-  }
-}
 
-
-/* ===== DEFINITIVE COVER FOOTER PAGINATION FIX =====
-   Keep the cover footer in normal flex flow.
-   This prevents Chromium from fragmenting absolutely-positioned footer text
-   onto a separate printed sheet. */
-@media print{
   .reportPageCover{
-    display:flex !important;
-    flex-direction:column !important;
     position:relative !important;
-    overflow:hidden !important;
+    display:block !important;
   }
 
   .reportPageCover .reportHeaderBar{
-    flex:0 0 56px !important;
+    height:56px !important;
+    min-height:56px !important;
+    max-height:56px !important;
   }
 
   .reportPageCover .reportCoverInner{
-    position:static !important;
-    flex:1 1 auto !important;
-    height:auto !important;
+    height:calc(267mm - 56px) !important;
     min-height:0 !important;
-    max-height:none !important;
-    display:flex !important;
-    flex-direction:column !important;
-    padding:6mm 7mm 0 !important;
+    max-height:calc(267mm - 56px) !important;
+    padding:6mm 7mm 66px !important;
     overflow:hidden !important;
+    box-sizing:border-box !important;
   }
 
   .reportCoverFooter{
-    position:static !important;
-    left:auto !important;
-    right:auto !important;
-    bottom:auto !important;
-    flex:0 0 58px !important;
-    width:auto !important;
+    position:absolute !important;
+    left:0 !important;
+    right:0 !important;
+    bottom:0 !important;
     height:58px !important;
     min-height:58px !important;
-    margin-top:auto !important;
-    margin-left:-7mm !important;
-    margin-right:-7mm !important;
-    margin-bottom:0 !important;
+    max-height:58px !important;
     break-inside:avoid !important;
     page-break-inside:avoid !important;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
   }
 
-  .reportCoverFooterMain,
-  .reportCoverFooterContact,
-  .reportPlugMark{
-    break-inside:avoid !important;
-    page-break-inside:avoid !important;
+  .continuationPage{
+    height:267mm !important;
+    min-height:267mm !important;
+    max-height:267mm !important;
+    padding:7mm !important;
+    overflow:hidden !important;
+    box-sizing:border-box !important;
+  }
+
+  .reportContinuationHead,.reportHeaderDue,.reportPageCover .reportHeaderBar,
+  .reportCoverFooter,.reportFailureAlert,.reportSimpleFooter{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
   }
 }
