@@ -1,803 +1,1641 @@
-const KEY='mhk_pat_final_v1';
-const INTERNAL_BACKUP_KEY='mhk_pat_internal_backup_v1';
-const BACKUP_META_KEY='mhk_pat_backup_meta_v1';
-const APPLIANCES = [
- ['Kettle','KTL'],['Microwave','MCR'],['Toaster','TST'],['Air Fryer','AFR'],['Oven','OVN'],
- ['Fridge','FRG'],['Freezer','FRZ'],['TV','TV'],['Monitor','MON'],['Printer','PRN'],
- ['Desktop PC','DPC'],['Laptop Charger','LCH'],['Router','RTR'],['Extension Lead','EXT'],
- ['Lamp','LMP'],['Charger / PSU','CRG'],['Fan Heater','FHT'],['Vacuum Cleaner','VAC'],
- ['Iron','IRN'],['Hair Straightener','HST'],['Hand Dryer','HDR'],['Other','OTH']
-];
-const FUSES=['1A','3A','5A','7A','10A','13A','N/A','Other'];
-const IRS=['>200 MΩ','>100 MΩ','>50 MΩ','>20 MΩ','>10 MΩ','>2 MΩ','N/A','Manual'];
-const LOCATIONS=['Office','Reception','Kitchen','Staff Room','Meeting Room','Server Room','Warehouse','Workshop','Store','Hallway','Bedroom','Living Room','Utility Room','Classroom','Other'];
-const defaults = {
-  company:{name:'MHK Building Solutions Ltd',service:'Portable Appliance Testing (PAT)',phone:'07876786286',email:'mhkbuildingsolutions@gmail.com',address:'60 Little Horton Lane, Bradford BD5 0BS',logo:'',signature:'',pin:'',patTester:'Apollo 400+',testerSerial:'010182',calibrationDue:''},
-  clients:[],jobs:[],activeJobId:null,lastLabelItemId:null,reportCounter:0
-};
-let state = JSON.parse(localStorage.getItem(KEY) || JSON.stringify(defaults));
-function save(){localStorage.setItem(KEY, JSON.stringify(state)); const meta=getBackupMeta(); if(shouldRunInternalBackup(meta)) takeInternalBackup('scheduled');}
-function $(id){return document.getElementById(id)}
-function today(){return new Date().toISOString().slice(0,10)}
-function esc(s){return String(s||'').replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
-function activeJob(){return state.jobs.find(j=>j.id===state.activeJobId)}
-function nextId(prefix){return prefix + Math.random().toString(36).slice(2,7).toUpperCase()}
-let appModalResolver = null;
-window.pendingScannedRetest = null;
+:root{
+  --bg:#08131f; --panel:#102338; --panel2:#17314d; --line:#31597f; --text:#eef5ff; --muted:#bfd1e6;
+  --blue:#133553; --blue2:#1f4e79; --blue3:#4d88bf; --green:#14894c; --red:#c62828;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#08131f,#0d1d2f);color:var(--text)}
+.wrap{max-width:1080px;margin:0 auto;padding:14px 14px 88px}
+.hero{background:linear-gradient(135deg,#10263c,#133553 58%,#3d7cb2 130%);border:1px solid #416a94;border-radius:24px;padding:18px;box-shadow:0 10px 24px rgba(0,0,0,.28)}
+.heroRow{display:flex;gap:16px;align-items:center}
+.logoBox{width:110px;height:84px;border-radius:18px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 auto}
+.logoBox img{max-width:100%;max-height:100%;display:block}
+.hero h1{margin:0;font-size:1.9rem}
+.hero .sub{margin-top:6px;color:#d8e7f8}
+.hero .meta{margin-top:8px;color:#d8e7f8;font-size:.92rem;line-height:1.45}
+.card{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 8px 22px rgba(0,0,0,.25)}
+.card h2{margin:0;padding:14px 16px;border-bottom:1px solid var(--line);font-size:1rem;background:rgba(255,255,255,.03)}
+.body{padding:14px}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}.heroRow{display:block}.logoBox{margin-bottom:12px}}
+label{display:block;font-size:.84rem;color:var(--muted);margin:0 0 6px;font-weight:bold}
+input,select,textarea{width:100%;padding:12px;border-radius:14px;border:1px solid #466a8e;background:#081827;color:var(--text);font-size:16px}
+textarea{min-height:84px;resize:vertical}
+button{border:none;border-radius:14px;padding:12px 14px;background:var(--blue2);color:#fff;font-weight:bold;cursor:pointer}
+button.secondary{background:#244666}
+button.green{background:var(--green)}
+button.red{background:var(--red)}
+button.ghost{background:transparent;border:1px solid #5d7fa2}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.small{font-size:.82rem;color:var(--muted)}
+.hidden{display:none!important}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:#091522;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(7,1fr);gap:8px;padding:10px 10px 14px}
+.tab{padding:10px 6px;text-align:center;border-radius:14px;color:var(--muted);font-weight:bold}
+.tab.active{background:#16314d;color:#fff;border:1px solid #49739d}
+.item,.client,.job{background:var(--panel2);border:1px solid var(--line);padding:12px;border-radius:16px;margin-top:10px}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.title{font-weight:bold}
+.tag{display:inline-block;padding:4px 10px;border-radius:999px;font-size:.75rem;font-weight:bold}
+.pass{background:rgba(20,137,76,.18);color:#8af0b2}
+.fail{background:rgba(198,40,40,.18);color:#ffb4b4}
+.report{background:#fff;color:#111;border-radius:18px;padding:16px}
+.report-head{background:linear-gradient(135deg,#133553,#2a6798);color:#fff;border-radius:16px;padding:16px}
+.report-head h3{margin:0;font-size:1.5rem}
+.report-head .service{opacity:.95;margin-top:4px}
+.report-head .contact{margin-top:8px;font-size:.92rem;line-height:1.4}
+.tbl{width:100%;border-collapse:collapse;margin-top:10px;font-size:.84rem}
+.tbl th,.tbl td{border:1px solid #d7dfeb;padding:6px;text-align:left;vertical-align:top}
+.tbl th{background:#133553;color:#fff}
+.tbl.pass th{background:#14894c}
+.tbl.fail th{background:#c62828}
+.notice{background:rgba(77,136,191,.12);border:1px solid rgba(77,136,191,.3);border-radius:14px;padding:12px}
+.logoPrev{max-width:240px;max-height:100px;display:none;background:rgba(255,255,255,.05);padding:8px;border-radius:12px}
+.labelCard{background:#fff;color:#111;border:2px solid #133553;border-radius:12px;padding:10px;width:260px}
+.labelHead{background:#133553;color:#fff;padding:8px 10px;border-radius:8px;font-weight:bold}
+.modalBack{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:18px}
+.modal{width:min(92vw,420px);background:#fff;color:#111;border-radius:22px;overflow:hidden;box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.modalHead{background:linear-gradient(135deg,#133553,#2a6798);color:#fff;padding:14px 16px;font-weight:bold}
+.modalBody{padding:18px 16px 8px;font-size:1rem;line-height:1.4}
+.modalFoot{padding:14px 16px 18px;display:flex;justify-content:flex-end}
+.modalBtn{min-width:92px}
 
-function assetExistsInJob(job, asset, excludeId=null){
-  if(!job || !asset) return false;
-  const want = String(asset).trim().toUpperCase();
-  return (job.items || []).some(i => String(i.asset || '').trim().toUpperCase() === want && i.id !== excludeId);
+.sigCanvasWrap{background:#081827;border:1px solid #466a8e;border-radius:14px;padding:8px}
+.sigCanvas{width:100%;height:180px;background:#fff;border-radius:10px;display:block;touch-action:none}
+.itemActions{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+
+.photoThumb{max-width:120px;max-height:90px;border:1px solid #466a8e;border-radius:8px;display:block;margin-top:8px}
+.reportPage{
+  background:#fff;
+  color:#111;
+  width:190mm;
+  min-height:267mm;
+  margin:0 auto 8mm;
+  padding:0;
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  page-break-after:always;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+}
+.reportPageCover {
+  background:#f8fafc;
+}
+.reportHeaderBar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px 16px;
+  background:#0f172a;
+  color:#ffffff;
+  font-size:12px;
+  font-weight:600;
 }
 
-function prefillPendingRetestItem(){
-  const data = window.pendingScannedRetest;
-  if(!data) return;
+.reportHeaderLeft {
+  font-weight:700;
+}
 
-  const applianceKnown = APPLIANCES.some(a => a[0] === data.appliance);
-  $('itemAppliance').value = applianceKnown ? data.appliance : 'Other';
-  $('otherWrap').classList.toggle('hidden', applianceKnown);
-  $('itemOther').value = applianceKnown ? '' : (data.appliance || '');
+.reportHeaderRight {
+  font-size:11px;
+  opacity:0.9;
+}
+.reportPage:last-child{page-break-after:auto}
+.reportPageInner{
+  display:flex;
+  flex-direction:column;
+  min-height:100%;
+  border:none;
+  border-radius:0;
+  box-shadow:none;
+  background:#fff;
+}
+.reportTopLine{height:5px;background:#133553;margin:0 0 10px 0}
+.reportSplit{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.reportBoxSq{
+  border:1px solid #c9d2dc;
+  padding:9px 10px;
+  margin-top:10px;
+  border-radius:0;
+  background:#fff;
+  box-shadow:none;
+}
+.reportBoxSq h4,.reportSectionTitle{margin:0 0 8px 0;color:#111;font-size:1rem;font-weight:800}
+.reportTable{width:100%;border-collapse:collapse;margin-top:8px;font-size:.83rem}
+.reportTable th,.reportTable td{border:1px solid #c9d2dc;padding:6px;text-align:left;vertical-align:top;color:#111}
+.reportTable th{background:#133553;color:#fff;font-weight:700}
+.reportFoot{
+  margin-top:auto;
+  border-top:1px solid #c9d2dc;
+  padding-top:7px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  color:#555;
+  font-size:.8rem;
+}
+.reportMuted{color:#4f5e70}
+.reportPhotoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.reportPhotoCard{border:1px solid #c9d2dc;padding:8px;background:#fff}
+.reportPhotoCard img{width:100%;max-height:185px;object-fit:contain;border:1px solid #d7dfe8;background:#fff}
+.reportSignatureBox{height:44px;border:1px solid #bbb;background:#fff;margin-top:8px;padding:5px}
+.lockInput{background:#fff;color:#111;border:1px solid #cfd9e6}
 
-  const locationKnown = LOCATIONS.includes(data.location || '');
-  $('itemLocation').value = locationKnown ? data.location : (locationKnown ? data.location : 'Other');
-  $('locOtherWrap').classList.toggle('hidden', locationKnown);
-  $('itemLocationOther').value = locationKnown ? '' : (data.location || '');
+@page{
+  size:A4;
+  margin:10mm;
+}
 
-  $('itemAsset').value = data.asset || '';
-  $('itemClass').value = data.classType || 'Class I';
-
-  const fuseKnown = FUSES.includes(data.fuse || '');
-  $('itemFuse').value = fuseKnown ? data.fuse : 'Other';
-  $('fuseOtherWrap').classList.toggle('hidden', fuseKnown);
-  $('itemFuseOther').value = fuseKnown ? '' : (data.fuse || '');
-
-  $('itemVisual').value = 'PASS';
-  $('itemResult').value = 'PASS';
-  $('itemNotes').value = '';
-  $('itemEarth').disabled = false;
-  $('itemInsulation').disabled = false;
-
-  if((data.classType || '') === 'Visual Only'){
-    $('itemClass').value = 'Visual Only';
-    $('itemEarth').value = 'N/A';
-    $('itemInsulation').value = 'N/A';
-    $('itemEarth').disabled = true;
-    $('itemInsulation').disabled = true;
-    $('insOtherWrap').classList.add('hidden');
-  }else{
-    $('itemEarth').value = data.earth || '';
-    if(IRS.includes(data.ir || '')){
-      $('itemInsulation').value = data.ir;
-      $('insOtherWrap').classList.add('hidden');
-      $('itemInsOther').value = '';
-    }else{
-      $('itemInsulation').value = 'Manual';
-      $('insOtherWrap').classList.remove('hidden');
-      $('itemInsOther').value = data.ir || '';
-    }
+@media print{
+  .keepTogether{page-break-inside:avoid;break-inside:avoid}
+  .tabs,.noprint,.hero,.modalBack{display:none!important}
+  body{background:#fff!important}
+  .wrap{padding:0!important;max-width:none!important}
+  #reportView>.card{
+    border:none!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    background:#fff!important;
+    overflow:visible!important;
   }
-
-  syncOverallFromVisual();
-  window.pendingScannedRetest = null;
-}
-
-function showAppModal(msg, opts={}){
-  $('mhkModalTitle').textContent = opts.title || 'Notice';
-  $('mhkModalMsg').textContent = msg;
-  $('mhkModalCancel').style.display = opts.confirm ? 'inline-block' : 'none';
-  $('mhkModalBack').style.display='flex';
-  return new Promise(resolve => { appModalResolver = resolve; });
-}
-function brandedAlert(msg){
-  return showAppModal(msg, {title:'Notice', confirm:false});
-}
-
-function getBackupMeta(){
-  const defaultsMeta = {frequency:'weekly', lastExportAt:'', lastInternalBackupAt:'', lastReminderAt:''};
-  try{
-    return Object.assign({}, defaultsMeta, JSON.parse(localStorage.getItem(BACKUP_META_KEY) || '{}'));
-  }catch(e){
-    return defaultsMeta;
+  #reportView>.card>h2{display:none!important}
+  #reportView>.card>.body{
+    padding:0!important;
+    border:none!important;
+    background:#fff!important;
   }
-}
-function setBackupMeta(meta){
-  localStorage.setItem(BACKUP_META_KEY, JSON.stringify(meta));
-}
-function fmtDateTime(v){
-  if(!v) return 'Never';
-  const d = new Date(v);
-  return isNaN(d.getTime()) ? 'Never' : d.toLocaleString('en-GB');
-}
-function diffDays(iso){
-  if(!iso) return Infinity;
-  const then = new Date(iso).getTime();
-  if(!then) return Infinity;
-  return (Date.now() - then) / 86400000;
-}
-function backupThresholdDays(freq){
-  if(freq === 'daily') return 1;
-  if(freq === 'weekly') return 7;
-  if(freq === 'monthly') return 30;
-  return Infinity;
-}
-function shouldRunInternalBackup(meta){
-  if(!meta || meta.frequency === 'off') return false;
-  return diffDays(meta.lastInternalBackupAt) >= backupThresholdDays(meta.frequency);
-}
-function takeInternalBackup(reason='auto'){
-  try{
-    localStorage.setItem(INTERNAL_BACKUP_KEY, JSON.stringify({
-      savedAt: new Date().toISOString(),
-      reason,
-      data: state
-    }));
-    const meta = getBackupMeta();
-    meta.lastInternalBackupAt = new Date().toISOString();
-    setBackupMeta(meta);
-    refreshBackupUI();
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-function restoreInternalBackupNow(){
-  const raw = localStorage.getItem(INTERNAL_BACKUP_KEY);
-  if(!raw){
-    brandedAlert('No internal backup found yet.');
-    return;
-  }
-  try{
-    const parsed = JSON.parse(raw);
-    if(!parsed || !parsed.data) throw new Error('Invalid backup');
-    state = mergeState(parsed.data);
-    save();
-    brandedAlert('Internal backup restored. Reloading now.');
-    setTimeout(()=>location.reload(), 300);
-  }catch(e){
-    brandedAlert('Internal backup could not be restored.');
-  }
-}
-function exportBackupNow(){
-  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'MHK_PAT_Backup_Latest.json';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 400);
-  const meta = getBackupMeta();
-  meta.lastExportAt = new Date().toISOString();
-  setBackupMeta(meta);
-  refreshBackupUI();
-  localStorage.setItem('MHK_BACKUP_FLASH','exported');
-  showBackupInline('success', 'Backup exported successfully. File saved to your Downloads folder.');
-}
-function getBackupStatus(meta){
-  if(!meta.lastExportAt) return {cls:'danger', title:'Backup needed', text:'No export backup has been created yet. Export a backup before clearing browser history or changing phone.'};
-  if(meta.frequency === 'off') return {cls:'safe', title:'Backup protection active', text:'Automatic internal backup is off, but you have an export backup saved.'};
-  if(diffDays(meta.lastExportAt) > backupThresholdDays(meta.frequency)) return {cls:'overdue', title:'Backup overdue', text:'Your export backup is older than your chosen backup schedule. Export a fresh backup now.'};
-  return {cls:'safe', title:'Backup protection active', text:'Your backup status looks good.'};
-}
-function showBackupInline(type, message){
-  const banner = $('backupBanner');
-  if(!banner) return;
-  const existing = $('backupInlineMsg');
-  if(existing) existing.remove();
-  const box = document.createElement('div');
-  box.id = 'backupInlineMsg';
-  box.className = 'backupInline ' + type;
-  box.textContent = message;
-  banner.insertAdjacentElement('afterend', box);
-}
-function consumeBackupFlash(){
-  const flash = localStorage.getItem('MHK_BACKUP_FLASH');
-  if(!flash) return;
-  localStorage.removeItem('MHK_BACKUP_FLASH');
-  if(flash === 'exported'){
-    showBackupInline('success', 'Backup exported successfully. File saved to your Downloads folder.');
-  }else if(flash === 'imported'){
-    showBackupInline('info', 'Backup imported successfully. App data has been restored.');
+  #reportArea,#reportBox,.reportPage,.reportPageInner,.report,.report-head{
+    border:none!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    outline:none!important;
   }
 }
-function refreshBackupUI(){
-  const banner = $('backupBanner');
-  if(!banner) return;
-  const meta = getBackupMeta();
-  const status = getBackupStatus(meta);
-  banner.className = 'notice backupWarn ' + status.cls;
-  $('backupStatusTitle').textContent = status.title;
-  $('backupStatusText').textContent = status.text;
-  $('lastExportText').textContent = fmtDateTime(meta.lastExportAt);
-  $('lastInternalText').textContent = fmtDateTime(meta.lastInternalBackupAt);
-  if($('backupFrequency')) $('backupFrequency').value = meta.frequency || 'weekly';
-}
-function maybeShowBackupReminder(){
-  const meta = getBackupMeta();
-  const status = getBackupStatus(meta);
-  if(status.cls === 'safe') return;
-  if(diffDays(meta.lastReminderAt) < 1) return;
-  meta.lastReminderAt = new Date().toISOString();
-  setBackupMeta(meta);
-  brandedAlert(status.title + ': ' + status.text);
+
+.labelPreviewNote{margin-top:8px;font-size:.8rem;color:var(--muted)}
+
+
+.primaryActions{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.primaryActions button{padding:14px 16px;font-size:1rem;box-shadow:0 6px 14px rgba(0,0,0,.22)}
+.primaryActions #createJobBtn{background:var(--green)}
+.primaryActions #scanQrHomeBtn{background:var(--blue3);color:#08131f}
+@media(max-width:700px){
+  .primaryActions{grid-template-columns:1fr}
 }
 
-
-function nl2br(s){
-  return esc(s).replace(/\n/g,'<br>');
+.tabs{
+  overflow-x:auto;
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:minmax(86px,1fr);
+  gap:6px;
+  padding:10px 8px 12px;
+  -webkit-overflow-scrolling:touch;
 }
-function mergeState(incoming){
-  const merged = JSON.parse(JSON.stringify(defaults));
-  merged.company = Object.assign({}, merged.company, incoming.company||{});
-  merged.clients = Array.isArray(incoming.clients) ? incoming.clients : [];
-  merged.jobs = Array.isArray(incoming.jobs) ? incoming.jobs : [];
-  merged.activeJobId = incoming.activeJobId || null;
-  merged.lastLabelItemId = incoming.lastLabelItemId || null;
-  merged.reportCounter = typeof incoming.reportCounter==='number' ? incoming.reportCounter : 0;
-  return merged;
-}
-function askConfirm(msg){
-  return showAppModal(msg, {title:'Confirmation', confirm:true});
-}
-function prefixFor(appliance){const x=APPLIANCES.find(a=>a[0]===appliance); return x?x[1]:'OTH'}
-function nextAsset(prefix){
-  const job = activeJob();
-  const items = job ? job.items : [];
-  const nums = items
-    .filter(i => typeof i.asset === 'string' && i.asset.startsWith(prefix))
-    .map(i => parseInt(i.asset.replace(prefix,''),10))
-    .filter(n => !isNaN(n) && n > 0)
-    .sort((a,b) => a - b);
-
-  let next = 1;
-  for(const n of nums){
-    if(n === next){ next++; }
-    else if(n > next){ break; }
-  }
-
-  return prefix + String(next).padStart(3,'0');
-}
-function switchView(v){
-  document.querySelectorAll('section').forEach(s=>s.classList.add('hidden'));
-  $(v).classList.remove('hidden');
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelector(`.tab[data-view="${v}"]`).classList.add('active');
-  if(v==='clientsView') renderClients();
-  if(v==='itemsView') renderItems();
-  if(v==='labelsView') renderLabel();
-  if(v==='signView') renderSign();
-  if(v==='reportView') renderReport();
-  if(v==='settingsView') loadSettings();
-}
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchView(t.dataset.view));
-
-function refreshHeader(){
-  $('heroName').textContent = state.company.name;
-  $('heroService').textContent = state.company.service;
-  $('heroMeta').innerHTML = `${esc(state.company.address)}<br>${esc(state.company.phone)} · ${esc(state.company.email)}`;
-  const heroLogo = $('heroLogo');
-  if(state.company.logo){ heroLogo.src = state.company.logo; heroLogo.style.display='block'; }
-  else { heroLogo.style.display='none'; }
-}
-function populateLists(){
-  $('itemAppliance').innerHTML = APPLIANCES.map(a=>`<option>${a[0]}</option>`).join('');
-  $('itemFuse').innerHTML = FUSES.map(x=>`<option>${x}</option>`).join('');
-  $('itemInsulation').innerHTML = IRS.map(x=>`<option>${x}</option>`).join('');
-  $('itemLocation').innerHTML = LOCATIONS.map(x=>`<option>${x}</option>`).join('');
-  $('jobClientPick').innerHTML = '<option value="">-- Select saved client --</option>' + state.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
-}
-$('itemAppliance').onchange = ()=>{
-  const selected = $('itemAppliance').value;
-  $('otherWrap').classList.toggle('hidden', selected!=='Other');
-  $('itemAsset').value = nextAsset(prefixFor(selected));
-};
-$('itemFuse').onchange = ()=> $('fuseOtherWrap').classList.toggle('hidden', $('itemFuse').value!=='Other');
-$('itemInsulation').onchange = ()=> $('insOtherWrap').classList.toggle('hidden', $('itemInsulation').value!=='Manual');
-$('itemLocation').onchange = ()=> $('locOtherWrap').classList.toggle('hidden', $('itemLocation').value!=='Other');
-$('itemClass').onchange = ()=>{
-  const visualOnly = $('itemClass').value==='Visual Only';
-  $('itemEarth').disabled = visualOnly;
-  $('itemInsulation').disabled = visualOnly;
-  if(visualOnly){
-    $('itemEarth').value='N/A';
-    $('itemInsulation').value='N/A';
-    $('insOtherWrap').classList.add('hidden');
-  } else {
-    if($('itemEarth').value==='N/A') $('itemEarth').value='';
-    if($('itemInsulation').value==='N/A') $('itemInsulation').value='>200 MΩ';
-  }
-};
-function syncOverallFromVisual(){
-  const visualFail = $('itemVisual').value==='FAIL';
-  if(visualFail){
-    $('itemResult').value='FAIL';
-    $('itemResult').disabled=true;
-  } else {
-    $('itemResult').disabled=false;
-  }
-}
-$('itemVisual').onchange = syncOverallFromVisual;
-$('jobClientPick').onchange = ()=>{
-  const c = state.clients.find(x=>x.id==$('jobClientPick').value); if(!c) return;
-  $('jobClient').value=c.name; $('jobContact').value=c.contact; $('jobEmail').value=c.email; $('jobAddress').value=c.address;
-};
-$('jobDate').value = today();
-
-$('saveClientBtn').onclick = ()=>{
-  const name = $('clientName').value.trim(); if(!name) return brandedAlert('Enter client name');
-  state.clients.unshift({id:nextId('CLI'),name,contact:$('clientContact').value.trim(),email:$('clientEmail').value.trim(),phone:$('clientPhone').value.trim(),address:$('clientAddress').value.trim()});
-  save(); populateLists(); renderClients();
-  ['clientName','clientContact','clientEmail','clientPhone','clientAddress'].forEach(id=>$(id).value='');
-};
-function renderClients(){
-  $('clientsList').innerHTML = state.clients.length ? state.clients.map(c=>`<div class="client"><div class="top"><div><div class="title">${esc(c.name)}</div><div class="small">${esc(c.address)}</div><div class="small">${esc(c.contact)} ${c.email?'· '+esc(c.email):''}</div></div><button class="red" onclick="delClient('${c.id}')">Delete</button></div></div>`).join('') : '<div class="small">No saved clients yet.</div>';
-}
-window.delClient = id => {state.clients = state.clients.filter(c=>c.id!==id); save(); populateLists(); renderClients();};
-
-$('createJobBtn').onclick = ()=>{
-  const client = $('jobClient').value.trim(), addr = $('jobAddress').value.trim();
-  if(!client || !addr) return brandedAlert('Enter client name and site address');
-  const job = {id:nextId('JOB'),client,contact:$('jobContact').value.trim(),email:$('jobEmail').value.trim(),engineer:$('jobEngineer').value.trim(),address:addr,date:$('jobDate').value || today(),retest:$('jobRetest').value.trim()||'12',notes:$('jobNotes').value.trim(),items:[]};
-  state.jobs.unshift(job); state.activeJobId=job.id; save(); renderJobs(); switchView('itemsView');
-  if(window.pendingScannedRetest){
-    prefillPendingRetestItem();
-    brandedAlert('New job created and appliance test form prefilled.');
-  }
-};
-function renderJobs(){
-  $('jobsList').innerHTML = state.jobs.length ? state.jobs.map(j=>`<div class="job"><div class="top"><div><div class="title">${esc(j.client)}</div><div class="small">${esc(j.address)}</div><div class="small">${esc(j.date)} · ${j.items.length} item(s)</div></div><div class="btns"><button onclick="openJob('${j.id}')">Open</button><button class="red" onclick="delJob('${j.id}')">Delete</button></div></div></div>`).join('') : '<div class="small">No jobs created yet.</div>';
-}
-window.openJob = id => {state.activeJobId=id; save(); switchView('itemsView');};
-window.delJob = id => {state.jobs = state.jobs.filter(j=>j.id!==id); if(state.activeJobId===id) state.activeJobId=null; save(); renderJobs(); renderItems();};
-window.delItem = id => {
-  const job = activeJob(); if(!job) return;
-  job.items = job.items.filter(i=>i.id!==id);
-  if(state.lastLabelItemId===id) state.lastLabelItemId = job.items[0] ? job.items[0].id : null;
-  save(); renderItems(); renderLabel();
-};
-window.selectLabelItem = id => {
-  state.lastLabelItemId = id;
-  save();
-  switchView('labelsView');
-};
-
-let pendingPhotoItemId = null;
-function getItemById(id){
-  const job = activeJob();
-  if(!job) return null;
-  return job.items.find(i=>i.id===id) || null;
-}
-function compressImageDataUrl(dataUrl, maxSide=1400, quality=.78){
-  return new Promise(resolve=>{
-    const img = new Image();
-    img.onload = ()=>{
-      let w = img.width, h = img.height;
-      const scale = Math.min(1, maxSide / Math.max(w,h));
-      w = Math.round(w * scale); h = Math.round(h * scale);
-      const c = document.createElement('canvas');
-      c.width = w; c.height = h;
-      const ctx = c.getContext('2d');
-      ctx.drawImage(img,0,0,w,h);
-      resolve(c.toDataURL('image/jpeg', quality));
-    };
-    img.src = dataUrl;
-  });
-}
-window.addItemPhoto = id => { pendingPhotoItemId = id; $('itemPhotoInput').click(); };
-window.viewItemPhoto = id => {
-  const item = getItemById(id);
-  if(!item || !item.photo) return;
-  $('imgModalPic').src = item.photo;
-  $('imgModalBack').style.display='flex';
-};
-window.removeItemPhoto = async id => {
-  const item = getItemById(id);
-  if(!item || !item.photo) return;
-  if(!(await askConfirm('Remove this photo?'))) return;
-  item.photo = '';
-  save(); renderItems(); renderReport();
-};
-$('itemPhotoInput').onchange = async e => {
-  const f = e.target.files && e.target.files[0];
-  if(!f || !pendingPhotoItemId) return;
-  const reader = new FileReader();
-  reader.onload = async ev => {
-    const item = getItemById(pendingPhotoItemId);
-    if(!item) return;
-    item.photo = await compressImageDataUrl(ev.target.result);
-    save(); renderItems(); renderReport();
-    brandedAlert('Photo saved');
-    pendingPhotoItemId = null;
-    $('itemPhotoInput').value='';
-  };
-  reader.readAsDataURL(f);
-};
-
-$('saveItemBtn').onclick = ()=>saveItem(false);
-$('toLabelsBtn').onclick = ()=>saveItem(true);
-
-function saveItem(showLabel){
-  const job = activeJob(); if(!job) return brandedAlert('Create or open a job first');
-  let appliance = $('itemAppliance').value==='Other' ? ($('itemOther').value.trim() || 'Other') : $('itemAppliance').value;
-  const prefix = prefixFor($('itemAppliance').value);
-  const assetValue = ($('itemAsset').value.trim() || nextAsset(prefix)).toUpperCase();
-  if(assetExistsInJob(job, assetValue)){
-    return brandedAlert(`Asset ${assetValue} already exists in this job. Please use a different asset number.`);
-  }
-  const item = {
-    id:nextId('ITM'),
-    appliance,
-    asset:assetValue,
-    location:$('itemLocation').value==='Other' ? $('itemLocationOther').value.trim() : $('itemLocation').value,
-    classType:$('itemClass').value,
-    fuse:$('itemFuse').value==='Other' ? $('itemFuseOther').value.trim() : $('itemFuse').value,
-    visual:$('itemVisual').value,
-    earth:$('itemClass').value==='Visual Only' ? 'N/A' : $('itemEarth').value.trim(),
-    ir:$('itemClass').value==='Visual Only' ? 'N/A' : ($('itemInsulation').value==='Manual' ? $('itemInsOther').value.trim() : $('itemInsulation').value),
-    result:$('itemVisual').value==='FAIL' ? 'FAIL' : $('itemResult').value,
-    notes:$('itemNotes').value.trim(),
-    photo:''
-  };
-  job.items.unshift(item);
-  state.lastLabelItemId = item.id;
-  save();
-  ['itemAsset','itemLocationOther','itemOther','itemFuseOther','itemEarth','itemInsOther','itemNotes'].forEach(id=>{ if($(id)) $(id).value=''; });
-  $('itemAppliance').value='Kettle'; $('itemLocation').value='Office'; $('itemFuse').value='1A'; $('itemInsulation').value='>200 MΩ'; $('itemVisual').value='PASS'; $('itemResult').value='PASS'; $('itemClass').value='Class I';
-  $('otherWrap').classList.add('hidden'); $('locOtherWrap').classList.add('hidden'); $('fuseOtherWrap').classList.add('hidden'); $('insOtherWrap').classList.add('hidden');
-  $('itemEarth').disabled = false; $('itemInsulation').disabled = false;
-  $('itemAsset').value = nextAsset('KTL');
-  syncOverallFromVisual();
-  renderItems();
-  if(showLabel){switchView('labelsView')}
-}
-function renderItems(){
-  const job = activeJob();
-  $('jobSummary').innerHTML = job ? `<div class="title">${esc(job.client)}</div><div class="small">${esc(job.address)}</div><div class="small">Engineer: ${esc(job.engineer)} · Test date: ${esc(job.date)} · Retest: ${esc(job.retest)} months</div>` : '<div class="small">No active job.</div>';
-  $('itemsList').innerHTML = job && job.items.length ? job.items.map(i=>{
-    const photoBtns = i.photo
-      ? `<button class="secondary" onclick="viewItemPhoto('${i.id}')">View Photo</button><button class="secondary" onclick="addItemPhoto('${i.id}')">Change Photo</button><button class="ghost" onclick="removeItemPhoto('${i.id}')">Remove Photo</button>`
-      : `<button class="secondary" onclick="addItemPhoto('${i.id}')">${i.result==='FAIL' ? 'Add Failure Photo' : 'Add Photo'}</button>`;
-    const thumb = i.photo ? `<img class="photoThumb" src="${i.photo}" alt="Photo evidence">` : '';
-    return `<div class="item"><div class="top"><div><div class="title">${esc(i.asset)} · ${esc(i.appliance)}</div><div class="small">${esc(i.location)} · ${esc(i.classType)} · Fuse ${esc(i.fuse)}</div><div class="small">Visual ${esc(i.visual)} · Earth ${esc(i.earth)} · IR ${esc(i.ir)}</div>${thumb}</div><span class="tag ${i.result==='PASS'?'pass':'fail'}">${esc(i.result)}</span></div><div class="itemActions"><button class="secondary" onclick="selectLabelItem('${i.id}')">Print Label</button>${photoBtns}<button class="red" onclick="delItem('${i.id}')">Delete</button></div></div>`;
-  }).join('') : '<div class="small">No appliances saved yet.</div>';
-}
-function nextTest(job){
-  const d = new Date(job.date);
-  d.setMonth(d.getMonth()+parseInt(job.retest||12,10));
-  return d.toLocaleDateString('en-GB');
-}
-function fmtDateDMY(v){
-  if(!v) return '';
-  if(/^\d{4}-\d{2}-\d{2}$/.test(v)){
-    const parts = v.split('-');
-    return parts[2] + '/' + parts[1] + '/' + parts[0];
-  }
-  const dt = new Date(v);
-  return isNaN(dt.getTime()) ? String(v) : dt.toLocaleDateString('en-GB');
-}
-function ensureReportNumber(job){
-  if(job.reportNo) return job.reportNo;
-  if(typeof state.reportCounter !== 'number') state.reportCounter = 0;
-  state.reportCounter += 1;
-  const year = (job.date && /^\d{4}/.test(job.date)) ? job.date.slice(0,4) : String(new Date().getFullYear());
-  job.reportNo = 'MHK-' + year + '-' + String(state.reportCounter).padStart(4,'0');
-  save();
-  return job.reportNo;
-}
-function nl2br(s){
-  return esc(s).replace(/\n/g,'<br>');
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  min-width:86px;
+  padding:10px 4px;
+  font-size:.88rem;
 }
 
-function renderReport(){
-  const job = activeJob();
-  if(!job){$('reportArea').innerHTML='<div class="small">No active job.</div>'; return}
 
-  const pass = job.items.filter(i=>i.result==='PASS');
-  const fail = job.items.filter(i=>i.result==='FAIL');
-  const failPhotos = fail.filter(i=>i.photo);
-  const reportNo = ensureReportNumber(job);
-  const logoHtml = state.company.logo
-    ? '<img src="' + state.company.logo + '" alt="Logo">'
-    : '<div class="reportBrandBolt">⚡</div>';
-  const sigHtml = state.company.signature
-    ? '<img src="' + state.company.signature + '" alt="Signature" style="max-width:190px;max-height:42px;display:block">'
-    : '<div class="reportMuted">Signature not saved</div>';
+/* Scanner modal buttons */
+#scanModalBack .modalFoot{display:flex;gap:12px;justify-content:center;padding-top:10px}
+#scanModalBack button{font-size:16px;font-weight:600;padding:12px 18px;border-radius:8px;border:none;cursor:pointer}
+#scanUploadBtn{background:#1a73e8;color:#fff}
+#scanLiveBtn{background:#2e7d32;color:#fff}
+#scanCloseBtn{background:#444;color:#fff}
+#scanUploadBtn:hover{background:#1557b0}
+#scanLiveBtn:hover{background:#1e5a24}
+#scanCloseBtn:hover{background:#222}
+#scanModalBack .modalBody{padding-bottom:20px}
+#scanUploadBtn,#scanLiveBtn{min-width:140px;text-align:center}
 
-  const chunk = (arr, size) => {
-    const out=[];
-    for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size));
-    return out;
-  };
 
-  const pageHeader = (title, tone='blue') =>
-    '<div class="reportContinuationHead '+tone+'">' +
-      '<div class="reportContinuationBrand">' + logoHtml + '<div><b>'+esc(state.company.name)+'</b><span>'+esc(reportNo)+'</span></div></div>' +
-      '<div class="reportContinuationTitle">'+title+'</div>' +
-    '</div>';
 
-  const passRow = i => '<tr><td>'+esc(i.asset)+'</td><td>'+esc(i.appliance)+'</td><td>'+esc(i.location)+'</td><td>'+esc(i.classType)+'</td><td>'+esc(i.fuse)+'</td><td>'+esc(i.earth)+'</td><td>'+esc(i.ir)+'</td><td>'+esc(i.visual)+'</td><td class="reportResultPass">'+esc(i.result)+'</td></tr>';
-  const failRow = i => '<tr><td>'+esc(i.asset)+'</td><td>'+esc(i.appliance)+'</td><td>'+esc(i.location)+'</td><td>'+esc(i.classType)+'</td><td>'+esc(i.fuse)+'</td><td>'+esc(i.earth)+'</td><td>'+esc(i.ir)+'</td><td>'+esc(i.visual)+'</td><td class="reportResultFail">'+esc(i.result)+'</td><td>'+esc(i.notes||'-')+'</td></tr>';
-
-  const passPages = chunk(pass, 24);
-  const failPages = chunk(fail, 14);
-  const photoPages = chunk(failPhotos, 4);
-  const totalPages = 1 + passPages.length + failPages.length + (photoPages.length ? photoPages.length : 1) + 1;
-  let currentPage = 1;
-
-  const pageFooter = (pageLabel, pageNo) =>
-    '<div class="reportSimpleFooter"><span>'+esc(state.company.name)+'</span><span>'+pageLabel+'</span><span>Page '+pageNo+' of '+totalPages+'</span></div>';
-
-  let pages = '';
-
-  // PAGE 1: cover only. No appliance tables or extended safety wording on this page.
-  pages += '<div class="reportPage reportPageCover">'
-    + '<div class="reportHeaderBar">'
-    +   '<div class="reportHeaderLeft"><div class="reportHeaderLogo">'+logoHtml+'</div><div><b>'+esc(state.company.name)+'</b><span>BUILDING SOLUTIONS</span></div></div>'
-    +   '<div class="reportHeaderRight"><span>PORTABLE APPLIANCE</span><strong>TESTING (PAT) REPORT</strong></div>'
-    +   '<div class="reportHeaderDue"><span>NEXT TEST DUE</span><b>'+nextTest(job)+'</b></div>'
-    + '</div>'
-    + '<div class="reportPageInner premium reportCoverInner">'
-    +   '<div class="reportHero">'
-    +     '<div class="reportBrandIconWrap">'+logoHtml+'</div>'
-    +     '<div class="reportBrandText"><div class="reportCompanyName">'+esc(state.company.name)+'</div><div class="reportServiceLine">'+esc(state.company.service)+'</div><div class="reportCompanyMeta">⌖ '+nl2br(state.company.address)+'<br>☎ '+esc(state.company.phone)+' &nbsp; | &nbsp; ✉ '+esc(state.company.email)+'</div></div>'
-    +   '</div>'
-    +   '<div class="reportMetaBar reportMetaBarCover">'
-    +     '<div class="reportMetaItem reportMetaReport"><span class="reportMetaLabel">REPORT NUMBER</span><span class="reportMetaValue reportNoInline">'+esc(reportNo)+'</span></div>'
-    +     '<div class="reportMetaItem reportMetaDate"><span class="reportMetaLabel">TEST DATE</span><span class="reportMetaValue">'+fmtDateDMY(job.date)+'</span></div>'
-    +   '</div>'
-    +   '<div class="reportSummaryCard reportSummaryCover"><div class="reportSummaryHeading">TEST SUMMARY</div><div class="reportStatGrid">'
-    +     '<div class="reportStat total"><div class="num">'+job.items.length+'</div><div class="lbl">TOTAL TESTED</div></div>'
-    +     '<div class="reportStat pass"><div class="num">'+pass.length+'</div><div class="lbl">PASSED</div></div>'
-    +     '<div class="reportStat fail"><div class="num">'+fail.length+'</div><div class="lbl">FAILED</div></div>'
-    +   '</div></div>'
-    +   '<div class="reportSplit premium reportDetailGrid">'
-    +     '<div class="reportBoxSq premium reportDetailCard"><div class="reportDetailHeader">CLIENT DETAILS</div><div class="reportDetailBody">'
-    +       '<div class="reportDetailRow"><span>Client:</span><b>'+esc(job.client)+'</b></div><div class="reportDetailRow"><span>Contact:</span><b>'+esc(job.contact||'-')+'</b></div><div class="reportDetailRow"><span>Email:</span><b>'+esc(job.email||'-')+'</b></div><div class="reportDetailRow reportDetailAddress"><span>Site Address:</span><b>'+nl2br(job.address)+'</b></div>'
-    +     '</div></div>'
-    +     '<div class="reportBoxSq premium reportDetailCard"><div class="reportDetailHeader">TEST DETAILS</div><div class="reportDetailBody">'
-    +       '<div class="reportDetailRow"><span>Engineer:</span><b>'+esc(job.engineer||'-')+'</b></div><div class="reportDetailRow"><span>Instrument:</span><b>'+esc(state.company.patTester||'-')+'</b></div><div class="reportDetailRow"><span>Serial Number:</span><b>'+esc(state.company.testerSerial||'-')+'</b></div><div class="reportDetailRow"><span>Calibration Due:</span><b>'+esc(fmtDateDMY(state.company.calibrationDue)||'-')+'</b></div>'
-    +     '</div></div>'
-    +   '</div>'
-    +   '<div class="reportAssurancePanel"><div class="reportAssuranceIcon">✓</div><div class="reportAssuranceCopy"><div class="reportAssuranceKicker">TESTED FOR YOUR SAFETY &amp; COMPLIANCE</div><div class="reportAssuranceText">All portable appliances listed in this report have been inspected and tested in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div></div><div class="reportCoverSignature"><b>ENGINEER SIGNATURE</b>'+sigHtml+'<span>DATE: '+fmtDateDMY(job.date)+'</span></div></div>'
-    +   (fail.length ? '<div class="reportFailureAlert"><span class="reportFailureIcon">!</span><b>'+fail.length+' FAILED</b><span>'+fail.length+' failed item'+(fail.length===1?' is':'s are')+' recorded in this report. Failed equipment must remain out of service until remedial action and successful re-test.</span></div>' : '<div class="reportFailureAlert reportAllPassedAlert"><span class="reportFailureIcon">✓</span><b>ALL PASSED</b><span>All recorded appliances passed the inspection and test results shown in this report.</span></div>')
-    + '</div>'
-    + '<div class="reportCoverFooter"><div class="reportCoverFooterMain"><b>Thank you for choosing '+esc(state.company.name)+'.</b><span>If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.</span></div><div class="reportCoverFooterContact"><b>'+esc(state.company.phone)+'</b><span>'+esc(state.company.email)+'</span><small>Page 1 of '+totalPages+'</small></div><div class="reportPlugMark">⌁</div></div>'
-    + '</div>';
-
-  // Passed appliances. Only create this section when there are passed items.
-  passPages.forEach((items, idx)=>{
-    currentPage += 1;
-    pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'
-      + pageHeader('PASSED APPLIANCES','green')
-      + '<div class="reportBoxSq premium continuationBox"><div class="reportTableTitle pass">Passed Items'+(passPages.length>1?' · '+(idx+1)+' of '+passPages.length:'')+'</div>'
-      + '<table class="reportTable premium"><thead><tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th></tr></thead><tbody>'
-      + items.map(passRow).join('') + '</tbody></table></div>'
-      + pageFooter('Passed appliances', currentPage) + '</div></div>';
-  });
-
-  // Failed appliances follow immediately after all passed pages.
-  failPages.forEach((items, idx)=>{
-    currentPage += 1;
-    pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'
-      + pageHeader('FAILED APPLIANCES','red')
-      + '<div class="reportBoxSq premium continuationBox"><div class="reportTableTitle fail">Failed Items'+(failPages.length>1?' · '+(idx+1)+' of '+failPages.length:'')+'</div>'
-      + '<table class="reportTable premium failTable"><thead><tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th><th>Failure / Notes</th></tr></thead><tbody>'
-      + items.map(failRow).join('') + '</tbody></table></div>'
-      + pageFooter('Failed appliances', currentPage) + '</div></div>';
-  });
-
-  // Additional safety information and photographic evidence.
-  const safetyIntro = '<div class="reportBoxSq premium safetyInfoBox"><div class="reportSectionTitle">Additional Safety Information</div><div class="reportSafetyText">'+(job.notes ? nl2br(job.notes) : 'No additional job-specific safety information was recorded.')+'</div></div>';
-  if(photoPages.length){
-    photoPages.forEach((items, idx)=>{
-      currentPage += 1;
-      pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'
-        + pageHeader('ADDITIONAL SAFETY INFORMATION &amp; EVIDENCE','orange')
-        + (idx===0 ? safetyIntro : '')
-        + '<div class="reportBoxSq premium"><div class="reportSectionTitle">Failure Photographs'+(photoPages.length>1?' · '+(idx+1)+' of '+photoPages.length:'')+'</div><div class="reportPhotoGrid premium">'
-        + items.map(i=>'<div class="reportPhotoCard premium"><div class="reportPhotoAsset">'+esc(i.asset)+' · '+esc(i.appliance)+'</div><div class="reportPhotoReason"><b>Failure reason:</b> '+esc(i.notes||'See failed items table')+'</div><img src="'+i.photo+'" alt="Failure photo"></div>').join('')
-        + '</div></div>'+pageFooter('Safety information & evidence', currentPage)+'</div></div>';
-    });
-  }else{
-    currentPage += 1;
-    pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'+pageHeader('ADDITIONAL SAFETY INFORMATION','orange')+safetyIntro+'<div class="reportBoxSq premium"><div class="reportSectionTitle">Failure Photographs</div><div class="reportSafetyText">No failure photographs attached.</div></div>'+pageFooter('Additional safety information', currentPage)+'</div></div>';
-  }
-
-  // Final safety/compliance page.
-  currentPage += 1;
-  pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage finalSafetyPage">'
-    + pageHeader('SAFETY &amp; COMPLIANCE INFORMATION','blue')
-    + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Important Safety Notice</div><div class="reportSafetyText">Appliances that have failed testing must be removed from service immediately and must not be used until repaired and successfully re-tested. Failed equipment should be clearly identified and isolated from normal use.</div></div>'
-    + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Compliance Statement</div><div class="reportSafetyText">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div></div>'
-    + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Engineer Declaration</div><div class="reportFinalSignature"><div class="reportSignatureBox premium">'+sigHtml+'</div><div><b>'+esc(job.engineer||'-')+'</b><span>Test date: '+fmtDateDMY(job.date)+'</span><span>Report: '+esc(reportNo)+'</span></div></div></div>'
-    + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Report Information</div><div class="reportSafetyText">This report records the condition and test results of the appliances listed at the time of inspection. It should be retained with the duty holder’s electrical safety records. Any failed appliance must remain out of service until suitable remedial action has been completed.</div></div>'
-    + pageFooter('Safety & compliance', currentPage) + '</div></div>';
-
-  $('reportArea').innerHTML = '<div id="reportBox">'+pages+'</div>';
+/* ===== Premium report polish ===== */
+.reportPageInner.premium{
+  padding:10mm 9mm 8mm;
+  background:#fff;
 }
-$('printReportBtn').onclick = ()=>window.print();
+.reportHero{
+  display:flex;
+  justify-content:space-between;
+  gap:18px;
+  align-items:flex-start;
+}
+.reportHeroLeft{
+  display:flex;
+  gap:14px;
+  align-items:flex-start;
+  flex:1;
+}
+.reportBrandIconWrap{
+  width:82px;
+  min-width:82px;
+  height:82px;
+  border-radius:16px;
+  background:#f5f8fb;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.reportBrandBolt{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2.2rem;
+  color:#f2c300;
+  background:linear-gradient(135deg,#244f7f,#3b8fd1);
+}
+.reportCompanyName{
+  font-size:1.56rem;
+  font-weight:900;
+  color:#132c4b;
+  line-height:1.12;
+}
+.reportServiceLine{
+  margin-top:3px;
+  color:#37465b;
+  font-size:1.02rem;
+}
+.reportCompanyMeta{
+  margin-top:11px;
+  color:#1f2b3a;
+  line-height:1.5;
+}
+.reportHeroRight{
+  flex:0 0 180px;
+}
+.reportNextCard{
+  border-radius:14px;
+  padding:12px 14px;
+  color:#fff;
+  background:linear-gradient(135deg,#254e7b,#3a98dc);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.15);
+}
+.reportNextLabel{
+  font-size:.95rem;
+  font-weight:800;
+  opacity:.95;
+}
+.reportNextDate{
+  margin-top:4px;
+  font-size:1.25rem;
+  font-weight:900;
+}
+.reportRibbon{
+  margin-top:16px;
+  border-radius:0;
+  background:linear-gradient(135deg,#1f3f67,#2f72ac 58%,#8dc7ea);
+  color:#fff;
+  font-size:1.26rem;
+  font-weight:900;
+  letter-spacing:.4px;
+  padding:12px 14px;
+}
+.reportMetaBar{
+  display:grid;
+  grid-template-columns:1.2fr 1fr 1fr;
+  gap:0;
+  border:1px solid #d7dfe8;
+  border-top:none;
+  background:#f6f8fb;
+  color:#1b2735;
+}
+.reportMetaBar>div{
+  padding:10px 12px;
+  border-right:1px solid #dde5ed;
+}
+.reportMetaBar>div:last-child{border-right:none}
 
-function renderSign(){
-  const c = $('sigCanvas');
-  if(!c) return;
-  const wrap = c.parentElement;
-  const ratio = Math.max(window.devicePixelRatio || 1, 1);
-  const w = Math.max(280, Math.floor(wrap.clientWidth - 16));
-  const h = 180;
-  const prev = state.company.signature || '';
-  c.width = Math.floor(w * ratio);
-  c.height = Math.floor(h * ratio);
-  c.style.width = w + 'px';
-  c.style.height = h + 'px';
-  const ctx = c.getContext('2d');
-  ctx.setTransform(ratio,0,0,ratio,0,0);
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0,0,w,h);
-  if(prev){
-    const img = new Image();
-    img.onload = ()=>{ ctx.drawImage(img, 0, 0, w, h); };
-    img.src = prev;
+.reportSummaryCard{
+  margin-top:14px;
+  border:1px solid #d8e1ea;
+  background:linear-gradient(135deg,#fbfcfe,#eef4f9);
+  padding:14px;
+  border-radius:12px;
+  display:grid;
+  grid-template-columns:1.2fr 1.3fr;
+  gap:14px;
+}
+.reportClientMini{
+  color:#111;
+}
+.reportStatGrid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  align-items:stretch;
+}
+.reportStat{
+  border-radius:50%;
+  width:108px;
+  height:108px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto;
+  color:#fff;
+  text-align:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
+}
+.reportStat .num{
+  font-size:2rem;
+  line-height:1;
+  font-weight:900;
+}
+.reportStat .num.date{
+  font-size:1.1rem;
+  line-height:1.1;
+  padding:0 8px;
+}
+.reportStat .lbl{
+  margin-top:6px;
+  font-size:.9rem;
+  font-weight:800;
+}
+.reportStat.total{background:linear-gradient(135deg,#2d7b67,#3daf87)}
+.reportStat.pass{background:linear-gradient(135deg,#23844d,#42b86f)}
+.reportStat.fail{background:linear-gradient(135deg,#c43838,#e45151)}
+.reportStat.neutral{background:linear-gradient(135deg,#214b76,#3e95d6)}
+
+.reportSplit.premium{gap:12px}
+.reportBoxSq.premium{
+  border:1px solid #d7dfe8;
+  border-radius:10px;
+  padding:10px 12px;
+  box-shadow:none;
+  background:#fff;
+}
+.reportPageTitle{
+  font-size:1.18rem;
+  font-weight:900;
+  color:#1d3e68;
+  letter-spacing:.35px;
+  padding-bottom:10px;
+  border-bottom:1px solid #d8e1ea;
+}
+.reportTableTitle{
+  margin:-12px -14px 10px;
+  padding:9px 14px;
+  font-size:1rem;
+  font-weight:900;
+  color:#fff;
+  border-radius:10px 10px 0 0;
+}
+.reportTableTitle.pass{
+  background:linear-gradient(135deg,#1e7d5b,#92c9b5);
+}
+.reportTableTitle.fail{
+  background:linear-gradient(135deg,#bf2e38,#f0b5ba);
+}
+.reportTable.premium{
+  margin-top:0;
+  font-size:.82rem;
+}
+.reportTable.premium th{
+  background:#f2f5f8;
+  color:#445266;
+  font-weight:800;
+}
+.reportResultPass{color:#14894c;font-weight:900}
+.reportResultFail{color:#c62828;font-weight:900}
+.reportPhotoGrid.premium{grid-template-columns:1fr 1fr}
+.reportPhotoCard.premium{
+  border:1px solid #d8e1ea;
+  border-radius:10px;
+  padding:10px;
+  background:#fff;
+}
+.reportPhotoAsset{
+  font-weight:900;
+  color:#1d3048;
+}
+.reportSignatureBox.premium{
+  min-height:54px;
+  border:1px solid #d8e1ea;
+  border-radius:10px;
+  padding:8px;
+  background:#fff;
+}
+.reportFoot.premium{
+  margin-top:auto;
+  border-top:1px solid #d8e1ea;
+  padding-top:8px;
+  color:#5c6776;
+  font-size:.82rem;
+}
+
+@media print{
+  .reportPageInner.premium{
+    padding:8mm 7mm 7mm !important;
   }
 }
-function initSignaturePad(){
-  const c = $('sigCanvas');
-  if(!c || c.dataset.ready==='1') return;
-  c.dataset.ready='1';
-  const getPos = e => {
-    const rect = c.getBoundingClientRect();
-    const p = e.touches ? e.touches[0] : e;
-    return {x:p.clientX - rect.left, y:p.clientY - rect.top};
-  };
-  let drawing = false;
-  const start = e => {
-    drawing = true;
-    const p = getPos(e);
-    const ctx = c.getContext('2d');
-    ctx.beginPath();
-    ctx.moveTo(p.x,p.y);
-    e.preventDefault();
-  };
-  const move = e => {
-    if(!drawing) return;
-    const p = getPos(e);
-    const ctx = c.getContext('2d');
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#0b3560';
-    ctx.lineTo(p.x,p.y);
-    ctx.stroke();
-    e.preventDefault();
-  };
-  const end = e => { drawing = false; if(e) e.preventDefault(); };
-  c.addEventListener('mousedown', start);
-  c.addEventListener('mousemove', move);
-  window.addEventListener('mouseup', end);
-  c.addEventListener('touchstart', start, {passive:false});
-  c.addEventListener('touchmove', move, {passive:false});
-  c.addEventListener('touchend', end, {passive:false});
-}
-function saveSignature(){
-  const c = $('sigCanvas');
-  state.company.signature = c.toDataURL('image/png');
-  save();
-  brandedAlert('Signature saved');
-}
-function clearSignature(){
-  state.company.signature = '';
-  save();
-  renderSign();
-}
-function loadSettings(){
-  $('setName').value = state.company.name;
-  $('setService').value = state.company.service;
-  $('setPhone').value = state.company.phone;
-  $('setEmail').value = state.company.email;
-  $('setAddress').value = state.company.address;
-  $('setPatTester').value = state.company.patTester || '';
-  $('setTesterSerial').value = state.company.testerSerial || '';
-  $('setCalibrationDue').value = state.company.calibrationDue || '';
-  $('setPin').value = state.company.pin || '';
-  if(state.company.logo){$('logoPrev').src=state.company.logo; $('logoPrev').style.display='block'}
-  refreshBackupUI();
-}
-$('setLogo').onchange = e => {
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=ev=>{$('logoPrev').src=ev.target.result; $('logoPrev').style.display='block'; state.company.logo=ev.target.result; save(); refreshHeader();}
-  r.readAsDataURL(f);
-};
-$('saveSettingsBtn').onclick = ()=>{
-  state.company.name=$('setName').value.trim()||defaults.company.name;
-  state.company.service=$('setService').value.trim()||defaults.company.service;
-  state.company.phone=$('setPhone').value.trim();
-  state.company.email=$('setEmail').value.trim();
-  state.company.address=$('setAddress').value.trim();
-  state.company.patTester=$('setPatTester').value.trim();
-  state.company.testerSerial=$('setTesterSerial').value.trim();
-  state.company.calibrationDue=$('setCalibrationDue').value.trim();
-  state.company.pin=$('setPin').value.trim();
-  const meta = getBackupMeta();
-  meta.frequency = $('backupFrequency') ? $('backupFrequency').value : (meta.frequency || 'weekly');
-  setBackupMeta(meta);
-  save(); refreshHeader(); refreshBackupUI(); brandedAlert('Settings saved');
-};
-$('clearDataBtn').onclick = async ()=>{
-  if(!(await askConfirm('Reset all app data? This will erase PAT jobs stored in the app. Export a backup first if you need to keep them.'))) return;
-  localStorage.removeItem(KEY);
-  localStorage.removeItem(INTERNAL_BACKUP_KEY);
-  localStorage.removeItem(BACKUP_META_KEY);
-  location.reload();
-};
 
-$('exportDataBtn').onclick = ()=> exportBackupNow();
-$('settingsExportBtn').onclick = ()=> exportBackupNow();
-$('settingsRestoreBtn').onclick = ()=> restoreInternalBackupNow();
-$('restoreInternalBtn').onclick = async ()=>{
-  if(!(await askConfirm('Restore the internal backup? Current app data will be replaced.'))) return;
-  restoreInternalBackupNow();
-};
-$('importDataBtn').onclick = ()=> $('importFileInput').click();
-$('importFileInput').onchange = e => {
-  const f = e.target.files && e.target.files[0];
-  if(!f) return;
-  const reader = new FileReader();
-  reader.onload = async ev => {
-    try{
-      const incoming = JSON.parse(ev.target.result);
-      if(!(await askConfirm('Import backup and replace current app data?'))) return;
-      state = mergeState(incoming);
-      save();
-      takeInternalBackup('post-import');
-      const meta = getBackupMeta();
-      meta.lastExportAt = meta.lastExportAt || new Date().toISOString();
-      setBackupMeta(meta);
-      localStorage.setItem('MHK_BACKUP_FLASH','imported');
-      location.reload();
-    }catch(err){
-      brandedAlert('Import failed. Please choose a valid backup file.');
-    }finally{
-      $('importFileInput').value='';
-    }
-  };
-  reader.readAsText(f);
-};
-$('imgModalOk').onclick = ()=> $('imgModalBack').style.display='none';
-$('imgModalBack').onclick = e => { if(e.target.id==='imgModalBack') $('imgModalBack').style.display='none'; };
 
-function checkPinLock(){
-  if(!state.company.pin){
-    $('pinModalBack').style.display='none';
-    return;
+
+/* ===== Final micro-fix: report number + dynamic footer support ===== */
+.reportNoInline{
+  white-space:nowrap !important;
+  word-break:keep-all !important;
+  overflow-wrap:normal !important;
+}
+.reportMetaBar > div:first-child{
+  white-space:nowrap !important;
+}
+@media (max-width: 900px){
+  .reportMetaBar > div:first-child{
+    white-space:normal !important;
   }
-  $('pinUnlockInput').value='';
-  $('pinMsg').style.display='none';
-  $('pinModalBack').style.display='flex';
 }
-$('pinUnlockBtn').onclick = ()=>{
-  if(($('pinUnlockInput').value||'').trim() === (state.company.pin||'')){
-    $('pinModalBack').style.display='none';
-  } else {
-    $('pinMsg').style.display='block';
-    $('pinUnlockInput').value='';
+.reportLastPage{
+  page-break-before:always;
+}
+
+/* ===== Premium page 1 cover redesign ===== */
+.reportPageCover{
+  background:#fff;
+}
+
+.reportPageCover .reportHeaderBar{
+  min-height:42px;
+  padding:0 18px;
+  background:#082846;
+  color:#fff;
+  border-radius:0;
+  letter-spacing:.1px;
+}
+
+.reportPageCover .reportHeaderLeft{
+  font-size:.82rem;
+  font-weight:800;
+}
+
+.reportPageCover .reportHeaderRight{
+  font-size:.78rem;
+  font-weight:800;
+  opacity:1;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
+
+.reportHeaderAccent{
+  height:3px;
+  background:#f28c28;
+}
+
+.reportPageCover .reportCoverInner{
+  padding:8mm 7mm 6mm;
+}
+
+.reportPageCover .reportHero{
+  align-items:center;
+  gap:20px;
+  padding:2mm 2mm 4mm;
+  border-bottom:1px solid #d9e3ed;
+}
+
+.reportPageCover .reportHeroLeft{
+  align-items:center;
+}
+
+.reportPageCover .reportBrandIconWrap{
+  width:90px;
+  min-width:90px;
+  height:90px;
+  border:1px solid #e2e9f0;
+  border-radius:16px;
+  background:#f8fafc;
+}
+
+.reportPageCover .reportCompanyName{
+  font-size:1.72rem;
+  color:#082846;
+  letter-spacing:-.25px;
+}
+
+.reportPageCover .reportServiceLine{
+  color:#36485d;
+  font-size:1rem;
+}
+
+.reportPageCover .reportCompanyMeta{
+  margin-top:9px;
+  color:#34465a;
+  font-size:.9rem;
+  line-height:1.45;
+}
+
+.reportPageCover .reportHeroRight{
+  flex:0 0 172px;
+}
+
+.reportPageCover .reportNextCard{
+  background:linear-gradient(135deg,#0d4f83,#2498dc);
+  border-radius:12px;
+  padding:13px 15px;
+  box-shadow:none;
+  border:1px solid rgba(8,40,70,.08);
+}
+
+.reportPageCover .reportNextLabel{
+  font-size:.74rem;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+}
+
+.reportPageCover .reportNextDate{
+  font-size:1.28rem;
+  letter-spacing:.1px;
+}
+
+.reportMetaBarCover{
+  margin-top:14px;
+  grid-template-columns:1.1fr 1fr 1.1fr;
+  border:1px solid #d9e3ed;
+  border-radius:10px;
+  overflow:hidden;
+  background:#f8fafc;
+}
+
+.reportMetaBarCover>div{
+  padding:10px 13px;
+  min-height:58px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.reportMetaLabel{
+  display:block;
+  color:#6a7888;
+  font-size:.7rem;
+  line-height:1;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.55px;
+  margin-bottom:5px;
+}
+
+.reportMetaValue{
+  display:block;
+  color:#102f50;
+  font-size:.98rem;
+  line-height:1.15;
+  font-weight:900;
+}
+
+.reportPageCover .reportSummaryCard.reportSummaryCover{
+  display:block;
+  margin-top:14px;
+  padding:0;
+  border:1px solid #d9e3ed;
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.reportSummaryHeading{
+  padding:9px 14px;
+  background:#eef4f9;
+  border-bottom:1px solid #d9e3ed;
+  color:#0b3155;
+  font-size:.78rem;
+  font-weight:900;
+  letter-spacing:.55px;
+}
+
+.reportPageCover .reportStatGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  padding:12px;
+}
+
+.reportPageCover .reportStat{
+  width:auto;
+  height:auto;
+  min-height:88px;
+  margin:0;
+  border-radius:10px;
+  align-items:flex-start;
+  padding:15px 17px;
+  text-align:left;
+  justify-content:center;
+  box-shadow:none;
+  border:1px solid #d9e3ed;
+  color:#102f50;
+  background:#fff;
+}
+
+.reportPageCover .reportStat.total{
+  border-left:5px solid #17608f;
+  background:linear-gradient(135deg,#f7fbff,#eef6fb);
+}
+
+.reportPageCover .reportStat.pass{
+  border-left:5px solid #229653;
+  background:linear-gradient(135deg,#fbfffc,#edf9f2);
+}
+
+.reportPageCover .reportStat.fail{
+  border-left:5px solid #d33838;
+  background:linear-gradient(135deg,#fffdfd,#fff1f1);
+}
+
+.reportPageCover .reportStat .num{
+  color:#0a3155;
+  font-size:1.95rem;
+  line-height:1;
+}
+
+.reportPageCover .reportStat.pass .num{color:#23874d}
+.reportPageCover .reportStat.fail .num{color:#c82f2f}
+
+.reportPageCover .reportStat .lbl{
+  margin-top:7px;
+  color:#46576a;
+  font-size:.78rem;
+  line-height:1;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.35px;
+}
+
+.reportDetailGrid{
+  margin-top:14px !important;
+  gap:12px !important;
+}
+
+.reportPageCover .reportDetailCard{
+  padding:0;
+  margin-top:0;
+  overflow:hidden;
+  border-radius:12px;
+  border-color:#d9e3ed;
+}
+
+.reportDetailHeader{
+  padding:9px 13px;
+  background:#082846;
+  color:#fff;
+  font-size:.9rem;
+  font-weight:900;
+}
+
+.reportDetailBody{
+  padding:5px 13px 8px;
+}
+
+.reportDetailRow{
+  display:grid;
+  grid-template-columns:108px 1fr;
+  gap:10px;
+  align-items:start;
+  padding:7px 0;
+  border-bottom:1px solid #edf1f5;
+  color:#111;
+  font-size:.84rem;
+}
+
+.reportDetailRow:last-child{
+  border-bottom:none;
+}
+
+.reportDetailRow span{
+  color:#68778a;
+  font-size:.75rem;
+  font-weight:800;
+}
+
+.reportDetailRow b{
+  color:#172c43;
+  font-weight:800;
+  overflow-wrap:anywhere;
+}
+
+.reportDetailAddress b{
+  line-height:1.3;
+}
+
+.reportStatusPanel{
+  margin-top:14px;
+  border-radius:12px;
+  padding:13px 15px;
+  border:1px solid #d9e3ed;
+  background:#f8fafc;
+}
+
+.reportStatusPanel.hasFailures{
+  border-left:5px solid #f28c28;
+  background:linear-gradient(135deg,#fffdf8,#fff8ec);
+}
+
+.reportStatusPanel.allPassed{
+  border-left:5px solid #229653;
+  background:linear-gradient(135deg,#fbfffc,#edf9f2);
+}
+
+.reportStatusKicker{
+  color:#6a7888;
+  font-size:.68rem;
+  font-weight:900;
+  letter-spacing:.6px;
+}
+
+.reportStatusTitle{
+  margin-top:4px;
+  color:#0c3155;
+  font-size:.98rem;
+  line-height:1.25;
+  font-weight:900;
+}
+
+.reportStatusText{
+  margin-top:5px;
+  color:#425367;
+  font-size:.78rem;
+  line-height:1.45;
+}
+
+.reportCoverFooter{
+  margin-top:14px;
+  min-height:48px;
+  padding:10px 14px;
+  background:#082846;
+  color:#fff;
+  border-top:3px solid #f28c28;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+}
+
+.reportCoverFooter>div:first-child{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+
+.reportCoverFooter b{
+  font-size:.76rem;
+}
+
+.reportCoverFooter span{
+  color:#d7e3ee;
+  font-size:.68rem;
+  overflow-wrap:anywhere;
+}
+
+.reportCoverFooterTag{
+  flex:0 0 auto;
+  color:#d7e3ee;
+  font-size:.67rem;
+  font-weight:900;
+  letter-spacing:.7px;
+}
+
+@media print{
+  .reportPageCover .reportCoverInner{
+    padding:7mm 7mm 5mm !important;
   }
-};
-$('pinUnlockInput').addEventListener('keydown', e=>{ if(e.key==='Enter') $('pinUnlockBtn').click(); });
-
-$('saveSigBtn').onclick = ()=>saveSignature();
-$('clearSigBtn').onclick = ()=>clearSignature();
-window.addEventListener('resize', ()=>{ if(!$('signView').classList.contains('hidden')) renderSign(); });
-$('mhkModalOk').onclick = ()=>{ $('mhkModalBack').style.display='none'; if(appModalResolver){ const r=appModalResolver; appModalResolver=null; r(true);} };
-$('mhkModalCancel').onclick = ()=>{ $('mhkModalBack').style.display='none'; if(appModalResolver){ const r=appModalResolver; appModalResolver=null; r(false);} };
-$('mhkModalBack').onclick = (e)=>{ if(e.target.id==='mhkModalBack'){ $('mhkModalBack').style.display='none'; if(appModalResolver){ const r=appModalResolver; appModalResolver=null; r(false);} } };
-
-renderJobs(); renderClients(); populateLists(); renderItems(); refreshHeader(); initSignaturePad(); renderSign();
-if(!localStorage.getItem(INTERNAL_BACKUP_KEY)){
-  takeInternalBackup('initial');
+  .reportPageCover .reportHeaderBar{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+  .reportPageCover .reportNextCard,
+  .reportPageCover .reportSummaryCard,
+  .reportPageCover .reportStat,
+  .reportDetailHeader,
+  .reportStatusPanel,
+  .reportCoverFooter,
+  .reportHeaderAccent{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
 }
-refreshBackupUI();
-consumeBackupFlash();
-maybeShowBackupReminder();
-$('itemLocation').value='Office'; $('itemAsset').value='KTL001'; syncOverallFromVisual();
-checkPinLock();
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js?v=15').catch(()=>{}); }
+
+
+
+/* ===== Premium page 1 visual refinement v2 ===== */
+.reportPageCover{
+  position:relative;
+  overflow:hidden;
+  background:#fff;
+}
+
+.reportPageCover .reportHeaderBar{
+  min-height:72px;
+  padding:0 22px;
+  background:linear-gradient(100deg,#062442 0%,#082f55 62%,#0a3b67 100%);
+  align-items:center;
+}
+
+.reportPageCover .reportHeaderLeft{
+  flex:0 0 32%;
+  padding-right:18px;
+  border-right:1px solid rgba(255,255,255,.25);
+}
+
+.reportHeaderCompany{
+  display:block;
+  color:#fff;
+  font-size:.88rem;
+  line-height:1.25;
+  font-weight:900;
+}
+
+.reportPageCover .reportHeaderRight{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+  padding-left:22px;
+  text-align:left;
+  line-height:1.05;
+}
+
+.reportPageCover .reportHeaderRight span{
+  color:#fff;
+  font-size:1.18rem;
+  font-weight:900;
+  letter-spacing:.35px;
+}
+
+.reportPageCover .reportHeaderRight strong{
+  margin-top:5px;
+  color:#f28c28;
+  font-size:1.18rem;
+  font-weight:900;
+  letter-spacing:.35px;
+}
+
+.reportHeaderAccent{height:3px;background:#f28c28}
+
+.reportPageCover .reportCoverInner{
+  min-height:calc(267mm - 75px);
+  display:flex;
+  flex-direction:column;
+  padding:7mm 7mm 0;
+}
+
+.reportPageCover .reportHero{
+  padding:3mm 2mm 5mm;
+  gap:22px;
+}
+
+.reportPageCover .reportBrandIconWrap{
+  width:106px;
+  min-width:106px;
+  height:106px;
+  border-radius:18px;
+  border:1px solid #dbe5ee;
+  box-shadow:0 8px 20px rgba(8,40,70,.06);
+}
+
+.reportPageCover .reportBrandIconWrap img{
+  max-width:88px !important;
+  max-height:88px !important;
+}
+
+.reportPageCover .reportCompanyName{
+  font-size:1.94rem;
+  line-height:1.04;
+  letter-spacing:-.45px;
+}
+
+.reportPageCover .reportServiceLine{
+  margin-top:6px;
+  font-size:1.05rem;
+}
+
+.reportPageCover .reportCompanyMeta{
+  margin-top:13px;
+  font-size:.93rem;
+  line-height:1.6;
+}
+
+.reportPageCover .reportHeroRight{flex:0 0 188px}
+
+.reportPageCover .reportNextCard{
+  padding:15px 17px;
+  min-height:78px;
+  border-radius:13px;
+  background:linear-gradient(135deg,#0868a9,#1da1e8);
+  box-shadow:0 8px 18px rgba(10,111,174,.16);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.reportPageCover .reportNextLabel{
+  font-size:.76rem;
+  letter-spacing:.7px;
+}
+
+.reportPageCover .reportNextDate{
+  margin-top:6px;
+  font-size:1.42rem;
+}
+
+.reportMetaBarCover{
+  margin:16px 0 0;
+  grid-template-columns:1fr 1fr;
+  border:none;
+  border-radius:0;
+  background:transparent;
+  overflow:visible;
+  gap:16px;
+}
+
+.reportMetaBarCover>.reportMetaItem{
+  position:relative;
+  min-height:72px;
+  padding:12px 16px 12px 66px;
+  border:1px solid #dbe5ee !important;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 7px 16px rgba(8,40,70,.04);
+}
+
+.reportMetaBarCover>.reportMetaItem::before{
+  position:absolute;
+  left:16px;
+  top:50%;
+  transform:translateY(-50%);
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#eef4f9;
+  color:#0d4e81;
+  font-weight:900;
+  font-size:.9rem;
+}
+.reportMetaBarCover>.reportMetaReport::before{content:'№'}
+.reportMetaBarCover>.reportMetaDate::before{content:'D'}
+
+.reportMetaLabel{
+  margin-bottom:6px;
+  color:#526479;
+  font-size:.72rem;
+  letter-spacing:.7px;
+}
+.reportMetaValue{font-size:1.08rem}
+
+.reportPageCover .reportSummaryCard.reportSummaryCover{
+  margin-top:17px;
+  border-radius:16px;
+  border:1px solid #cfddea;
+  box-shadow:0 8px 20px rgba(8,40,70,.045);
+}
+
+.reportSummaryHeading{
+  position:relative;
+  padding:12px 16px 12px 68px;
+  min-height:50px;
+  display:flex;
+  align-items:center;
+  background:#fff;
+  color:#092f52;
+  font-size:.9rem;
+  border-bottom:1px solid #dbe5ee;
+}
+
+.reportSummaryHeading::before{
+  content:'✓';
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:50px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#082846;
+  color:#fff;
+  font-size:1.2rem;
+}
+
+.reportPageCover .reportStatGrid{
+  gap:14px;
+  padding:16px;
+}
+
+.reportPageCover .reportStat{
+  position:relative;
+  min-height:104px;
+  padding:18px 16px 18px 86px;
+  display:grid;
+  grid-template-columns:1fr;
+  grid-template-rows:auto auto;
+  align-content:center;
+  border-radius:14px;
+  border-left-width:1px;
+}
+
+.reportPageCover .reportStat::before{
+  position:absolute;
+  left:18px;
+  top:50%;
+  transform:translateY(-50%);
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.45rem;
+  font-weight:900;
+  color:#fff;
+}
+
+.reportPageCover .reportStat.total{border-color:#c9d9e6;background:#fff}
+.reportPageCover .reportStat.pass{border-color:#b9dfc6;background:#fff}
+.reportPageCover .reportStat.fail{border-color:#efc3c3;background:#fff}
+.reportPageCover .reportStat.total::before{content:'≡';background:#0d4f83}
+.reportPageCover .reportStat.pass::before{content:'✓';background:#2da455}
+.reportPageCover .reportStat.fail::before{content:'×';background:#df332f}
+
+.reportPageCover .reportStat .num{
+  font-size:2.2rem;
+  line-height:.95;
+}
+.reportPageCover .reportStat .lbl{
+  margin-top:9px;
+  font-size:.82rem;
+  color:#111;
+}
+
+.reportDetailGrid{
+  margin-top:18px !important;
+  gap:16px !important;
+}
+
+.reportPageCover .reportDetailCard{
+  border-radius:15px;
+  box-shadow:0 8px 20px rgba(8,40,70,.04);
+}
+
+.reportDetailHeader{
+  position:relative;
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  padding:10px 15px 10px 50px;
+  font-size:.96rem;
+  letter-spacing:.2px;
+}
+
+.reportDetailHeader::before{
+  content:'•';
+  position:absolute;
+  left:14px;
+  width:25px;
+  height:25px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0c5a92;
+  color:#fff;
+  font-size:1rem;
+}
+
+.reportDetailBody{padding:7px 15px 10px}
+.reportDetailRow{
+  grid-template-columns:118px 1fr;
+  padding:8px 0;
+  font-size:.86rem;
+}
+.reportDetailRow span{font-size:.76rem}
+
+.reportAssurancePanel{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:86px 1fr auto;
+  gap:16px;
+  align-items:center;
+  min-height:112px;
+  padding:14px 16px;
+  border:1px solid #d5e0e9;
+  border-radius:15px;
+  background:linear-gradient(135deg,#fbfdff,#f5f9fc);
+  box-shadow:0 8px 20px rgba(8,40,70,.04);
+}
+
+.reportAssurancePanel.hasFailures{border-left:5px solid #f28c28}
+.reportAssurancePanel.allPassed{border-left:5px solid #2da455}
+
+.reportAssuranceIcon{
+  width:64px;
+  height:64px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#0b3a63;
+  color:#fff;
+  font-size:2rem;
+  font-weight:900;
+  box-shadow:inset 0 -6px 0 rgba(242,140,40,.18);
+}
+
+.reportAssuranceKicker{
+  color:#0a3155;
+  font-size:.92rem;
+  font-weight:900;
+  letter-spacing:.2px;
+}
+
+.reportAssuranceText{
+  margin-top:7px;
+  color:#3e5268;
+  font-size:.79rem;
+  line-height:1.5;
+}
+
+.reportAssuranceBadge{
+  min-width:86px;
+  padding:8px 10px;
+  border-radius:999px;
+  text-align:center;
+  font-size:.7rem;
+  font-weight:900;
+  letter-spacing:.45px;
+  background:#fff4e7;
+  color:#b85d00;
+  border:1px solid #f6c98f;
+}
+.reportAssurancePanel.allPassed .reportAssuranceBadge{
+  background:#ecf8f0;
+  color:#247a45;
+  border-color:#bfe2ca;
+}
+
+.reportCoverFooter{
+  margin-top:auto;
+  margin-left:-7mm;
+  margin-right:-7mm;
+  margin-bottom:0;
+  min-height:76px;
+  padding:15px 22px;
+  border-top:3px solid #f28c28;
+  background:linear-gradient(100deg,#062442,#082f55 70%,#093a65);
+  align-items:center;
+}
+
+.reportCoverFooterMain{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  max-width:66%;
+}
+.reportCoverFooterMain b{font-size:.8rem;color:#fff}
+.reportCoverFooterMain span{font-size:.7rem;line-height:1.4;color:#dbe7f1}
+
+.reportCoverFooterContact{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:4px;
+  min-width:0;
+}
+.reportCoverFooterContact b{font-size:.76rem;color:#fff}
+.reportCoverFooterContact span{font-size:.68rem;color:#dbe7f1;overflow-wrap:anywhere;text-align:right}
+
+@media print{
+  .reportPageCover .reportCoverInner{
+    min-height:calc(267mm - 75px) !important;
+    padding:6mm 7mm 0 !important;
+  }
+  .reportPageCover .reportHeaderBar,
+  .reportPageCover .reportNextCard,
+  .reportSummaryHeading::before,
+  .reportDetailHeader,
+  .reportAssuranceIcon,
+  .reportCoverFooter{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+}
+
+/* ===== MHK report layout v2: reference-style cover + ordered pagination ===== */
+.reportPage{height:267mm;min-height:267mm;max-height:267mm;overflow:hidden}
+.reportPageInner{height:100%;min-height:0}
+.reportPageCover .reportHeaderBar{height:56px;min-height:56px;padding:0 16px;display:grid;grid-template-columns:1.05fr 1.35fr .8fr;gap:14px;background:#062747}
+.reportPageCover .reportHeaderLeft{display:flex;align-items:center;gap:9px;min-width:0}
+.reportHeaderLogo{width:42px;height:42px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:0 0 42px}
+.reportHeaderLogo img{max-width:100%;max-height:100%;object-fit:contain}.reportHeaderLogo .reportBrandBolt{font-size:1.45rem}
+.reportPageCover .reportHeaderLeft b{display:block;font-size:.95rem;line-height:1.05}.reportPageCover .reportHeaderLeft span{display:block;font-size:.48rem;letter-spacing:.7px;margin-top:2px;opacity:.88}
+.reportPageCover .reportHeaderRight{border-left:1px solid rgba(255,255,255,.25);padding-left:14px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;text-transform:uppercase}
+.reportPageCover .reportHeaderRight span{font-size:.84rem;font-weight:800}.reportPageCover .reportHeaderRight strong{font-size:1rem;color:#f28c28;margin-top:2px}
+.reportHeaderDue{justify-self:end;align-self:center;background:linear-gradient(135deg,#0869aa,#159fe6);border-radius:9px;padding:7px 10px;min-width:126px;text-align:center;color:#fff}
+.reportHeaderDue span{display:block;font-size:.55rem;font-weight:900;letter-spacing:.45px}.reportHeaderDue b{display:block;font-size:.95rem;margin-top:2px}
+.reportPageCover .reportCoverInner{padding:6mm 7mm 0!important}
+.reportPageCover .reportHero{display:grid;grid-template-columns:82px 1fr;gap:15px;padding:3mm 1mm 4mm;border-bottom:1px solid #d9e3ed}
+.reportPageCover .reportBrandIconWrap{width:82px;min-width:82px;height:82px}.reportPageCover .reportBrandIconWrap img{max-width:100%;max-height:100%;object-fit:contain}
+.reportPageCover .reportCompanyName{font-size:1.55rem}.reportPageCover .reportCompanyMeta{font-size:.78rem;line-height:1.55;margin-top:7px}
+.reportMetaBarCover{margin-top:10px;gap:10px}.reportMetaBarCover>.reportMetaItem{min-height:54px;padding:8px 12px 8px 52px;border-radius:10px}.reportMetaBarCover>.reportMetaItem::before{left:11px;width:30px;height:30px}.reportMetaLabel{font-size:.61rem;margin-bottom:4px}.reportMetaValue{font-size:.88rem}
+.reportPageCover .reportSummaryCard.reportSummaryCover{margin-top:10px;border-radius:10px}.reportSummaryHeading{min-height:38px;padding:8px 12px 8px 52px;font-size:.72rem}.reportSummaryHeading::before{width:38px}.reportPageCover .reportStatGrid{gap:9px;padding:10px}.reportPageCover .reportStat{min-height:70px;padding:10px 8px 10px 62px;border-radius:9px}.reportPageCover .reportStat::before{left:11px;width:40px;height:40px;font-size:1.15rem}.reportPageCover .reportStat .num{font-size:1.65rem}.reportPageCover .reportStat .lbl{font-size:.65rem;margin-top:5px}
+.reportDetailGrid{margin-top:10px!important;gap:10px!important}.reportPageCover .reportDetailCard{border-radius:9px}.reportDetailHeader{min-height:35px;padding:7px 10px 7px 40px;font-size:.72rem}.reportDetailHeader::before{left:10px;width:21px;height:21px}.reportDetailBody{padding:3px 10px 5px}.reportDetailRow{grid-template-columns:86px 1fr;padding:5px 0;font-size:.72rem}.reportDetailRow span{font-size:.65rem}
+.reportAssurancePanel{margin-top:10px;grid-template-columns:58px 1fr 150px;gap:10px;min-height:76px;padding:9px 11px;border-radius:9px}.reportAssuranceIcon{width:46px;height:46px;border-radius:12px;font-size:1.45rem}.reportAssuranceKicker{font-size:.7rem}.reportAssuranceText{font-size:.61rem;line-height:1.4;margin-top:4px}.reportCoverSignature{border-left:1px solid #d8e1ea;padding-left:10px;display:flex;flex-direction:column;gap:3px;font-size:.58rem;color:#20364d}.reportCoverSignature>b{font-size:.62rem}.reportCoverSignature img{max-height:26px!important;max-width:120px!important}.reportCoverSignature span{font-size:.55rem}
+.reportCoverFooter{min-height:54px;margin-top:auto;padding:9px 18px}.reportCoverFooterMain b{font-size:.66rem}.reportCoverFooterMain span{font-size:.55rem}.reportPlugMark{font-size:2rem;opacity:.25}
+
+.continuationPage{padding:7mm!important}.reportContinuationHead{height:58px;flex:0 0 58px;background:#082846;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:8px 14px;border-bottom:3px solid #1684c5}.reportContinuationHead.green{border-bottom-color:#2da455}.reportContinuationHead.red{border-bottom-color:#df332f}.reportContinuationHead.orange{border-bottom-color:#f28c28}.reportContinuationBrand{display:flex;align-items:center;gap:9px}.reportContinuationBrand>img,.reportContinuationBrand>.reportBrandBolt{width:38px;height:38px;object-fit:contain}.reportContinuationBrand .reportBrandBolt{font-size:1.2rem}.reportContinuationBrand b{display:block;font-size:.82rem}.reportContinuationBrand span{display:block;font-size:.6rem;opacity:.8;margin-top:2px}.reportContinuationTitle{font-size:1rem;font-weight:900;letter-spacing:.5px}
+.continuationBox{margin-top:10px!important;padding:10px!important;overflow:hidden}.reportTable.premium{font-size:.69rem;table-layout:fixed}.reportTable.premium th,.reportTable.premium td{padding:5px 4px;overflow-wrap:anywhere}.reportTable.premium th{font-size:.63rem}.failTable{font-size:.63rem!important}.failTable th,.failTable td{padding:4px 3px!important}.reportTableTitle{margin:-10px -10px 8px;border-radius:0;padding:8px 10px;font-size:.82rem}
+.reportSimpleFooter{margin-top:auto;padding-top:7px;border-top:1px solid #d8e1ea;display:flex;justify-content:space-between;color:#6a7888;font-size:.6rem}.safetyInfoBox{margin-top:10px!important}.reportSafetyText{color:#24384d;font-size:.8rem;line-height:1.55}.reportPhotoGrid.premium{grid-template-columns:1fr 1fr;gap:9px}.reportPhotoCard.premium{padding:8px}.reportPhotoCard.premium img{height:175px;max-height:175px;object-fit:contain;margin-top:7px}.reportPhotoAsset{font-size:.78rem}.reportPhotoReason{font-size:.66rem;color:#4b5d70;margin-top:3px}.reportFinalSignature{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:center}.reportFinalSignature>div:last-child{display:flex;flex-direction:column;gap:5px;color:#24384d;font-size:.8rem}
+.reportLastPage{page-break-before:auto!important}
+@media print{.reportPage{height:267mm!important;min-height:267mm!important;max-height:267mm!important;margin:0!important;page-break-after:always!important;break-after:page!important}.reportPage:last-child{page-break-after:auto!important;break-after:auto!important}.reportPageCover .reportCoverInner{height:calc(267mm - 56px)!important;min-height:0!important}.continuationPage{height:267mm!important}.reportContinuationHead,.reportHeaderDue,.reportPageCover .reportHeaderBar,.reportCoverFooter{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
+
+
+/* ===== AUTHORITATIVE PRINT LAYOUT — FINAL ===== */
+.reportPageCover{
+  position:relative;
+  overflow:hidden;
+}
+
+.reportPageCover .reportCoverInner{
+  padding-bottom:66px !important;
+}
+
+.reportCoverFooter{
+  position:absolute !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  height:58px !important;
+  min-height:58px !important;
+  margin:0 !important;
+  padding:9px 18px !important;
+  display:grid !important;
+  grid-template-columns:1.45fr .8fr 42px !important;
+  gap:12px !important;
+  align-items:center !important;
+  background:#062747 !important;
+  border-top:3px solid #f28c28 !important;
+  color:#fff !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  z-index:3;
+}
+.reportCoverFooterMain b,.reportCoverFooterMain span,
+.reportCoverFooterContact b,.reportCoverFooterContact span,
+.reportCoverFooterContact small{display:block}
+.reportCoverFooterMain b{font-size:.68rem}
+.reportCoverFooterMain span{font-size:.54rem;line-height:1.3;margin-top:2px;opacity:.92}
+.reportCoverFooterContact{text-align:right;min-width:0}
+.reportCoverFooterContact b{font-size:.66rem}
+.reportCoverFooterContact span{font-size:.52rem;overflow-wrap:anywhere;margin-top:2px;opacity:.9}
+.reportCoverFooterContact small{font-size:.48rem;margin-top:2px;opacity:.7}
+.reportPlugMark{font-size:1.8rem;line-height:1;color:#1b79b5;text-align:center}
+
+.reportSimpleFooter{
+  margin-top:auto;
+  display:grid !important;
+  grid-template-columns:1fr 1fr 1fr;
+  align-items:center;
+  gap:8px;
+  border-top:1px solid #d9e3ed;
+  padding-top:7px;
+  font-size:.62rem;
+  color:#6a7888;
+}
+.reportSimpleFooter span:nth-child(2){text-align:center}
+.reportSimpleFooter span:last-child{text-align:right}
+
+@media print{
+  @page{size:A4;margin:10mm}
+
+  html,body{margin:0!important;padding:0!important}
+
+  .reportPage{
+    width:190mm !important;
+    height:267mm !important;
+    min-height:267mm !important;
+    max-height:267mm !important;
+    margin:0 !important;
+    padding:0 !important;
+    box-sizing:border-box !important;
+    overflow:hidden !important;
+    break-inside:avoid !important;
+    page-break-inside:avoid !important;
+    break-after:page !important;
+    page-break-after:always !important;
+  }
+  .reportPage:last-child{
+    break-after:auto !important;
+    page-break-after:auto !important;
+  }
+
+  .reportPageInner{
+    height:100% !important;
+    min-height:0 !important;
+    max-height:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  .reportPageCover{
+    position:relative !important;
+    display:block !important;
+  }
+
+  .reportPageCover .reportHeaderBar{
+    height:56px !important;
+    min-height:56px !important;
+    max-height:56px !important;
+  }
+
+  .reportPageCover .reportCoverInner{
+    height:calc(267mm - 56px) !important;
+    min-height:0 !important;
+    max-height:calc(267mm - 56px) !important;
+    padding:6mm 7mm 66px !important;
+    overflow:hidden !important;
+    box-sizing:border-box !important;
+  }
+
+  .reportCoverFooter{
+    position:absolute !important;
+    left:0 !important;
+    right:0 !important;
+    bottom:0 !important;
+    height:58px !important;
+    min-height:58px !important;
+    max-height:58px !important;
+    break-inside:avoid !important;
+    page-break-inside:avoid !important;
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+
+  .continuationPage{
+    height:267mm !important;
+    min-height:267mm !important;
+    max-height:267mm !important;
+    padding:7mm !important;
+    overflow:hidden !important;
+    box-sizing:border-box !important;
+  }
+
+  .reportContinuationHead,.reportHeaderDue,.reportPageCover .reportHeaderBar,
+  .reportCoverFooter,.reportFailureAlert,.reportSimpleFooter{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+}
+
+
+/* ===== PAGE 1 FINAL VISUAL POLISH — pagination-safe ===== */
+
+/* Keep the successful 5-page print geometry untouched.
+   These rules only refine content inside the existing cover bounds. */
+.reportPageCover .reportCoverInner{
+  display:flex !important;
+  flex-direction:column !important;
+}
+
+/* Give the identity area a little more of the premium reference's breathing room. */
+.reportPageCover .reportHero{
+  padding-top:4mm !important;
+  padding-bottom:5mm !important;
+}
+
+.reportPageCover .reportCompanyName{
+  font-size:1.68rem !important;
+  line-height:1.08 !important;
+  letter-spacing:-.2px !important;
+}
+
+.reportPageCover .reportServiceLine{
+  margin-top:3px !important;
+  font-size:.86rem !important;
+}
+
+.reportPageCover .reportCompanyMeta{
+  margin-top:8px !important;
+  font-size:.76rem !important;
+  line-height:1.5 !important;
+}
+
+/* Slightly richer cards, still compact enough to stay safely inside page 1. */
+.reportMetaBarCover{
+  margin-top:11px !important;
+}
+
+.reportPageCover .reportSummaryCard.reportSummaryCover{
+  margin-top:11px !important;
+}
+
+.reportDetailGrid{
+  margin-top:11px !important;
+}
+
+.reportAssurancePanel{
+  margin-top:11px !important;
+  min-height:82px !important;
+  background:linear-gradient(135deg,#f9fbfd,#eef5fa) !important;
+  border:1px solid #d7e2eb !important;
+}
+
+/* Proper failed-items warning strip. The HTML was already correct; this
+   prevents the icon, heading and message from running into one another. */
+.reportFailureAlert{
+  margin-top:auto !important;
+  margin-bottom:9px !important;
+  min-height:48px !important;
+  display:grid !important;
+  grid-template-columns:34px 78px minmax(0,1fr) !important;
+  gap:9px !important;
+  align-items:center !important;
+  padding:8px 12px !important;
+  border:1px solid #f0c58f !important;
+  border-left:4px solid #f28c28 !important;
+  border-radius:9px !important;
+  background:linear-gradient(135deg,#fffaf2,#fff4e5) !important;
+  color:#24384d !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  break-inside:avoid !important;
+  page-break-inside:avoid !important;
+}
+
+.reportFailureIcon{
+  width:28px !important;
+  height:28px !important;
+  border-radius:50% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  background:#f28c28 !important;
+  color:#fff !important;
+  font-size:1rem !important;
+  line-height:1 !important;
+  font-weight:900 !important;
+}
+
+.reportFailureAlert>b{
+  display:block !important;
+  color:#172f49 !important;
+  font-size:.76rem !important;
+  line-height:1.1 !important;
+  white-space:nowrap !important;
+}
+
+.reportFailureAlert>span:last-child{
+  display:block !important;
+  min-width:0 !important;
+  color:#42566c !important;
+  font-size:.62rem !important;
+  line-height:1.35 !important;
+}
+
+.reportFailureAlert.reportAllPassedAlert{
+  border-color:#b9dfc6 !important;
+  border-left-color:#2da455 !important;
+  background:linear-gradient(135deg,#f9fff9,#edf9f1) !important;
+}
+.reportFailureAlert.reportAllPassedAlert .reportFailureIcon{
+  background:#2da455 !important;
+}
+
+/* Make the bottom band read more like the approved reference without
+   altering its proven pagination geometry. */
+.reportCoverFooter{
+  background:linear-gradient(90deg,#062747,#07365d) !important;
+  border-top:3px solid #f28c28 !important;
+}
+.reportCoverFooterMain b{
+  font-size:.7rem !important;
+  letter-spacing:.05px !important;
+}
+.reportCoverFooterMain span{
+  font-size:.55rem !important;
+  line-height:1.35 !important;
+}
+.reportCoverFooterContact b{
+  font-size:.7rem !important;
+}
+.reportCoverFooterContact span{
+  font-size:.54rem !important;
+}
+.reportPlugMark{
+  font-size:2rem !important;
+  opacity:.42 !important;
+}
+
+/* Print keeps the already-successful dimensions and page boundaries. */
+@media print{
+  .reportFailureAlert{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+}
+
+
+/* ===== FINAL COVER TIDY — user-approved finishing changes ===== */
+
+/* 1) Report Number + Test Date: remove the decorative № / D circles. */
+.reportMetaBarCover>.reportMetaItem{
+  padding-left:14px !important;
+}
+.reportMetaBarCover>.reportMetaItem::before{
+  display:none !important;
+  content:none !important;
+}
+
+/* 2) Client Details + Test Details: remove decorative blue dot circles. */
+.reportDetailHeader{
+  padding-left:13px !important;
+}
+.reportDetailHeader::before{
+  display:none !important;
+  content:none !important;
+}
+
+/* 3) Footer: allow every line to be fully readable while keeping it
+      anchored safely inside page 1. */
+.reportPageCover .reportCoverInner{
+  padding-bottom:82px !important;
+}
+
+.reportCoverFooter{
+  height:72px !important;
+  min-height:72px !important;
+  max-height:72px !important;
+  padding:9px 18px !important;
+  grid-template-columns:1.35fr .9fr 36px !important;
+  gap:10px !important;
+  overflow:hidden !important;
+}
+
+.reportCoverFooterMain{
+  max-width:none !important;
+  min-width:0 !important;
+  gap:2px !important;
+}
+
+.reportCoverFooterMain b{
+  font-size:.66rem !important;
+  line-height:1.2 !important;
+}
+
+.reportCoverFooterMain span{
+  font-size:.52rem !important;
+  line-height:1.28 !important;
+  margin-top:2px !important;
+  white-space:normal !important;
+  overflow:visible !important;
+}
+
+.reportCoverFooterContact{
+  min-width:0 !important;
+  gap:2px !important;
+}
+
+.reportCoverFooterContact b{
+  font-size:.64rem !important;
+  line-height:1.15 !important;
+}
+
+.reportCoverFooterContact span{
+  font-size:.50rem !important;
+  line-height:1.2 !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+}
+
+.reportCoverFooterContact small{
+  font-size:.46rem !important;
+  line-height:1.1 !important;
+}
+
+.reportPlugMark{
+  font-size:1.7rem !important;
+}
+
+/* Preserve the successful five-page print geometry. */
+@media print{
+  .reportPageCover .reportCoverInner{
+    padding-bottom:82px !important;
+  }
+  .reportCoverFooter{
+    height:72px !important;
+    min-height:72px !important;
+    max-height:72px !important;
+  }
+}
