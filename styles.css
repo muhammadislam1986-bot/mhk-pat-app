@@ -1545,3 +1545,97 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
     print-color-adjust:exact !important;
   }
 }
+
+
+/* ===== FINAL COVER TIDY — user-approved finishing changes ===== */
+
+/* 1) Report Number + Test Date: remove the decorative № / D circles. */
+.reportMetaBarCover>.reportMetaItem{
+  padding-left:14px !important;
+}
+.reportMetaBarCover>.reportMetaItem::before{
+  display:none !important;
+  content:none !important;
+}
+
+/* 2) Client Details + Test Details: remove decorative blue dot circles. */
+.reportDetailHeader{
+  padding-left:13px !important;
+}
+.reportDetailHeader::before{
+  display:none !important;
+  content:none !important;
+}
+
+/* 3) Footer: allow every line to be fully readable while keeping it
+      anchored safely inside page 1. */
+.reportPageCover .reportCoverInner{
+  padding-bottom:82px !important;
+}
+
+.reportCoverFooter{
+  height:72px !important;
+  min-height:72px !important;
+  max-height:72px !important;
+  padding:9px 18px !important;
+  grid-template-columns:1.35fr .9fr 36px !important;
+  gap:10px !important;
+  overflow:hidden !important;
+}
+
+.reportCoverFooterMain{
+  max-width:none !important;
+  min-width:0 !important;
+  gap:2px !important;
+}
+
+.reportCoverFooterMain b{
+  font-size:.66rem !important;
+  line-height:1.2 !important;
+}
+
+.reportCoverFooterMain span{
+  font-size:.52rem !important;
+  line-height:1.28 !important;
+  margin-top:2px !important;
+  white-space:normal !important;
+  overflow:visible !important;
+}
+
+.reportCoverFooterContact{
+  min-width:0 !important;
+  gap:2px !important;
+}
+
+.reportCoverFooterContact b{
+  font-size:.64rem !important;
+  line-height:1.15 !important;
+}
+
+.reportCoverFooterContact span{
+  font-size:.50rem !important;
+  line-height:1.2 !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+}
+
+.reportCoverFooterContact small{
+  font-size:.46rem !important;
+  line-height:1.1 !important;
+}
+
+.reportPlugMark{
+  font-size:1.7rem !important;
+}
+
+/* Preserve the successful five-page print geometry. */
+@media print{
+  .reportPageCover .reportCoverInner{
+    padding-bottom:82px !important;
+  }
+  .reportCoverFooter{
+    height:72px !important;
+    min-height:72px !important;
+    max-height:72px !important;
+  }
+}
