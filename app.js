@@ -560,6 +560,12 @@ function renderReport(){
     +             '<div class="reportCompanyMeta">' + nl2br(state.company.address) + '<br>' + esc(state.company.phone) + ' · ' + esc(state.company.email) + '</div>'
     +           '</div>'
     +         '</div>'
+    +         '<div class="reportHeroRight">'
+    +           '<div class="reportNextCard">'
+    +             '<div class="reportNextLabel">Next Test</div>'
+    +             '<div class="reportNextDate">' + nextTest(job) + '</div>'
+    +           '</div>'
+    +         '</div>'
     +         '</div>'
     +       '</div>'
 
