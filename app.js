@@ -547,8 +547,8 @@ function renderReport(){
 
     +   '<div class="reportPage reportPageCover">'
     +     '<div class="reportHeaderBar">'
-    +       '<div class="reportHeaderLeft">' + esc(state.company.name) + '</div>'
-    +       '<div class="reportHeaderRight">Portable Appliance Testing Report</div>'
+    +       '<div class="reportHeaderLeft"><span class="reportHeaderCompany">' + esc(state.company.name) + '</span></div>'
+    +       '<div class="reportHeaderRight"><span>PORTABLE APPLIANCE</span><strong>TESTING (PAT) REPORT</strong></div>'
     +     '</div>'
     +     '<div class="reportHeaderAccent"></div>'
     +     '<div class="reportPageInner premium reportCoverInner">'
@@ -571,9 +571,8 @@ function renderReport(){
     +       '</div>'
 
     +       '<div class="reportMetaBar reportMetaBarCover">'
-    +         '<div><span class="reportMetaLabel">Report Number</span><span class="reportMetaValue reportNoInline">' + esc(reportNo) + '</span></div>'
-    +         '<div><span class="reportMetaLabel">Test Date</span><span class="reportMetaValue">' + fmtDateDMY(job.date) + '</span></div>'
-    +         '<div><span class="reportMetaLabel">Report Status</span><span class="reportMetaValue">' + (fail.length ? 'Attention Required' : 'All Items Passed') + '</span></div>'
+    +         '<div class="reportMetaItem reportMetaReport"><span class="reportMetaLabel">Report Number</span><span class="reportMetaValue reportNoInline">' + esc(reportNo) + '</span></div>'
+    +         '<div class="reportMetaItem reportMetaDate"><span class="reportMetaLabel">Test Date</span><span class="reportMetaValue">' + fmtDateDMY(job.date) + '</span></div>'
     +       '</div>'
 
     +       '<div class="reportSummaryCard reportSummaryCover">'
@@ -606,15 +605,18 @@ function renderReport(){
     +         '</div>'
     +       '</div>'
 
-    +       '<div class="reportStatusPanel ' + (fail.length ? 'hasFailures' : 'allPassed') + '">'
-    +         '<div class="reportStatusKicker">REPORT OVERVIEW</div>'
-    +         '<div class="reportStatusTitle">' + (fail.length ? 'Attention required before failed appliances return to service' : 'All recorded appliances passed at the time of testing') + '</div>'
-    +         '<div class="reportStatusText">' + (fail.length ? (fail.length + ' failed item' + (fail.length === 1 ? '' : 's') + ' ' + (fail.length === 1 ? 'is' : 'are') + ' detailed later in this report. Failed equipment should remain out of service until remedial action and successful re-test.') : ('All ' + job.items.length + ' tested item' + (job.items.length === 1 ? '' : 's') + ' passed the recorded inspection and test results.')) + '</div>'
+    +       '<div class="reportAssurancePanel ' + (fail.length ? 'hasFailures' : 'allPassed') + '">'
+    +         '<div class="reportAssuranceIcon">✓</div>'
+    +         '<div class="reportAssuranceCopy">'
+    +           '<div class="reportAssuranceKicker">TESTED FOR YOUR SAFETY &amp; COMPLIANCE</div>'
+    +           '<div class="reportAssuranceText">' + (fail.length ? (fail.length + ' failed item' + (fail.length === 1 ? '' : 's') + ' ' + (fail.length === 1 ? 'is' : 'are') + ' recorded in this report. Failed equipment must remain out of service until remedial action and successful re-test.') : ('All ' + job.items.length + ' tested item' + (job.items.length === 1 ? '' : 's') + ' passed the recorded inspection and test results.')) + '</div>'
+    +         '</div>'
+    +         '<div class="reportAssuranceBadge">' + (fail.length ? (fail.length + ' FAILED') : 'ALL PASSED') + '</div>'
     +       '</div>'
 
     +       '<div class="reportCoverFooter">'
-    +         '<div><b>' + esc(state.company.name) + '</b><span>' + esc(state.company.phone) + ' · ' + esc(state.company.email) + '</span></div>'
-    +         '<div class="reportCoverFooterTag">PAT TEST REPORT</div>'
+    +         '<div class="reportCoverFooterMain"><b>Thank you for choosing ' + esc(state.company.name) + '.</b><span>For further electrical safety testing or PAT support, please use the contact details above.</span></div>'
+    +         '<div class="reportCoverFooterContact"><b>' + esc(state.company.phone) + '</b><span>' + esc(state.company.email) + '</span></div>'
     +       '</div>'
 
     +     '</div>'
