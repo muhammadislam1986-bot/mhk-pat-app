@@ -492,199 +492,120 @@ function nl2br(s){
 function renderReport(){
   const job = activeJob();
   if(!job){$('reportArea').innerHTML='<div class="small">No active job.</div>'; return}
+
   const pass = job.items.filter(i=>i.result==='PASS');
   const fail = job.items.filter(i=>i.result==='FAIL');
   const failPhotos = fail.filter(i=>i.photo);
   const reportNo = ensureReportNumber(job);
   const logoHtml = state.company.logo
-    ? '<img src="' + state.company.logo + '" alt="Logo" style="max-width:78px;max-height:78px;display:block;border-radius:12px">'
+    ? '<img src="' + state.company.logo + '" alt="Logo">'
     : '<div class="reportBrandBolt">⚡</div>';
   const sigHtml = state.company.signature
-    ? '<img src="' + state.company.signature + '" alt="Signature" style="max-width:220px;max-height:34px;display:block">'
+    ? '<img src="' + state.company.signature + '" alt="Signature" style="max-width:190px;max-height:42px;display:block">'
     : '<div class="reportMuted">Signature not saved</div>';
 
-  const passRows = pass.length ? pass.map(i =>
-    '<tr>' +
-      '<td>' + esc(i.asset) + '</td>' +
-      '<td>' + esc(i.appliance) + '</td>' +
-      '<td>' + esc(i.location) + '</td>' +
-      '<td>' + esc(i.classType) + '</td>' +
-      '<td>' + esc(i.fuse) + '</td>' +
-      '<td>' + esc(i.earth) + '</td>' +
-      '<td>' + esc(i.ir) + '</td>' +
-      '<td>' + esc(i.visual) + '</td>' +
-      '<td class="reportResultPass">' + esc(i.result) + '</td>' +
-    '</tr>'
-  ).join('') : '<tr><td colspan="9">None</td></tr>';
+  const chunk = (arr, size) => {
+    const out=[];
+    for(let i=0;i<arr.length;i+=size) out.push(arr.slice(i,i+size));
+    return out;
+  };
 
-  const failRows = fail.length ? fail.map(i =>
-    '<tr>' +
-      '<td>' + esc(i.asset) + '</td>' +
-      '<td>' + esc(i.appliance) + '</td>' +
-      '<td>' + esc(i.location) + '</td>' +
-      '<td>' + esc(i.classType) + '</td>' +
-      '<td>' + esc(i.fuse) + '</td>' +
-      '<td>' + esc(i.earth) + '</td>' +
-      '<td>' + esc(i.ir) + '</td>' +
-      '<td>' + esc(i.visual) + '</td>' +
-      '<td class="reportResultFail">' + esc(i.result) + '</td>' +
-      '<td>' + esc(i.notes) + '</td>' +
-    '</tr>'
-  ).join('') : '<tr><td colspan="10">None</td></tr>';
+  const pageHeader = (title, tone='blue') =>
+    '<div class="reportContinuationHead '+tone+'">' +
+      '<div class="reportContinuationBrand">' + logoHtml + '<div><b>'+esc(state.company.name)+'</b><span>'+esc(reportNo)+'</span></div></div>' +
+      '<div class="reportContinuationTitle">'+title+'</div>' +
+    '</div>';
 
-  const photoBlocks = failPhotos.length ? failPhotos.map(i =>
-    '<div class="reportPhotoCard premium">' +
-      '<div class="reportPhotoMeta">' +
-        '<div class="reportPhotoAsset">' + esc(i.asset) + ' · ' + esc(i.appliance) + '</div>' +
-        '<div class="reportMuted" style="margin-top:4px;font-size:.88rem"><b>Failure reason:</b> ' + esc(i.notes || 'See failed items table') + '</div>' +
-      '</div>' +
-      '<div style="margin-top:8px"><img src="' + i.photo + '" alt="Failure photo"></div>' +
-    '</div>'
-  ).join('') : '<div class="reportBoxSq premium" style="margin-top:0">No failure photos attached.</div>';
+  const pageFooter = (pageLabel) =>
+    '<div class="reportSimpleFooter"><span>'+esc(state.company.name)+'</span><span>'+pageLabel+'</span></div>';
 
-  $('reportArea').innerHTML = ''
-    + '<div id="reportBox">'
+  const passRow = i => '<tr><td>'+esc(i.asset)+'</td><td>'+esc(i.appliance)+'</td><td>'+esc(i.location)+'</td><td>'+esc(i.classType)+'</td><td>'+esc(i.fuse)+'</td><td>'+esc(i.earth)+'</td><td>'+esc(i.ir)+'</td><td>'+esc(i.visual)+'</td><td class="reportResultPass">'+esc(i.result)+'</td></tr>';
+  const failRow = i => '<tr><td>'+esc(i.asset)+'</td><td>'+esc(i.appliance)+'</td><td>'+esc(i.location)+'</td><td>'+esc(i.classType)+'</td><td>'+esc(i.fuse)+'</td><td>'+esc(i.earth)+'</td><td>'+esc(i.ir)+'</td><td>'+esc(i.visual)+'</td><td class="reportResultFail">'+esc(i.result)+'</td><td>'+esc(i.notes||'-')+'</td></tr>';
 
-    +   '<div class="reportPage reportPageCover">'
-    +     '<div class="reportHeaderBar">'
-    +       '<div class="reportHeaderLeft"><span class="reportHeaderCompany">' + esc(state.company.name) + '</span></div>'
-    +       '<div class="reportHeaderRight"><span>PORTABLE APPLIANCE</span><strong>TESTING (PAT) REPORT</strong></div>'
-    +     '</div>'
-    +     '<div class="reportHeaderAccent"></div>'
-    +     '<div class="reportPageInner premium reportCoverInner">'
+  const passPages = chunk(pass, 18);
+  const failPages = chunk(fail, 14);
+  const photoPages = chunk(failPhotos, 4);
 
-    +       '<div class="reportHero">'
-    +         '<div class="reportHeroLeft">'
-    +           '<div class="reportBrandIconWrap">' + logoHtml + '</div>'
-    +           '<div class="reportBrandText">'
-    +             '<div class="reportCompanyName">' + esc(state.company.name) + '</div>'
-    +             '<div class="reportServiceLine">' + esc(state.company.service) + '</div>'
-    +             '<div class="reportCompanyMeta">' + nl2br(state.company.address) + '<br>' + esc(state.company.phone) + ' · ' + esc(state.company.email) + '</div>'
-    +           '</div>'
-    +         '</div>'
-    +         '<div class="reportHeroRight">'
-    +           '<div class="reportNextCard">'
-    +             '<div class="reportNextLabel">NEXT TEST DUE</div>'
-    +             '<div class="reportNextDate">' + nextTest(job) + '</div>'
-    +           '</div>'
-    +         '</div>'
-    +       '</div>'
+  let pages = '';
 
-    +       '<div class="reportMetaBar reportMetaBarCover">'
-    +         '<div class="reportMetaItem reportMetaReport"><span class="reportMetaLabel">Report Number</span><span class="reportMetaValue reportNoInline">' + esc(reportNo) + '</span></div>'
-    +         '<div class="reportMetaItem reportMetaDate"><span class="reportMetaLabel">Test Date</span><span class="reportMetaValue">' + fmtDateDMY(job.date) + '</span></div>'
-    +       '</div>'
-
-    +       '<div class="reportSummaryCard reportSummaryCover">'
-    +         '<div class="reportSummaryHeading">TEST SUMMARY</div>'
-    +         '<div class="reportStatGrid">'
-    +           '<div class="reportStat total"><div class="num">' + job.items.length + '</div><div class="lbl">Total Tested</div></div>'
-    +           '<div class="reportStat pass"><div class="num">' + pass.length + '</div><div class="lbl">Passed</div></div>'
-    +           '<div class="reportStat fail"><div class="num">' + fail.length + '</div><div class="lbl">Failed</div></div>'
-    +         '</div>'
-    +       '</div>'
-
-    +       '<div class="reportSplit premium reportDetailGrid">'
-    +         '<div class="reportBoxSq premium reportDetailCard">'
-    +           '<div class="reportDetailHeader">Client Details</div>'
-    +           '<div class="reportDetailBody">'
-    +             '<div class="reportDetailRow"><span>Client</span><b>' + esc(job.client) + '</b></div>'
-    +             '<div class="reportDetailRow"><span>Contact</span><b>' + esc(job.contact || '-') + '</b></div>'
-    +             '<div class="reportDetailRow"><span>Email</span><b>' + esc(job.email || '-') + '</b></div>'
-    +             '<div class="reportDetailRow reportDetailAddress"><span>Site Address</span><b>' + nl2br(job.address) + '</b></div>'
-    +           '</div>'
-    +         '</div>'
-    +         '<div class="reportBoxSq premium reportDetailCard">'
-    +           '<div class="reportDetailHeader">Test Details</div>'
-    +           '<div class="reportDetailBody">'
-    +             '<div class="reportDetailRow"><span>Engineer</span><b>' + esc(job.engineer || '-') + '</b></div>'
-    +             '<div class="reportDetailRow"><span>Instrument</span><b>' + esc(state.company.patTester || '-') + '</b></div>'
-    +             '<div class="reportDetailRow"><span>Serial Number</span><b>' + esc(state.company.testerSerial || '-') + '</b></div>'
-    +             '<div class="reportDetailRow"><span>Calibration Due</span><b>' + esc(fmtDateDMY(state.company.calibrationDue) || '-') + '</b></div>'
-    +           '</div>'
-    +         '</div>'
-    +       '</div>'
-
-    +       '<div class="reportAssurancePanel ' + (fail.length ? 'hasFailures' : 'allPassed') + '">'
-    +         '<div class="reportAssuranceIcon">✓</div>'
-    +         '<div class="reportAssuranceCopy">'
-    +           '<div class="reportAssuranceKicker">TESTED FOR YOUR SAFETY &amp; COMPLIANCE</div>'
-    +           '<div class="reportAssuranceText">' + (fail.length ? (fail.length + ' failed item' + (fail.length === 1 ? '' : 's') + ' ' + (fail.length === 1 ? 'is' : 'are') + ' recorded in this report. Failed equipment must remain out of service until remedial action and successful re-test.') : ('All ' + job.items.length + ' tested item' + (job.items.length === 1 ? '' : 's') + ' passed the recorded inspection and test results.')) + '</div>'
-    +         '</div>'
-    +         '<div class="reportAssuranceBadge">' + (fail.length ? (fail.length + ' FAILED') : 'ALL PASSED') + '</div>'
-    +       '</div>'
-
-    +       '<div class="reportCoverFooter">'
-    +         '<div class="reportCoverFooterMain"><b>Thank you for choosing ' + esc(state.company.name) + '.</b><span>For further electrical safety testing or PAT support, please use the contact details above.</span></div>'
-    +         '<div class="reportCoverFooterContact"><b>' + esc(state.company.phone) + '</b><span>' + esc(state.company.email) + '</span></div>'
-    +       '</div>'
-
-    +     '</div>'
+  // PAGE 1: cover only. No appliance tables or extended safety wording on this page.
+  pages += '<div class="reportPage reportPageCover">'
+    + '<div class="reportHeaderBar">'
+    +   '<div class="reportHeaderLeft"><div class="reportHeaderLogo">'+logoHtml+'</div><div><b>'+esc(state.company.name)+'</b><span>BUILDING SOLUTIONS</span></div></div>'
+    +   '<div class="reportHeaderRight"><span>PORTABLE APPLIANCE</span><strong>TESTING (PAT) REPORT</strong></div>'
+    +   '<div class="reportHeaderDue"><span>NEXT TEST DUE</span><b>'+nextTest(job)+'</b></div>'
+    + '</div>'
+    + '<div class="reportPageInner premium reportCoverInner">'
+    +   '<div class="reportHero">'
+    +     '<div class="reportBrandIconWrap">'+logoHtml+'</div>'
+    +     '<div class="reportBrandText"><div class="reportCompanyName">'+esc(state.company.name)+'</div><div class="reportServiceLine">'+esc(state.company.service)+'</div><div class="reportCompanyMeta">⌖ '+nl2br(state.company.address)+'<br>☎ '+esc(state.company.phone)+' &nbsp; | &nbsp; ✉ '+esc(state.company.email)+'</div></div>'
     +   '</div>'
-
-    +   '<div class="reportPage">'
-    +     '<div class="reportPageInner premium">'
-    +       '<div class="reportBoxSq premium">'
-    +         '<div class="reportTableTitle pass">Passed Items</div>'
-    +         '<table class="reportTable premium">'
-    +           '<tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th></tr>'
-    +           passRows
-    +         '</table>'
-    +       '</div>'
-    +     '</div>'
+    +   '<div class="reportMetaBar reportMetaBarCover">'
+    +     '<div class="reportMetaItem reportMetaReport"><span class="reportMetaLabel">REPORT NUMBER</span><span class="reportMetaValue reportNoInline">'+esc(reportNo)+'</span></div>'
+    +     '<div class="reportMetaItem reportMetaDate"><span class="reportMetaLabel">TEST DATE</span><span class="reportMetaValue">'+fmtDateDMY(job.date)+'</span></div>'
     +   '</div>'
-
-    +   '<div class="reportPage">'
-    +     '<div class="reportPageInner premium">'
-    +       '<div class="reportBoxSq premium">'
-    +         '<div class="reportTableTitle fail">Failed Items</div>'
-    +         '<table class="reportTable premium">'
-    +           '<tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th><th>Notes</th></tr>'
-    +           failRows
-    +         '</table>'
-    +       '</div>'
-    +     '</div>'
+    +   '<div class="reportSummaryCard reportSummaryCover"><div class="reportSummaryHeading">TEST SUMMARY</div><div class="reportStatGrid">'
+    +     '<div class="reportStat total"><div class="num">'+job.items.length+'</div><div class="lbl">TOTAL TESTED</div></div>'
+    +     '<div class="reportStat pass"><div class="num">'+pass.length+'</div><div class="lbl">PASSED</div></div>'
+    +     '<div class="reportStat fail"><div class="num">'+fail.length+'</div><div class="lbl">FAILED</div></div>'
+    +   '</div></div>'
+    +   '<div class="reportSplit premium reportDetailGrid">'
+    +     '<div class="reportBoxSq premium reportDetailCard"><div class="reportDetailHeader">CLIENT DETAILS</div><div class="reportDetailBody">'
+    +       '<div class="reportDetailRow"><span>Client:</span><b>'+esc(job.client)+'</b></div><div class="reportDetailRow"><span>Contact:</span><b>'+esc(job.contact||'-')+'</b></div><div class="reportDetailRow"><span>Email:</span><b>'+esc(job.email||'-')+'</b></div><div class="reportDetailRow reportDetailAddress"><span>Site Address:</span><b>'+nl2br(job.address)+'</b></div>'
+    +     '</div></div>'
+    +     '<div class="reportBoxSq premium reportDetailCard"><div class="reportDetailHeader">TEST DETAILS</div><div class="reportDetailBody">'
+    +       '<div class="reportDetailRow"><span>Engineer:</span><b>'+esc(job.engineer||'-')+'</b></div><div class="reportDetailRow"><span>Instrument:</span><b>'+esc(state.company.patTester||'-')+'</b></div><div class="reportDetailRow"><span>Serial Number:</span><b>'+esc(state.company.testerSerial||'-')+'</b></div><div class="reportDetailRow"><span>Calibration Due:</span><b>'+esc(fmtDateDMY(state.company.calibrationDue)||'-')+'</b></div>'
+    +     '</div></div>'
     +   '</div>'
+    +   '<div class="reportAssurancePanel"><div class="reportAssuranceIcon">✓</div><div class="reportAssuranceCopy"><div class="reportAssuranceKicker">TESTED FOR YOUR SAFETY &amp; COMPLIANCE</div><div class="reportAssuranceText">All portable appliances listed in this report have been inspected and tested in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div></div><div class="reportCoverSignature"><b>ENGINEER SIGNATURE</b>'+sigHtml+'<span>DATE: '+fmtDateDMY(job.date)+'</span></div></div>'
+    +   '<div class="reportCoverFooter"><div class="reportCoverFooterMain"><b>Thank you for choosing '+esc(state.company.name)+'.</b><span>If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details above.</span></div><div class="reportPlugMark">⌁</div></div>'
+    + '</div></div>';
 
-    +   '<div class="reportPage">'
-    +     '<div class="reportPageInner premium">'
-    +       '<div class="reportPageTitle">ADDITIONAL SAFETY INFORMATION & EVIDENCE</div>'
-    +       '<div class="reportBoxSq premium keepTogether">'
-    +         '<div class="reportSectionTitle">Failure Photos</div>'
-    +         (failPhotos.length ? '<div class="reportPhotoGrid premium">' + photoBlocks + '</div>' : '<div style="color:#111">No failure photos attached.</div>')
-    +       '</div>'
-    +     '</div>'
-    +   '</div>'
+  // Passed appliances. Only create this section when there are passed items.
+  passPages.forEach((items, idx)=>{
+    pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'
+      + pageHeader('PASSED APPLIANCES','green')
+      + '<div class="reportBoxSq premium continuationBox"><div class="reportTableTitle pass">Passed Items'+(passPages.length>1?' · '+(idx+1)+' of '+passPages.length:'')+'</div>'
+      + '<table class="reportTable premium"><thead><tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th></tr></thead><tbody>'
+      + items.map(passRow).join('') + '</tbody></table></div>'
+      + pageFooter('Passed appliances') + '</div></div>';
+  });
 
-    +   '<div class="reportPage">'
-    +     '<div class="reportPageInner premium reportLastPage">'
-    +       '<div class="reportBoxSq premium keepTogether">'
-    +         '<div class="reportSectionTitle">Important Safety Notice</div>'
-    +         '<div style="line-height:1.6;color:#111">Appliances that have failed testing must be removed from service immediately and must not be used until they have been repaired and successfully re-tested. These items may present an electrical safety risk and should be clearly identified and isolated from normal use.</div>'
-    +       '</div>'
+  // Failed appliances follow immediately after all passed pages.
+  failPages.forEach((items, idx)=>{
+    pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'
+      + pageHeader('FAILED APPLIANCES','red')
+      + '<div class="reportBoxSq premium continuationBox"><div class="reportTableTitle fail">Failed Items'+(failPages.length>1?' · '+(idx+1)+' of '+failPages.length:'')+'</div>'
+      + '<table class="reportTable premium failTable"><thead><tr><th>Asset</th><th>Appliance</th><th>Location</th><th>Class</th><th>Fuse</th><th>Earth Ω</th><th>IR MΩ</th><th>Visual</th><th>Result</th><th>Failure / Notes</th></tr></thead><tbody>'
+      + items.map(failRow).join('') + '</tbody></table></div>'
+      + pageFooter('Failed appliances') + '</div></div>';
+  });
 
-    +       '<div class="reportBoxSq premium keepTogether">'
-    +         '<div class="reportSectionTitle">Compliance Statement</div>'
-    +         '<div style="line-height:1.6;color:#111">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div>'
-    +       '</div>'
+  // Additional safety information and photographic evidence.
+  const safetyIntro = '<div class="reportBoxSq premium safetyInfoBox"><div class="reportSectionTitle">Additional Safety Information</div><div class="reportSafetyText">'+(job.notes ? nl2br(job.notes) : 'No additional job-specific safety information was recorded.')+'</div></div>';
+  if(photoPages.length){
+    photoPages.forEach((items, idx)=>{
+      pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'
+        + pageHeader('ADDITIONAL SAFETY INFORMATION &amp; EVIDENCE','orange')
+        + (idx===0 ? safetyIntro : '')
+        + '<div class="reportBoxSq premium"><div class="reportSectionTitle">Failure Photographs'+(photoPages.length>1?' · '+(idx+1)+' of '+photoPages.length:'')+'</div><div class="reportPhotoGrid premium">'
+        + items.map(i=>'<div class="reportPhotoCard premium"><div class="reportPhotoAsset">'+esc(i.asset)+' · '+esc(i.appliance)+'</div><div class="reportPhotoReason"><b>Failure reason:</b> '+esc(i.notes||'See failed items table')+'</div><img src="'+i.photo+'" alt="Failure photo"></div>').join('')
+        + '</div></div>'+pageFooter('Safety information & evidence')+'</div></div>';
+    });
+  }else{
+    pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage">'+pageHeader('ADDITIONAL SAFETY INFORMATION','orange')+safetyIntro+'<div class="reportBoxSq premium"><div class="reportSectionTitle">Failure Photographs</div><div class="reportSafetyText">No failure photographs attached.</div></div>'+pageFooter('Additional safety information')+'</div></div>';
+  }
 
-    +       '<div class="reportBoxSq premium keepTogether">'
-    +         '<div class="reportSectionTitle">Engineer Signature</div>'
-    +         '<div class="reportSignatureBox premium">' + sigHtml + '</div>'
-    +         '<div style="display:flex;justify-content:space-between;gap:12px;margin-top:8px;color:#111;font-size:.92rem">'
-    +           '<div><b>Engineer:</b> ' + esc(job.engineer) + '</div>'
-    +           '<div><b>Date:</b> ' + fmtDateDMY(job.date) + '</div>'
-    +         '</div>'
-    +       '</div>'
+  // Final safety/compliance page.
+  pages += '<div class="reportPage"><div class="reportPageInner premium continuationPage finalSafetyPage">'
+    + pageHeader('SAFETY &amp; COMPLIANCE INFORMATION','blue')
+    + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Important Safety Notice</div><div class="reportSafetyText">Appliances that have failed testing must be removed from service immediately and must not be used until repaired and successfully re-tested. Failed equipment should be clearly identified and isolated from normal use.</div></div>'
+    + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Compliance Statement</div><div class="reportSafetyText">Inspection and testing has been carried out in accordance with the Electricity at Work Regulations 1989 and the IET Code of Practice for In-Service Inspection and Testing of Electrical Equipment.</div></div>'
+    + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Engineer Declaration</div><div class="reportFinalSignature"><div class="reportSignatureBox premium">'+sigHtml+'</div><div><b>'+esc(job.engineer||'-')+'</b><span>Test date: '+fmtDateDMY(job.date)+'</span><span>Report: '+esc(reportNo)+'</span></div></div></div>'
+    + '<div class="reportBoxSq premium keepTogether"><div class="reportSectionTitle">Report Information</div><div class="reportSafetyText">This report records the condition and test results of the appliances listed at the time of inspection. It should be retained with the duty holder’s electrical safety records. Any failed appliance must remain out of service until suitable remedial action has been completed.</div></div>'
+    + pageFooter('Safety & compliance') + '</div></div>';
 
-    +       '<div class="reportBoxSq premium keepTogether">'
-    +         '<div class="reportSectionTitle">Thank You</div>'
-    +         '<div style="line-height:1.6;color:#111">Thank you for choosing <b>' + esc(state.company.name) + '</b>. If you require further electrical safety testing, PAT maintenance, or compliance inspections, please contact us using the details on page 1 of this report.</div>'
-    +       '</div>'
-    +     '</div>'
-    +   '</div>'
-
-    + '</div>';
+  $('reportArea').innerHTML = '<div id="reportBox">'+pages+'</div>';
 }
 $('printReportBtn').onclick = ()=>window.print();
 
