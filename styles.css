@@ -1385,3 +1385,57 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
     print-color-adjust:exact !important;
   }
 }
+
+
+/* ===== DEFINITIVE COVER FOOTER PAGINATION FIX =====
+   Keep the cover footer in normal flex flow.
+   This prevents Chromium from fragmenting absolutely-positioned footer text
+   onto a separate printed sheet. */
+@media print{
+  .reportPageCover{
+    display:flex !important;
+    flex-direction:column !important;
+    position:relative !important;
+    overflow:hidden !important;
+  }
+
+  .reportPageCover .reportHeaderBar{
+    flex:0 0 56px !important;
+  }
+
+  .reportPageCover .reportCoverInner{
+    position:static !important;
+    flex:1 1 auto !important;
+    height:auto !important;
+    min-height:0 !important;
+    max-height:none !important;
+    display:flex !important;
+    flex-direction:column !important;
+    padding:6mm 7mm 0 !important;
+    overflow:hidden !important;
+  }
+
+  .reportCoverFooter{
+    position:static !important;
+    left:auto !important;
+    right:auto !important;
+    bottom:auto !important;
+    flex:0 0 58px !important;
+    width:auto !important;
+    height:58px !important;
+    min-height:58px !important;
+    margin-top:auto !important;
+    margin-left:-7mm !important;
+    margin-right:-7mm !important;
+    margin-bottom:0 !important;
+    break-inside:avoid !important;
+    page-break-inside:avoid !important;
+  }
+
+  .reportCoverFooterMain,
+  .reportCoverFooterContact,
+  .reportPlugMark{
+    break-inside:avoid !important;
+    page-break-inside:avoid !important;
+  }
+}
