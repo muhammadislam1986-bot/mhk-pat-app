@@ -127,10 +127,10 @@ window.onafterprint = function(){ window.close(); };
 }
 
 function drawThermalLabel(ctx, canvas, data, qrImg=null){
-  // Revision 2: extra-heavy typography tuned from the real PM220 print test.
-  // Used only by Save Label / Share Label. Print/report/application logic is untouched.
+  // Revision 3: simplified, extra-bold 50x30 mm layout based on real PM220 output.
+  // Used only by Save Label / Share Label. All other app/report logic remains untouched.
   const initials = getEngineerInitials();
-  const company = String(data.company || 'MHK Building Solutions Ltd');
+  const company = String(data.company || 'MHK Building Solutions Ltd').toUpperCase();
   const W = canvas.width;
   const H = canvas.height;
   const sx = W / 900;
@@ -139,6 +139,7 @@ function drawThermalLabel(ctx, canvas, data, qrImg=null){
   const X = n => n * sx;
   const Y = n => n * sy;
   const F = n => Math.max(1, Math.round(n * S));
+  const heavy = 'Arial Black, Arial, Helvetica, sans-serif';
 
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#ffffff';
@@ -150,67 +151,55 @@ function drawThermalLabel(ctx, canvas, data, qrImg=null){
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
 
-  const left = X(30);
+  const left = X(28);
   const qrSize = Math.min(X(220), Y(220));
-  const qrX = W - X(30) - qrSize;
-  const qrY = Y(36);
-  const textRight = qrX - X(20);
+  const qrX = W - X(28) - qrSize;
+  const qrY = Y(78);
+  const textRight = qrX - X(18);
   const textWidth = textRight - left;
-  const font = 'Arial, Helvetica, sans-serif';
-  const heavy = 'Arial Black, Arial, Helvetica, sans-serif';
 
-  // Large company name. Shrink only when needed to keep it on one line.
-  let companySize = F(49);
+  // Company name: maximum practical size, one line, extra heavy.
+  let companySize = F(48);
   ctx.font = `900 ${companySize}px ${heavy}`;
-  while(ctx.measureText(company.toUpperCase()).width > textWidth && companySize > F(30)){
+  while(ctx.measureText(company).width > textWidth && companySize > F(32)){
     companySize -= 1;
     ctx.font = `900 ${companySize}px ${heavy}`;
   }
-  ctx.fillText(company.toUpperCase(), left, Y(70));
+  ctx.fillText(company, left, Y(64));
 
-  // PAT heading uses a heavy face because fine text loses weight on thermal paper.
-  let patSize = F(27);
-  ctx.font = `900 ${patSize}px ${heavy}`;
-  const pat = 'PORTABLE APPLIANCE TESTING (PAT)';
-  while(ctx.measureText(pat).width > textWidth && patSize > F(19)){
-    patSize -= 1;
-    ctx.font = `900 ${patSize}px ${heavy}`;
-  }
-  ctx.fillText(pat, left, Y(108));
-
-  // Primary appliance identity.
-  ctx.font = `900 ${F(78)}px ${heavy}`;
-  ctx.fillText(String(data.asset || ''), left, Y(202));
+  // Shortened heading so it can be genuinely readable on a 50x30 thermal label.
   ctx.font = `900 ${F(36)}px ${heavy}`;
-  wrapText(ctx, String(data.appliance || '').toUpperCase(), left, Y(247), textWidth, Y(40), 1);
+  ctx.fillText('PAT TESTING', left, Y(108));
 
-  // PASS / FAIL banner.
+  // Appliance identity: intentionally dominant.
+  ctx.font = `900 ${F(86)}px ${heavy}`;
+  ctx.fillText(String(data.asset || ''), left, Y(202));
+  ctx.font = `900 ${F(41)}px ${heavy}`;
+  wrapText(ctx, String(data.appliance || '').toUpperCase(), left, Y(247), textWidth, Y(42), 1);
+
+  // High-contrast status banner. Same height for PASS and FAIL for predictable output.
   const boxX = left;
-  const boxY = Y(270);
+  const boxY = Y(264);
   const boxW = textWidth;
-  const boxH = data.isFail ? Y(105) : Y(88);
+  const boxH = Y(90);
   ctx.fillStyle = '#000000';
   ctx.beginPath();
-  ctx.roundRect(boxX, boxY, boxW, boxH, F(10));
+  ctx.roundRect(boxX, boxY, boxW, boxH, F(9));
   ctx.fill();
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
-  ctx.font = `900 ${F(data.isFail ? 55 : 60)}px ${heavy}`;
-  ctx.fillText(data.isFail ? '✕  FAIL' : '✓  PASS', boxX + boxW/2, boxY + Y(61));
-  if(data.isFail){
-    ctx.font = `900 ${F(25)}px ${heavy}`;
-    ctx.fillText('DO NOT USE', boxX + boxW/2, boxY + Y(94));
-  }
+  ctx.font = `900 ${F(62)}px ${heavy}`;
+  ctx.fillText(data.isFail ? '✕  FAIL' : '✓  PASS', boxX + boxW/2, Y(329));
 
-  // Critical metadata: deliberately large, uppercase and extra bold.
+  // Metadata is now approximately the same strong print size as the appliance name.
   ctx.fillStyle = '#000000';
   ctx.textAlign = 'left';
-  const labelFont = F(30);
-  const valueFont = F(31);
-  const metaStart = data.isFail ? 404 : 382;
-  const metaGap = 43;
+  const labelFont = F(36);
+  const valueFont = F(38);
   const labelX = left;
-  const valueX = left + X(185);
+  const valueX = left + X(245);
+  const metaStart = 401;
+  const metaGap = 50;
 
   function metaLine(label, value, y){
     ctx.font = `900 ${labelFont}px ${heavy}`;
@@ -221,11 +210,9 @@ function drawThermalLabel(ctx, canvas, data, qrImg=null){
 
   metaLine('TESTED:', data.tested, metaStart);
   metaLine('RETEST:', data.retest, metaStart + metaGap);
-  if(initials){
-    metaLine('ENGINEER:', initials, metaStart + metaGap*2);
-  }
+  if(initials) metaLine('ENGINEER:', initials, metaStart + metaGap*2);
 
-  // Preserve the successful QR size/quiet zone from Revision 1.
+  // Keep the QR large with a clean white quiet zone and no interpolation.
   if(qrImg){
     const quiet = X(9);
     ctx.fillStyle = '#ffffff';
