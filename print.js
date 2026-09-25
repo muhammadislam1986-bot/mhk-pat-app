@@ -127,7 +127,7 @@ window.onafterprint = function(){ window.close(); };
 }
 
 function drawThermalLabel(ctx, canvas, data, qrImg=null){
-  // Revision 3: simplified, extra-bold 50x30 mm layout based on real PM220 output.
+  // Final Revision 4: extra-bold 50x30 mm PM220 layout with enlarged metadata for real-world readability.
   // Used only by Save Label / Share Label. All other app/report logic remains untouched.
   const initials = getEngineerInitials();
   const company = String(data.company || 'MHK Building Solutions Ltd').toUpperCase();
@@ -168,8 +168,8 @@ function drawThermalLabel(ctx, canvas, data, qrImg=null){
   ctx.fillText(company, left, Y(64));
 
   // Shortened heading so it can be genuinely readable on a 50x30 thermal label.
-  ctx.font = `900 ${F(36)}px ${heavy}`;
-  ctx.fillText('PAT TESTING', left, Y(108));
+  ctx.font = `900 ${F(39)}px ${heavy}`;
+  ctx.fillText('PAT TESTING', left, Y(110));
 
   // Appliance identity: intentionally dominant.
   ctx.font = `900 ${F(86)}px ${heavy}`;
@@ -194,12 +194,12 @@ function drawThermalLabel(ctx, canvas, data, qrImg=null){
   // Metadata is now approximately the same strong print size as the appliance name.
   ctx.fillStyle = '#000000';
   ctx.textAlign = 'left';
-  const labelFont = F(36);
-  const valueFont = F(38);
+  const labelFont = F(42);
+  const valueFont = F(44);
   const labelX = left;
-  const valueX = left + X(245);
-  const metaStart = 401;
-  const metaGap = 50;
+  const valueX = left + X(260);
+  const metaStart = 400;
+  const metaGap = 55;
 
   function metaLine(label, value, y){
     ctx.font = `900 ${labelFont}px ${heavy}`;
