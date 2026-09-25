@@ -1639,3 +1639,27 @@ button.ghost{background:transparent;border:1px solid #5d7fa2}
     max-height:72px !important;
   }
 }
+
+/* ===== A4 PRINT OPTIMISATION — SAFE VISUAL-ONLY REV1 =====
+   Purpose: use more of the physical A4 sheet without changing report
+   structure, page allocation, report data, or label printing.
+   The existing 190mm x 267mm report geometry remains the layout basis;
+   it is enlarged uniformly at print time into a 5mm A4 safe margin. */
+@media print{
+  @page{
+    size:A4 portrait;
+    margin:5mm !important;
+  }
+
+  /* Keep the proven report layout dimensions and page breaks, but enlarge
+     the finished page uniformly by 200/190 = 1.05263 (about 5.3%). */
+  .reportPage{
+    width:190mm !important;
+    height:267mm !important;
+    min-height:267mm !important;
+    max-height:267mm !important;
+    margin:0 !important;
+    transform:scale(1.052631579);
+    transform-origin:top left;
+  }
+}
